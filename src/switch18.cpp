@@ -60,14 +60,14 @@ struct Switch18 : Module {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
 		configParam(MODE_PARAM, 0.f, 3.f, 0.f, "mode");
 		getParamQuantity(MODE_PARAM)->snapEnabled = true;
-		configParam(STEP_1_PARAM, 0.f, 1.f, 0.f, "step 1 probability");
-		configParam(STEP_2_PARAM, 0.f, 1.f, 0.f, "step 2 probability");
-		configParam(STEP_3_PARAM, 0.f, 1.f, 0.f, "step 3 probability");
-		configParam(STEP_4_PARAM, 0.f, 1.f, 0.f, "step 4 probability");
-		configParam(STEP_5_PARAM, 0.f, 1.f, 0.f, "step 5 probability");
-		configParam(STEP_6_PARAM, 0.f, 1.f, 0.f, "step 6 probability");
-		configParam(STEP_7_PARAM, 0.f, 1.f, 0.f, "step 7 probability");
-		configParam(STEP_8_PARAM, 0.f, 1.f, 0.f, "step 8 probability");
+		configParam(STEP_1_PARAM, 0.f, 1.f, 1.f, "step 1 probability");
+		configParam(STEP_2_PARAM, 0.f, 1.f, 1.f, "step 2 probability");
+		configParam(STEP_3_PARAM, 0.f, 1.f, 1.f, "step 3 probability");
+		configParam(STEP_4_PARAM, 0.f, 1.f, 1.f, "step 4 probability");
+		configParam(STEP_5_PARAM, 0.f, 1.f, 1.f, "step 5 probability");
+		configParam(STEP_6_PARAM, 0.f, 1.f, 1.f, "step 6 probability");
+		configParam(STEP_7_PARAM, 0.f, 1.f, 1.f, "step 7 probability");
+		configParam(STEP_8_PARAM, 0.f, 1.f, 1.f, "step 8 probability");
 		configInput(SIGNAL_INPUT, "signal");
 		configInput(TRIGGER_INPUT, "trigger");
 		configInput(STEP_1_INPUT, "step 1 cv");
@@ -90,20 +90,54 @@ struct Switch18 : Module {
 
 	int mode = 0;
 	int step = 1;
+	float weights[8] = { 0.f };
 	dsp::SchmittTrigger trigger;
+
+	void compute_weights() {
+		for (int i = 0; i < 8; i++) {
+			if (outputs[STEP_1_OUTPUT + i].isConnected()) {
+				weights[i] = params[i + 1].getValue();
+			}
+			else {
+				weights[i] = 0.f;
+			}
+		}
+	}
+
+	float calculate_sum(float w[8]) {
+		float sum = 0.f;
+		for (int i = 0; i < 8; i++) {
+			sum += w[i];
+		}
+		return sum;
+	}
 
 	void process(const ProcessArgs& args) override {
 		float signal = inputs[SIGNAL_INPUT].getVoltage();
 		mode = (int)params[MODE_PARAM].getValue();
+
 		if (trigger.process(inputs[TRIGGER_INPUT].getVoltage())) {
+
+			compute_weights();
+
 			switch (mode) {
 			case SELECT_CHANCE:
-				break;
-			case SKIP_CHANCE:
-				break;
-			case REPEAT_WEIGHT:
-				break;
-			case FIXED_PATTERN:
+				float sum = calculate_sum(weights);
+				float r = random::uniform() * sum;
+
+				for (int i = 0; i < 8; i++) {
+					r -= weights[i];
+					if (r <= 0.f) {
+						if (weights[i] > 0.f) {
+							step = i + 1;
+						}
+						else {
+							continue;
+						}
+						break;
+					}
+				}
+
 				break;
 			}
 		}
