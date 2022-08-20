@@ -12,5 +12,14 @@
   "sourceUrl": "",
   "donateUrl": "",
   "changelogUrl": "",
-  "modules": []
+  "modules": [
+    {
+      "slug": "switch18",
+      "name": "switch18",
+      "description": "",
+      "tags": [
+        "Utility"
+      ]
+    }
+  ]
 }
