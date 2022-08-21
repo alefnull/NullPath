@@ -70,14 +70,14 @@ struct Switch18 : Module {
 		configParam(STEP_8_PARAM, 0.f, 1.f, 1.f, "step 8 probability");
 		configInput(SIGNAL_INPUT, "signal");
 		configInput(TRIGGER_INPUT, "trigger");
-		configInput(STEP_1_INPUT, "step 1 cv");
-		configInput(STEP_2_INPUT, "step 2 cv");
-		configInput(STEP_3_INPUT, "step 3 cv");
-		configInput(STEP_4_INPUT, "step 4 cv");
-		configInput(STEP_5_INPUT, "step 5 cv");
-		configInput(STEP_6_INPUT, "step 6 cv");
-		configInput(STEP_7_INPUT, "step 7 cv");
-		configInput(STEP_8_INPUT, "step 8 cv");
+		configInput(STEP_1_CV_INPUT, "step 1 cv");
+		configInput(STEP_2_CV_INPUT, "step 2 cv");
+		configInput(STEP_3_CV_INPUT, "step 3 cv");
+		configInput(STEP_4_CV_INPUT, "step 4 cv");
+		configInput(STEP_5_CV_INPUT, "step 5 cv");
+		configInput(STEP_6_CV_INPUT, "step 6 cv");
+		configInput(STEP_7_CV_INPUT, "step 7 cv");
+		configInput(STEP_8_CV_INPUT, "step 8 cv");
 		configOutput(STEP_1_OUTPUT, "step 1");
 		configOutput(STEP_2_OUTPUT, "step 2");
 		configOutput(STEP_3_OUTPUT, "step 3");
@@ -217,14 +217,14 @@ struct Switch18Widget : ModuleWidget {
 
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.085, 25.796)), module, Switch18::SIGNAL_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.085, 36.769)), module, Switch18::TRIGGER_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 25.796)), module, Switch18::STEP_1_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 35.806)), module, Switch18::STEP_2_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 46.202)), module, Switch18::STEP_3_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 56.597)), module, Switch18::STEP_4_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 67.955)), module, Switch18::STEP_5_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 78.928)), module, Switch18::STEP_6_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 89.708)), module, Switch18::STEP_7_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 100.104)), module, Switch18::STEP_8_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 25.796)), module, Switch18::STEP_1_CV_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 35.806)), module, Switch18::STEP_2_CV_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 46.202)), module, Switch18::STEP_3_CV_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 56.597)), module, Switch18::STEP_4_CV_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 67.955)), module, Switch18::STEP_5_CV_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 78.928)), module, Switch18::STEP_6_CV_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 89.708)), module, Switch18::STEP_7_CV_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 100.104)), module, Switch18::STEP_8_CV_INPUT));
 
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(43.892, 25.796)), module, Switch18::STEP_1_OUTPUT));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(43.892, 35.806)), module, Switch18::STEP_2_OUTPUT));
