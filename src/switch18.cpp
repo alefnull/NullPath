@@ -89,14 +89,14 @@ struct Switch18 : Module {
 	}
 
 	int mode = 0;
-	int step = 1;
+	int step = 0;
 	float weights[8] = { 0.f };
 	dsp::SchmittTrigger trigger;
 
 	void compute_weights() {
 		for (int i = 0; i < 8; i++) {
 			if (outputs[STEP_1_OUTPUT + i].isConnected()) {
-				weights[i] = params[i + 1].getValue();
+				weights[i] = params[STEP_1_PARAM + i].getValue();
 			}
 			else {
 				weights[i] = 0.f;
@@ -112,38 +112,84 @@ struct Switch18 : Module {
 		return sum;
 	}
 
+	void skip_steps(int depth) {
+		int d = depth;
+		if (d < 1) {
+			step = random::uniform() * 8;
+			return;
+		}
+		if (depth > 8) {
+			d = 8;
+		}
+		DEBUG("incrementing step");
+		step++;
+		if (step > 7) {
+			step = 0;
+		}
+		DEBUG("step is now %d", step);
+		DEBUG("rolling dice for random step");
+		float r = random::uniform();
+		float w = weights[STEP_1_OUTPUT + step];
+		DEBUG("dice roll is %f", r);
+		DEBUG("step probability is %f", w);
+		if (r > w) {
+			DEBUG("dice roll > step probability, calling skip_steps() again");
+			skip_steps(d - 1);
+		}
+	}
+
 	void process(const ProcessArgs& args) override {
 		float signal = inputs[SIGNAL_INPUT].getVoltage();
 		mode = (int)params[MODE_PARAM].getValue();
 
-		if (trigger.process(inputs[TRIGGER_INPUT].getVoltage())) {
+		compute_weights();
 
-			compute_weights();
+		if (trigger.process(inputs[TRIGGER_INPUT].getVoltage())) {
 
 			switch (mode) {
 			case SELECT_CHANCE:
-				float sum = calculate_sum(weights);
-				float r = random::uniform() * sum;
+				{
+					float sum = calculate_sum(weights);
+					float r = random::uniform() * sum;
 
-				for (int i = 0; i < 8; i++) {
-					r -= weights[i];
-					if (r <= 0.f) {
-						if (weights[i] > 0.f) {
-							step = i + 1;
+					for (int i = 0; i < 8; i++) {
+						r -= weights[i];
+						if (r <= 0.f) {
+							if (weights[i] > 0.f) {
+								step = i;
+							}
+							else {
+								continue;
+							}
+							break;
 						}
-						else {
-							continue;
-						}
-						break;
 					}
+					break;
 				}
-
-				break;
+			case SKIP_CHANCE:
+				{
+					bool all_zero = true;
+					for (int i = 0; i < 8; i++) {
+						if (weights[i] > 0.f) {
+							all_zero = false;
+							DEBUG("non-zero weight of %f found at index %d", weights[i], i);
+							break;
+						}
+					}
+					DEBUG("all_zero is %d", all_zero);
+					if (!all_zero) {
+						skip_steps(8);
+					}
+					else {
+						step = random::uniform() * 8;
+					}
+					break;
+				}
 			}
 		}
 		for (int i = 0; i < OUTPUTS_LEN; i++) {
-			outputs[i].setVoltage(i == step - 1 ? signal : 0.f);
-			lights[i].setBrightness(i == step - 1 ? 1.f : 0.f);
+			outputs[i].setVoltage(i == step ? signal : 0.f);
+			lights[i].setBrightness(i == step ? 1.f : 0.f);
 		}
 	}
 };
