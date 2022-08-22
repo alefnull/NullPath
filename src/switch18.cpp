@@ -1,7 +1,8 @@
 #include "plugin.hpp"
+#include "SwitchBase.hpp"
 
 
-struct Switch18 : Module {
+struct Switch18 : Module, SwitchBase {
 	enum ParamId {
 		MODE_PARAM,
 		STEP_1_PARAM,
@@ -49,12 +50,6 @@ struct Switch18 : Module {
 		STEP_8_LIGHT,
 		LIGHTS_LEN
 	};
-	enum Mode {
-		SELECT_CHANCE,
-		SKIP_CHANCE,
-		REPEAT_WEIGHT,
-		FIXED_PATTERN
-	};
 
 	Switch18() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
@@ -88,13 +83,6 @@ struct Switch18 : Module {
 		configOutput(STEP_8_OUTPUT, "step 8");
 	}
 
-	int mode = 0;
-	int step = 0;
-	float weights[8] = { 0.f };
-	float pattern[8] = { 0.f };
-	float repeat_value = 0.f;
-	dsp::SchmittTrigger trigger;
-
 	void compute_weights() {
 		for (int i = 0; i < 8; i++) {
 			if (outputs[STEP_1_OUTPUT + i].isConnected()) {
@@ -106,170 +94,19 @@ struct Switch18 : Module {
 		}
 	}
 
-	float calculate_sum(float w[8]) {
-		float sum = 0.f;
-		for (int i = 0; i < 8; i++) {
-			sum += w[i];
-		}
-		return sum;
-	}
-
-	void skip_steps(int depth) {
-		int d = depth;
-		if (d < 1) {
-			step = random::uniform() * 8;
-			return;
-		}
-		if (depth > 8) {
-			d = 8;
-		}
-		DEBUG("incrementing step");
-		step++;
-		if (step > 7) {
-			step = 0;
-		}
-		DEBUG("step is now %d", step);
-		DEBUG("rolling dice for random step");
-		float r = random::uniform();
-		float w = weights[STEP_1_OUTPUT + step];
-		DEBUG("dice roll is %f", r);
-		DEBUG("step probability is %f", w);
-		if (r > w) {
-			DEBUG("dice roll > step probability, calling skip_steps() again");
-			skip_steps(d - 1);
-		}
-	}
-
 	void process(const ProcessArgs& args) override {
 		float signal = inputs[SIGNAL_INPUT].getVoltage();
 		mode = (int)params[MODE_PARAM].getValue();
 
 		compute_weights();
-		
 
 		if (trigger.process(inputs[TRIGGER_INPUT].getVoltage())) {
-
-			switch (mode) {
-			case SELECT_CHANCE:
-				{
-					float sum = calculate_sum(weights);
-					if (sum == 0.f) {
-						step = random::uniform() * 8;
-
-					}
-					else {
-						float r = random::uniform() * sum;
-
-						for (int i = 0; i < 8; i++) {
-							r -= weights[i];
-							if (r <= 0.f) {
-								if (weights[i] > 0.f) {
-									step = i;
-								}
-								else {
-									continue;
-								}
-								break;
-							}
-						}
-						break;
-					}
-					break;
-				}
-			case SKIP_CHANCE:
-				{
-					bool all_zero = true;
-					for (int i = 0; i < 8; i++) {
-						if (weights[i] > 0.f) {
-							all_zero = false;
-							DEBUG("non-zero weight of %f found at index %d", weights[i], i);
-							break;
-						}
-					}
-					DEBUG("all_zero is %d", all_zero);
-					if (!all_zero) {
-						skip_steps(8);
-					}
-					else {
-						step = random::uniform() * 8;
-					}
-					break;
-				}
-			case REPEAT_WEIGHT:
-				{
-					// if all weights are zero, just pick a random step
-					bool all_zero = true;
-					for (int i = 0; i < 8; i++) {
-						if (weights[i] > 0.f) {
-							all_zero = false;
-							break;
-						}
-					}
-					if (!all_zero) {
-						// find the min param value that isn't 0
-						float min = 1.f;
-						for (int i = 0; i < 8; i++) {
-							if (weights[i] < min && weights[i] > 0.f) {
-								min = weights[i];
-							}
-						}
-						DEBUG("min is %f", min);
-						// decrement the repeat value by the min value
-						repeat_value -= min;
-						DEBUG("repeat_value after decrement is %f", repeat_value);
-						// if repeat value is greater than 0, keep the same step,
-						// otherwise, advance to next step with a weight greater than 0
-						if (repeat_value > 0.f) {
-							break;
-						}
-						else {
-							DEBUG("repeat_value is 0, advancing to next step");
-							for (int i = 0; i < 8; i++) {
-								if (weights[(step + i + 1) % 8] > 0.f) {
-									step = (step + i + 1) % 8;
-									break;
-								}
-							}
-							repeat_value = params[STEP_1_PARAM + step].getValue();
-							DEBUG("step is now %d", step);
-							DEBUG("repeat_value is now %f", repeat_value);
-						}
-					}
-					else {
-						step = random::uniform() * 8;
-					}
-					break;
-				}
-			case FIXED_PATTERN:
-				{
-					float sum = calculate_sum(weights);
-					if (sum == 0.f) {
-						step = random::uniform() * 8;
-						break;
-					}
-					// increment stored weights by their param values
-					for (int i = 0; i < 8; i++) {
-						pattern[i] += params[STEP_1_PARAM + i].getValue();
-					}
-					// select the port that has the highest stored value
-					float max = 0.f;
-					int max_index = 0;
-					for (int i = 0; i < 8; i++) {
-						if (pattern[i] > max) {
-							max = pattern[i];
-							max_index = i;
-						}
-					}
-					step = max_index;
-					// decrement the selected port's value by the sum of all the weights
-					pattern[step] -= sum;
-					break;
-				}
-			}
+			do_it_all();
 		}
+		
 		for (int i = 0; i < OUTPUTS_LEN; i++) {
-			outputs[i].setVoltage(i == step ? signal : 0.f);
-			lights[i].setBrightness(i == step ? 1.f : 0.f);
+			outputs[STEP_1_OUTPUT + i].setVoltage(i == current_step ? signal : 0.f);
+			lights[STEP_1_LIGHT + i].setBrightness(i == current_step ? 1.f : 0.f);
 		}
 	}
 };
