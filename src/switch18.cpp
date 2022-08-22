@@ -91,6 +91,7 @@ struct Switch18 : Module {
 	int mode = 0;
 	int step = 0;
 	float weights[8] = { 0.f };
+	float pattern[8] = { 0.f };
 	float repeat_value = 0.f;
 	dsp::SchmittTrigger trigger;
 
@@ -144,6 +145,7 @@ struct Switch18 : Module {
 		mode = (int)params[MODE_PARAM].getValue();
 
 		compute_weights();
+		
 
 		if (trigger.process(inputs[TRIGGER_INPUT].getVoltage())) {
 
@@ -236,6 +238,32 @@ struct Switch18 : Module {
 					else {
 						step = random::uniform() * 8;
 					}
+					break;
+				}
+			case FIXED_PATTERN:
+				{
+					float sum = calculate_sum(weights);
+					if (sum == 0.f) {
+						step = random::uniform() * 8;
+						break;
+					}
+					// increment stored weights by their param values
+					for (int i = 0; i < 8; i++) {
+						pattern[i] += params[STEP_1_PARAM + i].getValue();
+					}
+					// select the port that has the highest stored value
+					float max = 0.f;
+					int max_index = 0;
+					for (int i = 0; i < 8; i++) {
+						if (pattern[i] > max) {
+							max = pattern[i];
+							max_index = i;
+						}
+					}
+					step = max_index;
+					// decrement the selected port's value by the sum of all the weights
+					pattern[step] -= sum;
+					break;
 				}
 			}
 		}
