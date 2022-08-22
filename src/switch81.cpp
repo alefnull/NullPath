@@ -86,7 +86,13 @@ struct Switch81 : Module, SwitchBase {
 	void compute_weights() {
 		for (int i = 0; i < 8; i++) {
 			if (inputs[STEP_1_INPUT + i].isConnected()) {
-				weights[i] = params[STEP_1_PARAM + i].getValue();
+				if (!inputs[STEP_1_CV_INPUT + i].isConnected()) {
+					weights[i] = params[STEP_1_PARAM + i].getValue();
+				}
+				else {
+					weights[i] = inputs[STEP_1_CV_INPUT + i].getVoltage();
+					weights[i] *= params[STEP_1_PARAM].getValue();
+				}
 			}
 			else {
 				weights[i] = 0.f;
