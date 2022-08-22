@@ -91,7 +91,7 @@ struct Switch18 : Module, SwitchBase {
 				}
 				else {
 					weights[i] = inputs[STEP_1_CV_INPUT + i].getVoltage();
-					weights[i] *= params[STEP_1_PARAM].getValue();
+					weights[i] = clamp(weights[i] + params[STEP_1_PARAM].getValue(), 0, 1);
 				}
 			}
 			else {
