@@ -17,14 +17,14 @@ struct Switch18 : Module {
 	enum InputId {
 		SIGNAL_INPUT,
 		TRIGGER_INPUT,
-		STEP_1_INPUT,
-		STEP_2_INPUT,
-		STEP_3_INPUT,
-		STEP_4_INPUT,
-		STEP_5_INPUT,
-		STEP_6_INPUT,
-		STEP_7_INPUT,
-		STEP_8_INPUT,
+		STEP_1_CV_INPUT,
+		STEP_2_CV_INPUT,
+		STEP_3_CV_INPUT,
+		STEP_4_CV_INPUT,
+		STEP_5_CV_INPUT,
+		STEP_6_CV_INPUT,
+		STEP_7_CV_INPUT,
+		STEP_8_CV_INPUT,
 		INPUTS_LEN
 	};
 	enum OutputId {
@@ -91,6 +91,7 @@ struct Switch18 : Module {
 	int mode = 0;
 	int step = 0;
 	float weights[8] = { 0.f };
+	float repeat_value = 0.f;
 	dsp::SchmittTrigger trigger;
 
 	void compute_weights() {
@@ -150,19 +151,26 @@ struct Switch18 : Module {
 			case SELECT_CHANCE:
 				{
 					float sum = calculate_sum(weights);
-					float r = random::uniform() * sum;
+					if (sum == 0.f) {
+						step = random::uniform() * 8;
 
-					for (int i = 0; i < 8; i++) {
-						r -= weights[i];
-						if (r <= 0.f) {
-							if (weights[i] > 0.f) {
-								step = i;
+					}
+					else {
+						float r = random::uniform() * sum;
+
+						for (int i = 0; i < 8; i++) {
+							r -= weights[i];
+							if (r <= 0.f) {
+								if (weights[i] > 0.f) {
+									step = i;
+								}
+								else {
+									continue;
+								}
+								break;
 							}
-							else {
-								continue;
-							}
-							break;
 						}
+						break;
 					}
 					break;
 				}
@@ -184,6 +192,50 @@ struct Switch18 : Module {
 						step = random::uniform() * 8;
 					}
 					break;
+				}
+			case REPEAT_WEIGHT:
+				{
+					// if all weights are zero, just pick a random step
+					bool all_zero = true;
+					for (int i = 0; i < 8; i++) {
+						if (weights[i] > 0.f) {
+							all_zero = false;
+							break;
+						}
+					}
+					if (!all_zero) {
+						// find the min param value that isn't 0
+						float min = 1.f;
+						for (int i = 0; i < 8; i++) {
+							if (weights[i] < min && weights[i] > 0.f) {
+								min = weights[i];
+							}
+						}
+						DEBUG("min is %f", min);
+						// decrement the repeat value by the min value
+						repeat_value -= min;
+						DEBUG("repeat_value after decrement is %f", repeat_value);
+						// if repeat value is greater than 0, keep the same step,
+						// otherwise, advance to next step with a weight greater than 0
+						if (repeat_value > 0.f) {
+							break;
+						}
+						else {
+							DEBUG("repeat_value is 0, advancing to next step");
+							for (int i = 0; i < 8; i++) {
+								if (weights[(step + i + 1) % 8] > 0.f) {
+									step = (step + i + 1) % 8;
+									break;
+								}
+							}
+							repeat_value = params[STEP_1_PARAM + step].getValue();
+							DEBUG("step is now %d", step);
+							DEBUG("repeat_value is now %f", repeat_value);
+						}
+					}
+					else {
+						step = random::uniform() * 8;
+					}
 				}
 			}
 		}
