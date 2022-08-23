@@ -115,8 +115,8 @@ struct Switch81 : Module, SwitchBase {
 					weights[i] = params[STEP_1_PARAM + i].getValue();
 				}
 				else {
-					weights[i] = inputs[STEP_1_CV_INPUT + i].getVoltage();
-					weights[i] = clamp(weights[i] + params[STEP_1_PARAM].getValue(), 0, 1);
+					weights[i] = inputs[STEP_1_CV_INPUT + i].getVoltage() / 5.f;
+					weights[i] = clamp(weights[i] + params[STEP_1_PARAM].getValue(), 0.f, 1.f);
 				}
 			}
 			else {
