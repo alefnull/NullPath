@@ -13,6 +13,7 @@ struct SwitchBase {
 	float pattern[8] = { 0.f };
     float volumes[8] = { 0.f };
 	float repeat_value = 0.f;
+    bool fade_while_switching = true;
 	dsp::SchmittTrigger trigger;
     dsp::SchmittTrigger reset;
     dsp::SchmittTrigger rand_steps_input;

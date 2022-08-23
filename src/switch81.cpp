@@ -144,14 +144,19 @@ struct Switch81 : Module, SwitchBase {
 			advance_steps();
 		}
 
-		for (int v = 0; v < 8; v++) {
-			if (v == current_step) {
-				volumes[v] = clamp(volumes[v] + args.sampleTime * 200.f, 0.f, 1.f);
+		if (fade_while_switching) {
+			for (int v = 0; v < 8; v++) {
+				if (v == current_step) {
+					volumes[v] = clamp(volumes[v] + args.sampleTime * 200.f, 0.f, 1.f);
+				}
+				else {
+					volumes[v] = clamp(volumes[v] - args.sampleTime * 200.f, 0.f, 1.f);
+				}
+				output += inputs[STEP_1_INPUT + v].getVoltage() * volumes[v];
 			}
-			else {
-				volumes[v] = clamp(volumes[v] - args.sampleTime * 200.f, 0.f, 1.f);
-			}
-			output += inputs[STEP_1_INPUT + v].getVoltage() * volumes[v];
+		}
+		else {
+			output = inputs[STEP_1_INPUT + current_step].getVoltage();
 		}
 
 		outputs[SIGNAL_OUTPUT].setVoltage(output);
@@ -216,6 +221,14 @@ struct Switch81Widget : ModuleWidget {
 		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(52.169, 78.928)), module, Switch81::STEP_6_LIGHT));
 		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(52.169, 89.708)), module, Switch81::STEP_7_LIGHT));
 		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(52.169, 100.104)), module, Switch81::STEP_8_LIGHT));
+	}
+
+	void appendContextMenu(Menu* menu) override {
+		Switch81* module = dynamic_cast<Switch81*>(this->module);
+		assert(module);
+
+		menu->addChild(new MenuSeparator());
+		menu->addChild(createMenuItem("Fade while switching", CHECKMARK(module->fade_while_switching), [module]() { module->fade_while_switching = !module->fade_while_switching; }));
 	}
 };
 
