@@ -72,6 +72,7 @@ struct Switch18 : Module, SwitchBase {
 		configParam(STEP_8_PARAM, 0.f, 1.f, 1.f, "step 8 probability");
 		configInput(SIGNAL_INPUT, "signal");
 		configInput(TRIGGER_INPUT, "trigger");
+		configInput(RESET_INPUT, "reset");
 		configInput(RANDOMIZE_STEPS_INPUT, "randomize steps");
 		configInput(RANDOMIZE_MODE_INPUT, "randomize mode");
 		configInput(STEP_1_CV_INPUT, "step 1 cv");
@@ -90,6 +91,10 @@ struct Switch18 : Module, SwitchBase {
 		configOutput(STEP_6_OUTPUT, "step 6");
 		configOutput(STEP_7_OUTPUT, "step 7");
 		configOutput(STEP_8_OUTPUT, "step 8");
+	}
+
+	void onReset() override {
+		current_step = 0;
 	}
 
 	void randomize_steps() {
@@ -120,6 +125,9 @@ struct Switch18 : Module, SwitchBase {
 	}
 
 	void process(const ProcessArgs& args) override {
+		if (reset.process(inputs[RESET_INPUT].getVoltage())) {
+			onReset();
+		}
 		if (rand_steps_input.process(inputs[RANDOMIZE_STEPS_INPUT].getVoltage()) || rand_steps_button.process(params[RANDOMIZE_STEPS_PARAM].getValue() > 0.f)) {
 			randomize_steps();
 		}
@@ -159,6 +167,7 @@ struct Switch18Widget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(8.085, 59.362)), module, Switch18::MODE_PARAM));
 		addParam(createParamCentered<TL1105>(mm2px(Vec(8.085, 70.362)), module, Switch18::RANDOMIZE_STEPS_PARAM));
 		addParam(createParamCentered<TL1105>(mm2px(Vec(8.085, 92.362)), module, Switch18::RANDOMIZE_MODE_PARAM));
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(32.341, 25.796)), module, Switch18::STEP_1_PARAM));
@@ -172,6 +181,7 @@ struct Switch18Widget : ModuleWidget {
 
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.085, 25.796)), module, Switch18::SIGNAL_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.085, 36.769)), module, Switch18::TRIGGER_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.085, 47.769)), module, Switch18::RESET_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.085, 81.362)), module, Switch18::RANDOMIZE_STEPS_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.085, 103.362)), module, Switch18::RANDOMIZE_MODE_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 25.796)), module, Switch18::STEP_1_CV_INPUT));
