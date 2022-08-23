@@ -14,6 +14,7 @@ struct SwitchBase {
     float volumes[8] = { 0.f };
 	float repeat_value = 0.f;
 	dsp::SchmittTrigger trigger;
+    dsp::SchmittTrigger reset;
     dsp::SchmittTrigger rand_steps_input;
     dsp::SchmittTrigger rand_mode_input;
     dsp::BooleanTrigger rand_steps_button;
