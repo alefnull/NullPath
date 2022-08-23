@@ -140,7 +140,7 @@ struct Switch18 : Module, SwitchBase {
 		compute_weights();
 
 		if (trigger.process(inputs[TRIGGER_INPUT].getVoltage())) {
-			do_it_all();
+			advance_steps();
 		}
 		
 		for (int i = 0; i < OUTPUTS_LEN; i++) {

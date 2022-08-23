@@ -53,7 +53,7 @@ struct SwitchBase {
 		}
 	}
 
-	void do_it_all() {
+	void advance_steps() {
         switch (mode) {
         case SELECT_CHANCE:
             {
