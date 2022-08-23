@@ -19,6 +19,7 @@ struct Switch81 : Module, SwitchBase {
 	};
 	enum InputId {
 		TRIGGER_INPUT,
+		RESET_INPUT,
 		RANDOMIZE_STEPS_INPUT,
 		RANDOMIZE_MODE_INPUT,
 		STEP_1_CV_INPUT,
@@ -70,6 +71,7 @@ struct Switch81 : Module, SwitchBase {
 		configParam(STEP_7_PARAM, 0.f, 1.f, 1.f, "step 7");
 		configParam(STEP_8_PARAM, 0.f, 1.f, 1.f, "step 8");
 		configInput(TRIGGER_INPUT, "trigger");
+		configInput(RESET_INPUT, "reset");
 		configInput(RANDOMIZE_STEPS_INPUT, "randomize steps");
 		configInput(RANDOMIZE_MODE_INPUT, "randomize mode");
 		configInput(STEP_1_CV_INPUT, "step 1 CV");
@@ -89,6 +91,10 @@ struct Switch81 : Module, SwitchBase {
 		configInput(STEP_7_INPUT, "step 7");
 		configInput(STEP_8_INPUT, "step 8");
 		configOutput(SIGNAL_OUTPUT, "signal");
+	}
+
+	void onReset() override {
+		current_step = 0;
 	}
 
 	void randomize_steps() {
@@ -119,6 +125,9 @@ struct Switch81 : Module, SwitchBase {
 	}
 
 	void process(const ProcessArgs& args) override {
+		if (reset.process(inputs[RESET_INPUT].getVoltage())) {
+			onReset();
+		}
 		if (rand_steps_input.process(inputs[RANDOMIZE_STEPS_INPUT].getVoltage()) || rand_steps_button.process(params[RANDOMIZE_STEPS_PARAM].getValue() > 0.f)) {
 			randomize_steps();
 		}
@@ -176,6 +185,7 @@ struct Switch81Widget : ModuleWidget {
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(32.341, 100.104)), module, Switch81::STEP_8_PARAM));
 
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.085, 25.988)), module, Switch81::TRIGGER_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.085, 36.988)), module, Switch81::RESET_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.085, 68.581)), module, Switch81::RANDOMIZE_STEPS_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.085, 90.581)), module, Switch81::RANDOMIZE_MODE_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 25.796)), module, Switch81::STEP_1_CV_INPUT));
