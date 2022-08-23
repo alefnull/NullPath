@@ -5,6 +5,8 @@
 struct Switch81 : Module, SwitchBase {
 	enum ParamId {
 		MODE_PARAM,
+		RANDOMIZE_STEPS_PARAM,
+		RANDOMIZE_MODE_PARAM,
 		STEP_1_PARAM,
 		STEP_2_PARAM,
 		STEP_3_PARAM,
@@ -17,6 +19,8 @@ struct Switch81 : Module, SwitchBase {
 	};
 	enum InputId {
 		TRIGGER_INPUT,
+		RANDOMIZE_STEPS_INPUT,
+		RANDOMIZE_MODE_INPUT,
 		STEP_1_CV_INPUT,
 		STEP_2_CV_INPUT,
 		STEP_3_CV_INPUT,
@@ -55,6 +59,8 @@ struct Switch81 : Module, SwitchBase {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
 		configSwitch(MODE_PARAM, 0.f, 3.f, 0.f, "mode", { "select chance", "skip chance", "repeat weight", "fixed pattern" });
 		getParamQuantity(MODE_PARAM)->snapEnabled = true;
+		configParam(RANDOMIZE_STEPS_PARAM, 0.f, 1.f, 0.f, "randomize steps");
+		configParam(RANDOMIZE_MODE_PARAM, 0.f, 1.f, 0.f, "randomize mode");
 		configParam(STEP_1_PARAM, 0.f, 1.f, 1.f, "step 1");
 		configParam(STEP_2_PARAM, 0.f, 1.f, 1.f, "step 2");
 		configParam(STEP_3_PARAM, 0.f, 1.f, 1.f, "step 3");
@@ -64,6 +70,8 @@ struct Switch81 : Module, SwitchBase {
 		configParam(STEP_7_PARAM, 0.f, 1.f, 1.f, "step 7");
 		configParam(STEP_8_PARAM, 0.f, 1.f, 1.f, "step 8");
 		configInput(TRIGGER_INPUT, "trigger");
+		configInput(RANDOMIZE_STEPS_INPUT, "randomize steps");
+		configInput(RANDOMIZE_MODE_INPUT, "randomize mode");
 		configInput(STEP_1_CV_INPUT, "step 1 CV");
 		configInput(STEP_2_CV_INPUT, "step 2 CV");
 		configInput(STEP_3_CV_INPUT, "step 3 CV");
@@ -81,6 +89,16 @@ struct Switch81 : Module, SwitchBase {
 		configInput(STEP_7_INPUT, "step 7");
 		configInput(STEP_8_INPUT, "step 8");
 		configOutput(SIGNAL_OUTPUT, "signal");
+	}
+
+	void randomize_steps() {
+		for (int i = 0; i < 8; i++) {
+			params[STEP_1_PARAM + i].setValue(random::uniform());
+		}
+	}
+
+	void randomize_mode() {
+		params[MODE_PARAM].setValue((int)(random::uniform() * 4));
 	}
 
 	void compute_weights() {
@@ -101,6 +119,12 @@ struct Switch81 : Module, SwitchBase {
 	}
 
 	void process(const ProcessArgs& args) override {
+		if (rand_steps_input.process(inputs[RANDOMIZE_STEPS_INPUT].getVoltage()) || rand_steps_button.process(params[RANDOMIZE_STEPS_PARAM].getValue() > 0.f)) {
+			randomize_steps();
+		}
+		if (rand_mode_input.process(inputs[RANDOMIZE_MODE_INPUT].getVoltage()) || rand_mode_button.process(params[RANDOMIZE_MODE_PARAM].getValue() > 0.f)) {
+			randomize_mode();
+		}
 		float output = 0.f;
 		mode = (int)params[MODE_PARAM].getValue();
 
@@ -139,9 +163,11 @@ struct Switch81Widget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(8.085, 48.581)), module, Switch81::MODE_PARAM));
+		addParam(createParamCentered<TL1105>(mm2px(Vec(8.085, 58.581)), module, Switch81::RANDOMIZE_STEPS_PARAM));
+		addParam(createParamCentered<TL1105>(mm2px(Vec(8.085, 79.581)), module, Switch81::RANDOMIZE_MODE_PARAM));
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(32.341, 25.796)), module, Switch81::STEP_1_PARAM));
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(32.341, 35.806)), module, Switch81::STEP_2_PARAM));
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(8.085, 41.581)), module, Switch81::MODE_PARAM));
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(32.341, 46.202)), module, Switch81::STEP_3_PARAM));
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(32.341, 56.597)), module, Switch81::STEP_4_PARAM));
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(32.341, 67.955)), module, Switch81::STEP_5_PARAM));
@@ -149,8 +175,10 @@ struct Switch81Widget : ModuleWidget {
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(32.341, 89.708)), module, Switch81::STEP_7_PARAM));
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(32.341, 100.104)), module, Switch81::STEP_8_PARAM));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 25.796)), module, Switch81::STEP_1_CV_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.085, 25.988)), module, Switch81::TRIGGER_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.085, 68.581)), module, Switch81::RANDOMIZE_STEPS_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.085, 90.581)), module, Switch81::RANDOMIZE_MODE_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 25.796)), module, Switch81::STEP_1_CV_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(43.892, 25.796)), module, Switch81::STEP_1_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 35.806)), module, Switch81::STEP_2_CV_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(43.892, 35.806)), module, Switch81::STEP_2_INPUT));
