@@ -11,6 +11,7 @@ struct SwitchBase {
 	int current_step = 0;
 	float weights[8] = { 0.f };
 	float pattern[8] = { 0.f };
+    float volumes[8] = { 0.f };
 	float repeat_value = 0.f;
 	dsp::SchmittTrigger trigger;
 

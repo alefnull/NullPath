@@ -111,7 +111,13 @@ struct Switch18 : Module, SwitchBase {
 		}
 		
 		for (int i = 0; i < OUTPUTS_LEN; i++) {
-			outputs[STEP_1_OUTPUT + i].setVoltage(i == current_step ? signal : 0.f);
+			if (i == current_step) {
+				volumes[i] = clamp(volumes[i] + args.sampleTime * 200.f, 0.f, 1.f);
+			}
+			else {
+				volumes[i] = clamp(volumes[i] - args.sampleTime * 200.f, 0.f, 1.f);
+			}
+			outputs[STEP_1_OUTPUT + i].setVoltage(signal * volumes[i]);
 			lights[STEP_1_LIGHT + i].setBrightness(i == current_step ? 1.f : 0.f);
 		}
 	}

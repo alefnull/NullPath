@@ -110,7 +110,16 @@ struct Switch81 : Module, SwitchBase {
 			do_it_all();
 		}
 
-		output = inputs[STEP_1_INPUT + current_step].getVoltage();
+		for (int v = 0; v < 8; v++) {
+			if (v == current_step) {
+				volumes[v] = clamp(volumes[v] + args.sampleTime * 200.f, 0.f, 1.f);
+			}
+			else {
+				volumes[v] = clamp(volumes[v] - args.sampleTime * 200.f, 0.f, 1.f);
+			}
+			output += inputs[STEP_1_INPUT + v].getVoltage() * volumes[v];
+		}
+
 		outputs[SIGNAL_OUTPUT].setVoltage(output);
 
 		for (int i = 0; i < 8; i++) {
