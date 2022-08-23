@@ -31,7 +31,6 @@ struct SwitchBase {
 	void skip_steps(int depth) {
 		int d = depth;
 		if (d < 1) {
-			current_step = random::uniform() * 8;
 			return;
 		}
 		if (depth > 8) {
@@ -60,8 +59,7 @@ struct SwitchBase {
             {
                 float sum = calculate_sum(weights);
                 if (sum == 0.f) {
-                    current_step = random::uniform() * 8;
-
+                    break;
                 }
                 else {
                     float r = random::uniform() * sum;
@@ -97,7 +95,7 @@ struct SwitchBase {
                     skip_steps(8);
                 }
                 else {
-                    current_step = random::uniform() * 8;
+                    break;
                 }
                 break;
             }
@@ -141,16 +139,12 @@ struct SwitchBase {
                         DEBUG("repeat_value is now %f", repeat_value);
                     }
                 }
-                else {
-                    current_step = random::uniform() * 8;
-                }
                 break;
             }
         case FIXED_PATTERN:
             {
                 float sum = calculate_sum(weights);
                 if (sum == 0.f) {
-                    current_step = random::uniform() * 8;
                     break;
                 }
                 // increment stored weights by their param values
