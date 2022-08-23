@@ -60,6 +60,7 @@ struct Switch18 : Module, SwitchBase {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
 		configSwitch(MODE_PARAM, 0.f, 3.f, 0.f, "mode", { "select chance", "skip chance", "repeat weight", "fixed pattern" });
 		getParamQuantity(MODE_PARAM)->snapEnabled = true;
+		getParamQuantity(MODE_PARAM)->randomizeEnabled = false;
 		configParam(RANDOMIZE_STEPS_PARAM, 0.f, 1.f, 0.f, "randomize steps");
 		configParam(RANDOMIZE_MODE_PARAM, 0.f, 1.f, 0.f, "randomize mode");
 		configParam(STEP_1_PARAM, 0.f, 1.f, 1.f, "step 1 probability");
