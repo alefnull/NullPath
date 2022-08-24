@@ -147,10 +147,10 @@ struct Switch18 : Module, SwitchBase {
 		for (int i = 0; i < OUTPUTS_LEN; i++) {
 			if (fade_while_switching) {
 				if (i == current_step) {
-					volumes[i] = clamp(volumes[i] + args.sampleTime * 200.f, 0.f, 1.f);
+					volumes[i] = clamp(volumes[i] + args.sampleTime * (1.f / fade_speed), 0.f, 1.f);
 				}
 				else {
-					volumes[i] = clamp(volumes[i] - args.sampleTime * 200.f, 0.f, 1.f);
+					volumes[i] = clamp(volumes[i] - args.sampleTime * (1.f / fade_speed), 0.f, 1.f);
 				}
 				outputs[STEP_1_OUTPUT + i].setVoltage(signal * volumes[i]);
 			}
@@ -218,12 +218,49 @@ struct Switch18Widget : ModuleWidget {
 		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(52.169, 100.104)), module, Switch18::STEP_8_LIGHT));
 	}
 
+	struct FadeSpeedQuantity : Quantity {
+		float* fade_speed;
+
+		FadeSpeedQuantity(float* fs) {
+			fade_speed = fs;
+		}
+
+		void setValue(float value) override {
+			*fade_speed = clamp(value, 0.5f, 1.5f);
+		}
+
+		float getValue() override {
+			return *fade_speed;
+		}
+		
+		float getMinValue() override {return 0.5f;}
+		float getMaxValue() override {return 1.5f;}
+		float getDefaultValue() override {return 0.5f;}
+		float getDisplayValue() override {return *fade_speed;}
+
+		std::string getUnit() override {
+			return "s";
+		}
+	};
+
+	struct FadeSpeedSlider : ui::Slider {
+		FadeSpeedSlider(float* fade_speed) {
+			quantity = new FadeSpeedQuantity(fade_speed);
+		}
+		~FadeSpeedSlider() {
+			delete quantity;
+		}
+	};
+
 	void appendContextMenu(Menu* menu) override {
 		Switch18* module = dynamic_cast<Switch18*>(this->module);
 		assert(module);
 
 		menu->addChild(new MenuSeparator());
 		menu->addChild(createMenuItem("Fade while switching", CHECKMARK(module->fade_while_switching), [module]() { module->fade_while_switching = !module->fade_while_switching; }));
+		FadeSpeedSlider *fade_slider = new FadeSpeedSlider(&(module->fade_speed));
+		fade_slider->box.size.x = 200.f;
+		menu->addChild(fade_slider);
 	}
 };
 

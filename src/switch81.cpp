@@ -223,12 +223,49 @@ struct Switch81Widget : ModuleWidget {
 		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(52.169, 100.104)), module, Switch81::STEP_8_LIGHT));
 	}
 
+	struct FadeSpeedQuantity : Quantity {
+		float* fade_speed;
+
+		FadeSpeedQuantity(float* fs) {
+			fade_speed = fs;
+		}
+
+		void setValue(float value) override {
+			*fade_speed = clamp(value, 0.5f, 1.5f);
+		}
+
+		float getValue() override {
+			return *fade_speed;
+		}
+		
+		float getMinValue() override {return 0.5f;}
+		float getMaxValue() override {return 1.5f;}
+		float getDefaultValue() override {return 0.5f;}
+		float getDisplayValue() override {return *fade_speed;}
+
+		std::string getUnit() override {
+			return "s";
+		}
+	};
+
+	struct FadeSpeedSlider : ui::Slider {
+		FadeSpeedSlider(float* fade_speed) {
+			quantity = new FadeSpeedQuantity(fade_speed);
+		}
+		~FadeSpeedSlider() {
+			delete quantity;
+		}
+	};
+
 	void appendContextMenu(Menu* menu) override {
 		Switch81* module = dynamic_cast<Switch81*>(this->module);
 		assert(module);
 
 		menu->addChild(new MenuSeparator());
 		menu->addChild(createMenuItem("Fade while switching", CHECKMARK(module->fade_while_switching), [module]() { module->fade_while_switching = !module->fade_while_switching; }));
+		FadeSpeedSlider *fade_slider = new FadeSpeedSlider(&(module->fade_speed));
+		fade_slider->box.size.x = 200.f;
+		menu->addChild(fade_slider);
 	}
 };
 
