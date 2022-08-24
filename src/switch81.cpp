@@ -147,10 +147,10 @@ struct Switch81 : Module, SwitchBase {
 		if (fade_while_switching) {
 			for (int v = 0; v < 8; v++) {
 				if (v == current_step) {
-					volumes[v] = clamp(volumes[v] + args.sampleTime * 200.f, 0.f, 1.f);
+					volumes[v] = clamp(volumes[v] + args.sampleTime * (1.f / fade_speed), 0.f, 1.f);
 				}
 				else {
-					volumes[v] = clamp(volumes[v] - args.sampleTime * 200.f, 0.f, 1.f);
+					volumes[v] = clamp(volumes[v] - args.sampleTime * (1.f / fade_speed), 0.f, 1.f);
 				}
 				output += inputs[STEP_1_INPUT + v].getVoltage() * volumes[v];
 			}
