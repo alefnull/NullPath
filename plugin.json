@@ -15,7 +15,7 @@
   "modules": [
     {
       "slug": "switch18",
-      "name": "switch18",
+      "name": "Expand",
       "description": "",
       "tags": [
         "Utility"
@@ -23,7 +23,7 @@
     },
     {
       "slug": "switch81",
-      "name": "switch81",
+      "name": "Collapse",
       "description": "",
       "tags": [
         "Utility"
