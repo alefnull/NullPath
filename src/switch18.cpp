@@ -226,16 +226,16 @@ struct Switch18Widget : ModuleWidget {
 		}
 
 		void setValue(float value) override {
-			*fade_speed = clamp(value, 0.5f, 1.5f);
+			*fade_speed = clamp(value, 0.005f, 1.5f);
 		}
 
 		float getValue() override {
 			return *fade_speed;
 		}
 		
-		float getMinValue() override {return 0.5f;}
+		float getMinValue() override {return 0.005f;}
 		float getMaxValue() override {return 1.5f;}
-		float getDefaultValue() override {return 0.5f;}
+		float getDefaultValue() override {return 0.005f;}
 		float getDisplayValue() override {return *fade_speed;}
 
 		std::string getUnit() override {
