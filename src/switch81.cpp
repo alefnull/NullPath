@@ -231,7 +231,7 @@ struct Switch81Widget : ModuleWidget {
 		}
 
 		void setValue(float value) override {
-			*fade_speed = clamp(value, 0.005f, 1.5f);
+			*fade_speed = clamp(value, 0.005f, 10.f);
 		}
 
 		float getValue() override {
@@ -239,7 +239,7 @@ struct Switch81Widget : ModuleWidget {
 		}
 		
 		float getMinValue() override {return 0.005f;}
-		float getMaxValue() override {return 1.5f;}
+		float getMaxValue() override {return 10.f;}
 		float getDefaultValue() override {return 0.005f;}
 		float getDisplayValue() override {return *fade_speed;}
 
