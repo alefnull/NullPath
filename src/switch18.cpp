@@ -160,6 +160,22 @@ struct Switch18 : Module, SwitchBase {
 			lights[STEP_1_LIGHT + i].setBrightness(i == current_step ? 1.f : 0.f);
 		}
 	}
+
+    json_t* dataToJson() override {
+        json_t* rootJ = json_object();
+        json_object_set_new(rootJ, "fade_while_switching", json_boolean(fade_while_switching));
+        json_object_set_new(rootJ, "fade_speed", json_real(fade_speed));
+        return rootJ;
+    }
+
+    void dataFromJson(json_t* rootJ) override {
+        json_t* fadeJ = json_object_get(rootJ, "fade_while_switching");
+        if (fadeJ)
+            fade_while_switching = json_boolean_value(fadeJ);
+        json_t* fade_speedJ = json_object_get(rootJ, "fade_speed");
+        if (fade_speedJ)
+            fade_speed = json_real_value(fade_speedJ);
+    }
 };
 
 
