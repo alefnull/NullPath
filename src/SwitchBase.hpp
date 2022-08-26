@@ -114,16 +114,7 @@ struct SwitchBase {
                     }
                 }
                 if (!all_zero) {
-                    // find the min param value that isn't 0
-                    float min = 1.f;
-                    for (int i = 0; i < STEP_COUNT; i++) {
-                        if (weights[i] < min && weights[i] > 0.f) {
-                            min = weights[i];
-                        }
-                    }
-                    DEBUG("min is %f", min);
-                    // decrement the repeat value by the min value
-                    repeat_value -= min;
+                    repeat_value -= 0.1f;
                     DEBUG("repeat_value after decrement is %f", repeat_value);
                     // if repeat value is greater than 0, keep the same step,
                     // otherwise, advance to next step with a weight greater than 0
