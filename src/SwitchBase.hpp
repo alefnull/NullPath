@@ -1,6 +1,7 @@
 #include "plugin.hpp"
 
 #define STEP_COUNT 9
+#define MAX_POLY 16
 
 struct SwitchBase {
 	enum Mode {

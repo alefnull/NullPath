@@ -127,16 +127,7 @@ struct Switch18 : Module, SwitchBase {
 	}
 
 	void process(const ProcessArgs& args) override {
-		if (reset.process(inputs[RESET_INPUT].getVoltage())) {
-			onReset();
-		}
-		if (rand_steps_input.process(inputs[RANDOMIZE_STEPS_INPUT].getVoltage()) || rand_steps_button.process(params[RANDOMIZE_STEPS_PARAM].getValue() > 0.f)) {
-			randomize_steps();
-		}
-		if (rand_mode_input.process(inputs[RANDOMIZE_MODE_INPUT].getVoltage()) || rand_mode_button.process(params[RANDOMIZE_MODE_PARAM].getValue() > 0.f)) {
-			randomize_mode();
-		}
-		float signal = inputs[SIGNAL_INPUT].getVoltage();
+		int channels = inputs[SIGNAL_INPUT].getChannels();
 		mode = (int)params[MODE_PARAM].getValue();
 
 		compute_weights();
@@ -145,25 +136,43 @@ struct Switch18 : Module, SwitchBase {
 			advance_steps();
 		}
 		
-		for (int i = 0; i < OUTPUTS_LEN; i++) {
-			if (fade_while_switching) {
-				if (i == current_step) {
-					volumes[i] = clamp(volumes[i] + args.sampleTime * (1.f / fade_speed), 0.f, 1.f);
+		for (int c = 0; c < channels; c++) {
+			float signal = inputs[SIGNAL_INPUT].getPolyVoltage(c);
+			for (int i = 0; i < OUTPUTS_LEN; i++) {
+				if (fade_while_switching) {
+					if (i == current_step) {
+						volumes[i] = clamp(volumes[i] + args.sampleTime * (1.f / fade_speed), 0.f, 1.f);
+						outputs[STEP_1_OUTPUT + i].setChannels(channels);
+						outputs[STEP_1_OUTPUT + i].setVoltage(signal * volumes[i], c);
+					}
+					else {
+						volumes[i] = clamp(volumes[i] - args.sampleTime * (1.f / fade_speed), 0.f, 1.f);
+						outputs[STEP_1_OUTPUT + i].setChannels(1);
+						outputs[STEP_1_OUTPUT + i].setVoltage(signal * volumes[i]);
+					}
 				}
 				else {
-					volumes[i] = clamp(volumes[i] - args.sampleTime * (1.f / fade_speed), 0.f, 1.f);
+					if (i == current_step) {
+						outputs[STEP_1_OUTPUT + i].setChannels(channels);
+						outputs[STEP_1_OUTPUT + i].setVoltage(signal, c);
+					}
+					else {
+						outputs[STEP_1_OUTPUT + i].setChannels(1);
+						outputs[STEP_1_OUTPUT +i].setVoltage(0.f);
+					}
 				}
-				outputs[STEP_1_OUTPUT + i].setVoltage(signal * volumes[i]);
+				lights[STEP_1_LIGHT + i].setBrightness(i == current_step ? 1.f : 0.f);
 			}
-			else {
-				if (i == current_step) {
-					outputs[STEP_1_OUTPUT + i].setVoltage(signal);
-				}
-				else {
-					outputs[STEP_1_OUTPUT +i].setVoltage(0.f);
-				}
-			}
-			lights[STEP_1_LIGHT + i].setBrightness(i == current_step ? 1.f : 0.f);
+		}
+
+		if (reset.process(inputs[RESET_INPUT].getVoltage())) {
+			onReset();
+		}
+		if (rand_steps_input.process(inputs[RANDOMIZE_STEPS_INPUT].getVoltage()) || rand_steps_button.process(params[RANDOMIZE_STEPS_PARAM].getValue() > 0.f)) {
+			randomize_steps();
+		}
+		if (rand_mode_input.process(inputs[RANDOMIZE_MODE_INPUT].getVoltage()) || rand_mode_button.process(params[RANDOMIZE_MODE_PARAM].getValue() > 0.f)) {
+			randomize_mode();
 		}
 	}
 

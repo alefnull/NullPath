@@ -133,16 +133,6 @@ struct Switch81 : Module, SwitchBase {
 	}
 
 	void process(const ProcessArgs& args) override {
-		if (reset.process(inputs[RESET_INPUT].getVoltage())) {
-			onReset();
-		}
-		if (rand_steps_input.process(inputs[RANDOMIZE_STEPS_INPUT].getVoltage()) || rand_steps_button.process(params[RANDOMIZE_STEPS_PARAM].getValue() > 0.f)) {
-			randomize_steps();
-		}
-		if (rand_mode_input.process(inputs[RANDOMIZE_MODE_INPUT].getVoltage()) || rand_mode_button.process(params[RANDOMIZE_MODE_PARAM].getValue() > 0.f)) {
-			randomize_mode();
-		}
-		float output = 0.f;
 		mode = (int)params[MODE_PARAM].getValue();
 
 		compute_weights();
@@ -151,25 +141,44 @@ struct Switch81 : Module, SwitchBase {
 			advance_steps();
 		}
 
-		if (fade_while_switching) {
-			for (int v = 0; v < STEP_COUNT; v++) {
-				if (v == current_step) {
-					volumes[v] = clamp(volumes[v] + args.sampleTime * (1.f / fade_speed), 0.f, 1.f);
-				}
-				else {
-					volumes[v] = clamp(volumes[v] - args.sampleTime * (1.f / fade_speed), 0.f, 1.f);
-				}
-				output += inputs[STEP_1_INPUT + v].getVoltage() * volumes[v];
-			}
+		int channels = inputs[STEP_1_INPUT + current_step].getChannels();
+		if (channels > MAX_POLY) {
+			channels = MAX_POLY;
 		}
-		else {
-			output = inputs[STEP_1_INPUT + current_step].getVoltage();
-		}
+		outputs[SIGNAL_OUTPUT].setChannels(channels);
 
-		outputs[SIGNAL_OUTPUT].setVoltage(output);
+		for (int c = 0; c < channels; c++) {
+			float output = 0.f;
+			if (fade_while_switching) {
+				for (int v = 0; v < STEP_COUNT; v++) {
+					if (v == current_step) {
+						volumes[v] = clamp(volumes[v] + args.sampleTime * (1.f / fade_speed), 0.f, 1.f);
+					}
+					else {
+						volumes[v] = clamp(volumes[v] - args.sampleTime * (1.f / fade_speed), 0.f, 1.f);
+					}
+					output += inputs[STEP_1_INPUT + v].getPolyVoltage(c) * volumes[v];
+				}
+			}
+			else {
+				output = inputs[STEP_1_INPUT + current_step].getPolyVoltage(c);
+			}
+
+			outputs[SIGNAL_OUTPUT].setVoltage(output, c);
+		}
 
 		for (int i = 0; i < STEP_COUNT; i++) {
 			lights[STEP_1_LIGHT + i].setBrightness(i == current_step ? 1.f : 0.f);
+		}
+
+		if (reset.process(inputs[RESET_INPUT].getVoltage())) {
+			onReset();
+		}
+		if (rand_steps_input.process(inputs[RANDOMIZE_STEPS_INPUT].getVoltage()) || rand_steps_button.process(params[RANDOMIZE_STEPS_PARAM].getValue() > 0.f)) {
+			randomize_steps();
+		}
+		if (rand_mode_input.process(inputs[RANDOMIZE_MODE_INPUT].getVoltage()) || rand_mode_button.process(params[RANDOMIZE_MODE_PARAM].getValue() > 0.f)) {
+			randomize_mode();
 		}
 	}
 
