@@ -15,7 +15,7 @@ struct SwitchBase {
 	float pattern[STEP_COUNT] = { 0.f };
     float volumes[STEP_COUNT] = { 0.f };
 	float repeat_value = 0.f;
-    bool fade_while_switching = true;
+    bool fade_while_switching = false;
     float fade_speed = 0.005f;
 	dsp::SchmittTrigger trigger;
     dsp::SchmittTrigger reset;
