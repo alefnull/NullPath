@@ -1,4 +1,5 @@
 #include "plugin.hpp"
+#include "widgets.hpp"
 #include "SwitchBase.hpp"
 
 

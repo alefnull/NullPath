@@ -1,6 +1,6 @@
 #include "plugin.hpp"
+#include "widgets.hpp"
 #include "SwitchBase.hpp"
-
 
 struct Switch81 : Module, SwitchBase {
 	enum ParamId {
@@ -15,6 +15,7 @@ struct Switch81 : Module, SwitchBase {
 		STEP_6_PARAM,
 		STEP_7_PARAM,
 		STEP_8_PARAM,
+		STEP_9_PARAM,
 		PARAMS_LEN
 	};
 	enum InputId {
@@ -22,14 +23,15 @@ struct Switch81 : Module, SwitchBase {
 		RESET_INPUT,
 		RANDOMIZE_STEPS_INPUT,
 		RANDOMIZE_MODE_INPUT,
-		STEP_1_CV_INPUT,
-		STEP_2_CV_INPUT,
-		STEP_3_CV_INPUT,
-		STEP_4_CV_INPUT,
-		STEP_5_CV_INPUT,
-		STEP_6_CV_INPUT,
-		STEP_7_CV_INPUT,
-		STEP_8_CV_INPUT,
+		STEP_CV_1_INPUT,
+		STEP_CV_2_INPUT,
+		STEP_CV_3_INPUT,
+		STEP_CV_4_INPUT,
+		STEP_CV_5_INPUT,
+		STEP_CV_6_INPUT,
+		STEP_CV_7_INPUT,
+		STEP_CV_8_INPUT,
+		STEP_CV_9_INPUT,
 		STEP_1_INPUT,
 		STEP_2_INPUT,
 		STEP_3_INPUT,
@@ -38,6 +40,7 @@ struct Switch81 : Module, SwitchBase {
 		STEP_6_INPUT,
 		STEP_7_INPUT,
 		STEP_8_INPUT,
+		STEP_9_INPUT,
 		INPUTS_LEN
 	};
 	enum OutputId {
@@ -53,6 +56,7 @@ struct Switch81 : Module, SwitchBase {
 		STEP_6_LIGHT,
 		STEP_7_LIGHT,
 		STEP_8_LIGHT,
+		STEP_9_LIGHT,
 		LIGHTS_LEN
 	};
 
@@ -71,18 +75,20 @@ struct Switch81 : Module, SwitchBase {
 		configParam(STEP_6_PARAM, 0.f, 1.f, 1.f, "step 6");
 		configParam(STEP_7_PARAM, 0.f, 1.f, 1.f, "step 7");
 		configParam(STEP_8_PARAM, 0.f, 1.f, 1.f, "step 8");
+		configParam(STEP_9_PARAM, 0.f, 1.f, 1.f, "step 9");
 		configInput(TRIGGER_INPUT, "trigger");
 		configInput(RESET_INPUT, "reset");
 		configInput(RANDOMIZE_STEPS_INPUT, "randomize steps");
 		configInput(RANDOMIZE_MODE_INPUT, "randomize mode");
-		configInput(STEP_1_CV_INPUT, "step 1 CV");
-		configInput(STEP_2_CV_INPUT, "step 2 CV");
-		configInput(STEP_3_CV_INPUT, "step 3 CV");
-		configInput(STEP_4_CV_INPUT, "step 4 CV");
-		configInput(STEP_5_CV_INPUT, "step 5 CV");
-		configInput(STEP_6_CV_INPUT, "step 6 CV");
-		configInput(STEP_7_CV_INPUT, "step 7 CV");
-		configInput(STEP_8_CV_INPUT, "step 8 CV");
+		configInput(STEP_CV_1_INPUT, "step 1 CV");
+		configInput(STEP_CV_2_INPUT, "step 2 CV");
+		configInput(STEP_CV_3_INPUT, "step 3 CV");
+		configInput(STEP_CV_4_INPUT, "step 4 CV");
+		configInput(STEP_CV_5_INPUT, "step 5 CV");
+		configInput(STEP_CV_6_INPUT, "step 6 CV");
+		configInput(STEP_CV_7_INPUT, "step 7 CV");
+		configInput(STEP_CV_8_INPUT, "step 8 CV");
+		configInput(STEP_CV_9_INPUT, "step 9 CV");
 		configInput(STEP_1_INPUT, "step 1");
 		configInput(STEP_2_INPUT, "step 2");
 		configInput(STEP_3_INPUT, "step 3");
@@ -91,6 +97,7 @@ struct Switch81 : Module, SwitchBase {
 		configInput(STEP_6_INPUT, "step 6");
 		configInput(STEP_7_INPUT, "step 7");
 		configInput(STEP_8_INPUT, "step 8");
+		configInput(STEP_9_INPUT, "step 9");
 		configOutput(SIGNAL_OUTPUT, "signal");
 	}
 
@@ -99,7 +106,7 @@ struct Switch81 : Module, SwitchBase {
 	}
 
 	void randomize_steps() {
-		for (int i = 0; i < 8; i++) {
+		for (int i = 0; i < STEP_COUNT; i++) {
 			params[STEP_1_PARAM + i].setValue(random::uniform());
 		}
 	}
@@ -109,13 +116,13 @@ struct Switch81 : Module, SwitchBase {
 	}
 
 	void compute_weights() {
-		for (int i = 0; i < 8; i++) {
+		for (int i = 0; i < STEP_COUNT; i++) {
 			if (inputs[STEP_1_INPUT + i].isConnected()) {
-				if (!inputs[STEP_1_CV_INPUT + i].isConnected()) {
+				if (!inputs[STEP_CV_1_INPUT + i].isConnected()) {
 					weights[i] = params[STEP_1_PARAM + i].getValue();
 				}
 				else {
-					weights[i] = inputs[STEP_1_CV_INPUT + i].getVoltage() / 5.f;
+					weights[i] = inputs[STEP_CV_1_INPUT + i].getVoltage() / 5.f;
 					weights[i] = clamp(weights[i] + params[STEP_1_PARAM].getValue(), 0.f, 1.f);
 				}
 			}
@@ -145,7 +152,7 @@ struct Switch81 : Module, SwitchBase {
 		}
 
 		if (fade_while_switching) {
-			for (int v = 0; v < 8; v++) {
+			for (int v = 0; v < STEP_COUNT; v++) {
 				if (v == current_step) {
 					volumes[v] = clamp(volumes[v] + args.sampleTime * (1.f / fade_speed), 0.f, 1.f);
 				}
@@ -161,7 +168,7 @@ struct Switch81 : Module, SwitchBase {
 
 		outputs[SIGNAL_OUTPUT].setVoltage(output);
 
-		for (int i = 0; i < 8; i++) {
+		for (int i = 0; i < STEP_COUNT; i++) {
 			lights[STEP_1_LIGHT + i].setBrightness(i == current_step ? 1.f : 0.f);
 		}
 	}
@@ -187,56 +194,60 @@ struct Switch81 : Module, SwitchBase {
 struct Switch81Widget : ModuleWidget {
 	Switch81Widget(Switch81* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/switch81.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/Collapse.svg")));
 
-		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		addChild(createWidget<ScrewBlack>(Vec(RACK_GRID_WIDTH, 0)));
+		addChild(createWidget<ScrewBlack>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
+		addChild(createWidget<ScrewBlack>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		addChild(createWidget<ScrewBlack>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(8.085, 48.581)), module, Switch81::MODE_PARAM));
-		addParam(createParamCentered<TL1105>(mm2px(Vec(8.085, 58.581)), module, Switch81::RANDOMIZE_STEPS_PARAM));
-		addParam(createParamCentered<TL1105>(mm2px(Vec(8.085, 79.581)), module, Switch81::RANDOMIZE_MODE_PARAM));
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(32.341, 25.796)), module, Switch81::STEP_1_PARAM));
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(32.341, 35.806)), module, Switch81::STEP_2_PARAM));
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(32.341, 46.202)), module, Switch81::STEP_3_PARAM));
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(32.341, 56.597)), module, Switch81::STEP_4_PARAM));
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(32.341, 67.955)), module, Switch81::STEP_5_PARAM));
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(32.341, 78.928)), module, Switch81::STEP_6_PARAM));
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(32.341, 89.708)), module, Switch81::STEP_7_PARAM));
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(32.341, 100.104)), module, Switch81::STEP_8_PARAM));
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(23.303, 16.401)), module, Switch81::STEP_1_PARAM));
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(19.171, 28.368)), module, Switch81::STEP_2_PARAM));
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(20.896, 42.491)), module, Switch81::STEP_3_PARAM));
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(24.638, 53.697)), module, Switch81::STEP_4_PARAM));
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(19.963, 64.122)), module, Switch81::STEP_5_PARAM));
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(24.411, 76.411)), module, Switch81::STEP_6_PARAM));
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(27.728, 88.871)), module, Switch81::STEP_7_PARAM));
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(28.743, 101.797)), module, Switch81::STEP_8_PARAM));
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(35.896, 112.878)), module, Switch81::STEP_9_PARAM));
+		addParam(createParamCentered<NP::Button>(mm2px(Vec(56.547, 77.941)), module, Switch81::RANDOMIZE_MODE_PARAM));
+		addParam(createParamCentered<SwitchModeSwitch>(mm2px(Vec(52.389, 91.291)), module, Switch81::MODE_PARAM));
+		addParam(createParamCentered<NP::Button>(mm2px(Vec(56.396, 114.105)), module, Switch81::RANDOMIZE_STEPS_PARAM));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.085, 25.988)), module, Switch81::TRIGGER_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.085, 36.988)), module, Switch81::RESET_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.085, 68.581)), module, Switch81::RANDOMIZE_STEPS_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.085, 90.581)), module, Switch81::RANDOMIZE_MODE_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 25.796)), module, Switch81::STEP_1_CV_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(43.892, 25.796)), module, Switch81::STEP_1_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 35.806)), module, Switch81::STEP_2_CV_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(43.892, 35.806)), module, Switch81::STEP_2_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 46.202)), module, Switch81::STEP_3_CV_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(43.892, 46.202)), module, Switch81::STEP_3_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 56.597)), module, Switch81::STEP_4_CV_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(43.892, 56.597)), module, Switch81::STEP_4_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 67.955)), module, Switch81::STEP_5_CV_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(43.892, 67.955)), module, Switch81::STEP_5_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 78.928)), module, Switch81::STEP_6_CV_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(43.892, 78.928)), module, Switch81::STEP_6_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 89.708)), module, Switch81::STEP_7_CV_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(43.892, 89.708)), module, Switch81::STEP_7_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 100.104)), module, Switch81::STEP_8_CV_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(43.892, 100.104)), module, Switch81::STEP_8_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(5.742, 20.17)), module, Switch81::STEP_1_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(4.888, 30.285)), module, Switch81::STEP_2_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(5.6, 40.827)), module, Switch81::STEP_3_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(5.173, 53.507)), module, Switch81::STEP_4_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(6.17, 65.901)), module, Switch81::STEP_5_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(9.481, 77.614)), module, Switch81::STEP_6_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(13.56, 90.215)), module, Switch81::STEP_7_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(9.117, 99.966)), module, Switch81::STEP_8_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(7.786, 112.763)), module, Switch81::STEP_9_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(33.446, 15.684)), module, Switch81::STEP_CV_1_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(29.719, 30.996)), module, Switch81::STEP_CV_2_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(31.029, 41.271)), module, Switch81::STEP_CV_3_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(34.727, 51.552)), module, Switch81::STEP_CV_4_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(31.293, 63.825)), module, Switch81::STEP_CV_5_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(34.219, 72.616)), module, Switch81::STEP_CV_6_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(36.213, 82.677)), module, Switch81::STEP_CV_7_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(36.925, 95.357)), module, Switch81::STEP_CV_8_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(42.267, 104.474)), module, Switch81::STEP_CV_9_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(47.92, 114.105)), module, Switch81::RANDOMIZE_STEPS_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(50.996, 19.826)), module, Switch81::TRIGGER_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(50.996, 32.866)), module, Switch81::RESET_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(48.071, 77.941)), module, Switch81::RANDOMIZE_MODE_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(8.085, 99.911)), module, Switch81::SIGNAL_OUTPUT));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(53.725, 54.162)), module, Switch81::SIGNAL_OUTPUT));
 
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(52.169, 25.796)), module, Switch81::STEP_1_LIGHT));
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(52.169, 35.806)), module, Switch81::STEP_2_LIGHT));
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(52.169, 46.202)), module, Switch81::STEP_3_LIGHT));
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(52.169, 56.597)), module, Switch81::STEP_4_LIGHT));
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(52.169, 67.955)), module, Switch81::STEP_5_LIGHT));
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(52.169, 78.928)), module, Switch81::STEP_6_LIGHT));
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(52.169, 89.708)), module, Switch81::STEP_7_LIGHT));
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(52.169, 100.104)), module, Switch81::STEP_8_LIGHT));
+		addChild(createLightCentered<MediumLight<NP::TealLight>>(mm2px(Vec(13.423, 18.191)), module, Switch81::STEP_1_LIGHT));
+		addChild(createLightCentered<MediumLight<NP::TealLight>>(mm2px(Vec(11.018, 28.774)), module, Switch81::STEP_2_LIGHT));
+		addChild(createLightCentered<MediumLight<NP::TealLight>>(mm2px(Vec(12.428, 41.366)), module, Switch81::STEP_3_LIGHT));
+		addChild(createLightCentered<MediumLight<NP::TealLight>>(mm2px(Vec(13.838, 53.958)), module, Switch81::STEP_4_LIGHT));
+		addChild(createLightCentered<MediumLight<NP::TealLight>>(mm2px(Vec(12.025, 63.629)), module, Switch81::STEP_5_LIGHT));
+		addChild(createLightCentered<MediumLight<NP::TealLight>>(mm2px(Vec(16.133, 76.868)), module, Switch81::STEP_6_LIGHT));
+		addChild(createLightCentered<MediumLight<NP::TealLight>>(mm2px(Vec(19.623, 91.755)), module, Switch81::STEP_7_LIGHT));
+		addChild(createLightCentered<MediumLight<NP::TealLight>>(mm2px(Vec(17.914, 99.876)), module, Switch81::STEP_8_LIGHT));
+		addChild(createLightCentered<MediumLight<NP::TealLight>>(mm2px(Vec(20.122, 107.996)), module, Switch81::STEP_9_LIGHT));
 	}
 
 	struct FadeSpeedQuantity : Quantity {

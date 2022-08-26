@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="7.555315mm"
+   height="7.555315mm"
+   viewBox="0 0 7.555315 7.555315"
+   version="1.1"
+   id="svg11048"
+   inkscape:version="1.0 (4035a4fb49, 2020-05-01)"
+   sodipodi:docname="button_1.svg">
+  <defs
+     id="defs11042">
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient2354"
+       id="linearGradient8130"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(0.92592591,0,0,0.92592591,19.250184,-126.54051)"
+       x1="-16.724863"
+       y1="129.35089"
+       x2="-16.653629"
+       y2="135.26315" />
+    <linearGradient
+       id="linearGradient2354"
+       inkscape:collect="always">
+      <stop
+         id="stop2350"
+         offset="0"
+         style="stop-color:#a0f8f9;stop-opacity:1" />
+      <stop
+         id="stop2352"
+         offset="1"
+         style="stop-color:#a0f8f9;stop-opacity:0" />
+    </linearGradient>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#808080"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="11.2"
+     inkscape:cx="49.295925"
+     inkscape:cy="32.571837"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     inkscape:document-rotation="0"
+     showgrid="false"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
+     inkscape:window-x="1912"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata11045">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <circle
+       style="color:#000000;font-variation-settings:normal;overflow:visible;vector-effect:none;fill:#1f5455;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.692622;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker:none;stop-color:#000000"
+       id="circle5556"
+       cx="3.7776573"
+       cy="3.7776601"
+       r="3.7776575" />
+    <circle
+       transform="scale(1,-1)"
+       r="3.3819232"
+       cy="-3.7702003"
+       cx="3.7642"
+       id="circle5558"
+       style="color:#000000;font-variation-settings:normal;display:inline;overflow:visible;opacity:0.3;vector-effect:none;fill:url(#linearGradient8130);fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.620064;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker:none;stop-color:#000000" />
+  </g>
+</svg>

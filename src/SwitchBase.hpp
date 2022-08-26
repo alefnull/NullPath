@@ -1,5 +1,7 @@
 #include "plugin.hpp"
 
+#define STEP_COUNT 9
+
 struct SwitchBase {
 	enum Mode {
 		SELECT_CHANCE,
@@ -9,9 +11,9 @@ struct SwitchBase {
 	};
 	int mode = 0;
 	int current_step = 0;
-	float weights[8] = { 0.f };
-	float pattern[8] = { 0.f };
-    float volumes[8] = { 0.f };
+	float weights[STEP_COUNT] = { 0.f };
+	float pattern[STEP_COUNT] = { 0.f };
+    float volumes[STEP_COUNT] = { 0.f };
 	float repeat_value = 0.f;
     bool fade_while_switching = true;
     float fade_speed = 0.005f;
@@ -22,9 +24,9 @@ struct SwitchBase {
     dsp::BooleanTrigger rand_steps_button;
     dsp::BooleanTrigger rand_mode_button;
 
-	float calculate_sum(float w[8]) {
+	float calculate_sum(float w[STEP_COUNT]) {
 		float sum = 0.f;
-		for (int i = 0; i < 8; i++) {
+		for (int i = 0; i < STEP_COUNT; i++) {
 			sum += w[i];
 		}
 		return sum;
@@ -35,12 +37,12 @@ struct SwitchBase {
 		if (d < 1) {
 			return;
 		}
-		if (depth > 8) {
-			d = 8;
+		if (depth > STEP_COUNT) {
+			d = STEP_COUNT;
 		}
 		DEBUG("incrementing current_step");
 		current_step++;
-		if (current_step > 7) {
+		if (current_step >= STEP_COUNT) {
 			current_step = 0;
 		}
 		DEBUG("current_step is now %d", current_step);
@@ -66,7 +68,7 @@ struct SwitchBase {
                 else {
                     float r = random::uniform() * sum;
 
-                    for (int i = 0; i < 8; i++) {
+                    for (int i = 0; i < STEP_COUNT; i++) {
                         r -= weights[i];
                         if (r <= 0.f) {
                             if (weights[i] > 0.f) {
@@ -85,7 +87,7 @@ struct SwitchBase {
         case SKIP_CHANCE:
             {
                 bool all_zero = true;
-                for (int i = 0; i < 8; i++) {
+                for (int i = 0; i < STEP_COUNT; i++) {
                     if (weights[i] > 0.f) {
                         all_zero = false;
                         DEBUG("non-zero weight of %f found at index %d", weights[i], i);
@@ -94,7 +96,7 @@ struct SwitchBase {
                 }
                 DEBUG("all_zero is %d", all_zero);
                 if (!all_zero) {
-                    skip_steps(8);
+                    skip_steps(STEP_COUNT);
                 }
                 else {
                     break;
@@ -105,7 +107,7 @@ struct SwitchBase {
             {
                 // if all weights are zero, just pick a random step
                 bool all_zero = true;
-                for (int i = 0; i < 8; i++) {
+                for (int i = 0; i < STEP_COUNT; i++) {
                     if (weights[i] > 0.f) {
                         all_zero = false;
                         break;
@@ -114,7 +116,7 @@ struct SwitchBase {
                 if (!all_zero) {
                     // find the min param value that isn't 0
                     float min = 1.f;
-                    for (int i = 0; i < 8; i++) {
+                    for (int i = 0; i < STEP_COUNT; i++) {
                         if (weights[i] < min && weights[i] > 0.f) {
                             min = weights[i];
                         }
@@ -130,9 +132,9 @@ struct SwitchBase {
                     }
                     else {
                         DEBUG("repeat_value is 0, advancing to next step");
-                        for (int i = 0; i < 8; i++) {
-                            if (weights[(current_step + i + 1) % 8] > 0.f) {
-                                current_step = (current_step + i + 1) % 8;
+                        for (int i = 0; i < STEP_COUNT; i++) {
+                            if (weights[(current_step + i + 1) % STEP_COUNT] > 0.f) {
+                                current_step = (current_step + i + 1) % STEP_COUNT;
                                 break;
                             }
                         }
@@ -150,13 +152,13 @@ struct SwitchBase {
                     break;
                 }
                 // increment stored weights by their param values
-                for (int i = 0; i < 8; i++) {
+                for (int i = 0; i < STEP_COUNT; i++) {
                     pattern[i] += weights[i];
                 }
                 // select the port that has the highest stored value
                 float max = 0.f;
                 int max_index = 0;
-                for (int i = 0; i < 8; i++) {
+                for (int i = 0; i < STEP_COUNT; i++) {
                     if (pattern[i] > max) {
                         max = pattern[i];
                         max_index = i;
@@ -168,5 +170,15 @@ struct SwitchBase {
                 break;
             }
 		}
+	}
+};
+
+struct SwitchModeSwitch : app::SvgSwitch {
+	SwitchModeSwitch(){
+		addFrame(Svg::load(asset::plugin(pluginInstance,"res/switch_mode_switch_0.svg")));
+		addFrame(Svg::load(asset::plugin(pluginInstance,"res/switch_mode_switch_1.svg")));
+		addFrame(Svg::load(asset::plugin(pluginInstance,"res/switch_mode_switch_2.svg")));
+		addFrame(Svg::load(asset::plugin(pluginInstance,"res/switch_mode_switch_3.svg")));
+		shadow->blurRadius = 0;
 	}
 };
