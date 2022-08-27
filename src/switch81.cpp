@@ -149,13 +149,13 @@ struct Switch81 : Module, SwitchBase {
 
 		for (int c = 0; c < channels; c++) {
 			float output = 0.f;
-			if (fade_while_switching) {
+			if (crossfade) {
 				for (int v = 0; v < STEP_COUNT; v++) {
 					if (v == current_step) {
-						volumes[v] = clamp(volumes[v] + args.sampleTime * (1.f / fade_speed), 0.f, 1.f);
+						volumes[v] = clamp(volumes[v] + args.sampleTime * (1.f / fade_duration), 0.f, 1.f);
 					}
 					else {
-						volumes[v] = clamp(volumes[v] - args.sampleTime * (1.f / fade_speed), 0.f, 1.f);
+						volumes[v] = clamp(volumes[v] - args.sampleTime * (1.f / fade_duration), 0.f, 1.f);
 					}
 					output += inputs[STEP_1_INPUT + v].getPolyVoltage(c) * volumes[v];
 				}
@@ -184,18 +184,18 @@ struct Switch81 : Module, SwitchBase {
 
     json_t* dataToJson() override {
         json_t* rootJ = json_object();
-        json_object_set_new(rootJ, "fade_while_switching", json_boolean(fade_while_switching));
-        json_object_set_new(rootJ, "fade_speed", json_real(fade_speed));
+        json_object_set_new(rootJ, "crossfade", json_boolean(crossfade));
+        json_object_set_new(rootJ, "fade_duration", json_real(fade_duration));
         return rootJ;
     }
 
     void dataFromJson(json_t* rootJ) override {
-        json_t* fadeJ = json_object_get(rootJ, "fade_while_switching");
+        json_t* fadeJ = json_object_get(rootJ, "crossfade");
         if (fadeJ)
-            fade_while_switching = json_boolean_value(fadeJ);
-        json_t* fade_speedJ = json_object_get(rootJ, "fade_speed");
-        if (fade_speedJ)
-            fade_speed = json_real_value(fade_speedJ);
+            crossfade = json_boolean_value(fadeJ);
+        json_t* fade_durationJ = json_object_get(rootJ, "fade_duration");
+        if (fade_durationJ)
+            fade_duration = json_real_value(fade_durationJ);
     }
 };
 
@@ -259,36 +259,36 @@ struct Switch81Widget : ModuleWidget {
 		addChild(createLightCentered<MediumLight<NP::TealLight>>(mm2px(Vec(20.122, 107.996)), module, Switch81::STEP_9_LIGHT));
 	}
 
-	struct FadeSpeedQuantity : Quantity {
-		float* fade_speed;
+	struct FadeDurationQuantity : Quantity {
+		float* fade_duration;
 
-		FadeSpeedQuantity(float* fs) {
-			fade_speed = fs;
+		FadeDurationQuantity(float* fs) {
+			fade_duration = fs;
 		}
 
 		void setValue(float value) override {
-			*fade_speed = clamp(value, 0.005f, 10.f);
+			*fade_duration = clamp(value, 0.005f, 10.f);
 		}
 
 		float getValue() override {
-			return *fade_speed;
+			return *fade_duration;
 		}
 		
 		float getMinValue() override {return 0.005f;}
 		float getMaxValue() override {return 10.f;}
 		float getDefaultValue() override {return 0.005f;}
-		float getDisplayValue() override {return *fade_speed;}
+		float getDisplayValue() override {return *fade_duration;}
 
 		std::string getUnit() override {
 			return "s";
 		}
 	};
 
-	struct FadeSpeedSlider : ui::Slider {
-		FadeSpeedSlider(float* fade_speed) {
-			quantity = new FadeSpeedQuantity(fade_speed);
+	struct FadeDurationSlider : ui::Slider {
+		FadeDurationSlider(float* fade_duration) {
+			quantity = new FadeDurationQuantity(fade_duration);
 		}
-		~FadeSpeedSlider() {
+		~FadeDurationSlider() {
 			delete quantity;
 		}
 	};
@@ -298,8 +298,8 @@ struct Switch81Widget : ModuleWidget {
 		assert(module);
 
 		menu->addChild(new MenuSeparator());
-		menu->addChild(createMenuItem("Fade while switching", CHECKMARK(module->fade_while_switching), [module]() { module->fade_while_switching = !module->fade_while_switching; }));
-		FadeSpeedSlider *fade_slider = new FadeSpeedSlider(&(module->fade_speed));
+		menu->addChild(createMenuItem("Fade while switching", CHECKMARK(module->crossfade), [module]() { module->crossfade = !module->crossfade; }));
+		FadeDurationSlider *fade_slider = new FadeDurationSlider(&(module->fade_duration));
 		fade_slider->box.size.x = 200.f;
 		menu->addChild(fade_slider);
 	}
