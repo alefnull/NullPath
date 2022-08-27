@@ -41,19 +41,15 @@ struct SwitchBase {
 		if (depth > STEP_COUNT) {
 			d = STEP_COUNT;
 		}
-		DEBUG("incrementing current_step");
+
 		current_step++;
 		if (current_step >= STEP_COUNT) {
 			current_step = 0;
 		}
-		DEBUG("current_step is now %d", current_step);
-		DEBUG("rolling dice for random current_step");
+
 		float r = random::uniform();
 		float w = weights[current_step];
-		DEBUG("dice roll is %f", r);
-		DEBUG("current_step probability is %f", w);
 		if (r > w) {
-			DEBUG("dice roll > current_step probability, calling skip_steps() again");
 			skip_steps(d - 1);
 		}
 	}
@@ -91,11 +87,9 @@ struct SwitchBase {
                 for (int i = 0; i < STEP_COUNT; i++) {
                     if (weights[i] > 0.f) {
                         all_zero = false;
-                        DEBUG("non-zero weight of %f found at index %d", weights[i], i);
                         break;
                     }
                 }
-                DEBUG("all_zero is %d", all_zero);
                 if (!all_zero) {
                     skip_steps(STEP_COUNT);
                 }
@@ -116,14 +110,12 @@ struct SwitchBase {
                 }
                 if (!all_zero) {
                     repeat_value -= 0.1f;
-                    DEBUG("repeat_value after decrement is %f", repeat_value);
                     // if repeat value is greater than 0, keep the same step,
                     // otherwise, advance to next step with a weight greater than 0
                     if (repeat_value > 0.f) {
                         break;
                     }
                     else {
-                        DEBUG("repeat_value is 0, advancing to next step");
                         for (int i = 0; i < STEP_COUNT; i++) {
                             if (weights[(current_step + i + 1) % STEP_COUNT] > 0.f) {
                                 current_step = (current_step + i + 1) % STEP_COUNT;
@@ -131,8 +123,6 @@ struct SwitchBase {
                             }
                         }
                         repeat_value = weights[current_step];
-                        DEBUG("current_step is now %d", current_step);
-                        DEBUG("repeat_value is now %f", repeat_value);
                     }
                 }
                 break;
