@@ -17,6 +17,7 @@ struct SwitchBase {
     float volumes[STEP_COUNT] = { 0.f };
 	float repeat_value = 0.f;
     bool crossfade = true;
+    bool invert_weights = false;
     float fade_duration = 0.005f;
 	dsp::SchmittTrigger trigger;
     dsp::SchmittTrigger reset;
@@ -24,6 +25,8 @@ struct SwitchBase {
     dsp::SchmittTrigger rand_mode_input;
     dsp::BooleanTrigger rand_steps_button;
     dsp::BooleanTrigger rand_mode_button;
+    dsp::SchmittTrigger invert_trigger;
+    dsp::BooleanTrigger invert_button;
 
 	float calculate_sum(float w[STEP_COUNT]) {
 		float sum = 0.f;

@@ -16,6 +16,7 @@ struct Switch81 : Module, SwitchBase {
 		STEP_7_PARAM,
 		STEP_8_PARAM,
 		STEP_9_PARAM,
+		INVERT_WEIGHTS,
 		PARAMS_LEN
 	};
 	enum InputId {
@@ -41,6 +42,7 @@ struct Switch81 : Module, SwitchBase {
 		STEP_7_INPUT,
 		STEP_8_INPUT,
 		STEP_9_INPUT,
+		INVERT_TRIGGER_INPUT,
 		INPUTS_LEN
 	};
 	enum OutputId {
@@ -76,6 +78,7 @@ struct Switch81 : Module, SwitchBase {
 		configParam(STEP_7_PARAM, 0.f, 1.f, 1.f, "step 7");
 		configParam(STEP_8_PARAM, 0.f, 1.f, 1.f, "step 8");
 		configParam(STEP_9_PARAM, 0.f, 1.f, 1.f, "step 9");
+		configSwitch(INVERT_WEIGHTS, 0.f, 1.f, 0.f, "invert weights", {"off", "on"});
 		configInput(TRIGGER_INPUT, "trigger");
 		configInput(RESET_INPUT, "reset");
 		configInput(RANDOMIZE_STEPS_INPUT, "randomize steps");
@@ -98,6 +101,7 @@ struct Switch81 : Module, SwitchBase {
 		configInput(STEP_7_INPUT, "step 7");
 		configInput(STEP_8_INPUT, "step 8");
 		configInput(STEP_9_INPUT, "step 9");
+		configInput(INVERT_TRIGGER_INPUT, "invert trigger");
 		configOutput(SIGNAL_OUTPUT, "signal");
 	}
 
@@ -136,6 +140,13 @@ struct Switch81 : Module, SwitchBase {
 		mode = (int)params[MODE_PARAM].getValue();
 
 		compute_weights();
+		if (invert_weights) {
+			for (int w = 0; w < STEP_COUNT; w++) {
+				if (weights[w] > 0.f) {
+					weights[w] = 1.f - weights[w];
+				}
+			}
+		}
 
 		if (trigger.process(inputs[TRIGGER_INPUT].getVoltage())) {
 			advance_steps();
@@ -180,6 +191,9 @@ struct Switch81 : Module, SwitchBase {
 		if (rand_mode_input.process(inputs[RANDOMIZE_MODE_INPUT].getVoltage()) || rand_mode_button.process(params[RANDOMIZE_MODE_PARAM].getValue() > 0.f)) {
 			randomize_mode();
 		}
+		if (invert_trigger.process(inputs[INVERT_TRIGGER_INPUT].getVoltage()) || invert_button.process(params[INVERT_WEIGHTS].getValue() > 0.f)) {
+			invert_weights = !invert_weights;
+		}
 	}
 
     json_t* dataToJson() override {
@@ -222,6 +236,7 @@ struct Switch81Widget : ModuleWidget {
 		addParam(createParamCentered<NP::Button>(mm2px(Vec(56.547, 77.941)), module, Switch81::RANDOMIZE_MODE_PARAM));
 		addParam(createParamCentered<SwitchModeSwitch>(mm2px(Vec(52.389, 91.291)), module, Switch81::MODE_PARAM));
 		addParam(createParamCentered<NP::Button>(mm2px(Vec(56.396, 114.105)), module, Switch81::RANDOMIZE_STEPS_PARAM));
+		addParam(createParamCentered<CKSS>(mm2px(Vec(56.396, 120.000)), module, Switch81::INVERT_WEIGHTS));
 
 		addInput(createInputCentered<NP::InPort>(mm2px(Vec(5.742, 20.17)), module, Switch81::STEP_1_INPUT));
 		addInput(createInputCentered<NP::InPort>(mm2px(Vec(4.888, 30.285)), module, Switch81::STEP_2_INPUT));
@@ -245,6 +260,7 @@ struct Switch81Widget : ModuleWidget {
 		addInput(createInputCentered<NP::InPort>(mm2px(Vec(50.996, 19.826)), module, Switch81::TRIGGER_INPUT));
 		addInput(createInputCentered<NP::InPort>(mm2px(Vec(50.996, 32.866)), module, Switch81::RESET_INPUT));
 		addInput(createInputCentered<NP::InPort>(mm2px(Vec(48.071, 77.941)), module, Switch81::RANDOMIZE_MODE_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(50.000, 120.000)), module, Switch81::INVERT_TRIGGER_INPUT));
 
 		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(53.725, 54.162)), module, Switch81::SIGNAL_OUTPUT));
 
