@@ -28,6 +28,14 @@
       "tags": [
         "Utility"
       ]
+    },
+    {
+      "slug": "funcgen",
+      "name": "funcgen",
+      "description": "",
+      "tags": [
+        "Envelope generator"
+      ]
     }
   ]
 }

@@ -11,3 +11,4 @@ extern Plugin* pluginInstance;
 // extern Model* modelMyModule;
 extern Model* modelSwitch18;
 extern Model* modelSwitch81;
+extern Model* modelFuncgen;
