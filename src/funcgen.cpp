@@ -1,23 +1,27 @@
 #include "plugin.hpp"
+#include "Envelope.hpp"
 
 
+#define CHANNEL_COUNT 4
 #define ENV_MAX_VOLTAGE 10.f
 
 struct Funcgen : Module {
 	enum ParamId {
-		RISE_PARAM,
-		LOOP_PARAM,
-		FALL_PARAM,
+		ENUMS(RISE_PARAM, CHANNEL_COUNT),
+		ENUMS(LOOP_PARAM, CHANNEL_COUNT),
+		ENUMS(FALL_PARAM, CHANNEL_COUNT),
+		ENUMS(PUSH_PARAM, CHANNEL_COUNT),
 		PARAMS_LEN
 	};
 	enum InputId {
-		TRIGGER_INPUT,
-		RISE_CV_INPUT,
-		FALL_CV_INPUT,
+		ENUMS(TRIGGER_INPUT, CHANNEL_COUNT),
+		ENUMS(RISE_CV_INPUT, CHANNEL_COUNT),
+		ENUMS(FALL_CV_INPUT, CHANNEL_COUNT),
 		INPUTS_LEN
 	};
 	enum OutputId {
-		FUNCTION_OUTPUT,
+		ENUMS(FUNCTION_OUTPUT, CHANNEL_COUNT),
+		ENUMS(EOC_OUTPUT, CHANNEL_COUNT),
 		OUTPUTS_LEN
 	};
 	enum LightId {
@@ -30,21 +34,27 @@ struct Funcgen : Module {
 	};
 
 	Stage stage = IDLE;
-	float env = 0.0f;
+	
+	Envelope envelope[CHANNEL_COUNT];
 
-	bool loop = false;
-
-	dsp::SchmittTrigger trigger;
+	dsp::SchmittTrigger trigger[CHANNEL_COUNT];
+	dsp::SchmittTrigger push[CHANNEL_COUNT];
+	dsp::BooleanTrigger eoc_trigger[CHANNEL_COUNT];
+	dsp::PulseGenerator eoc_pulse[CHANNEL_COUNT];
 
 	Funcgen() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
-		configParam(RISE_PARAM, 0.01f, 10.f, 0.01f, "rise", "s");
-		configSwitch(LOOP_PARAM, 0.f, 1.f, 0.f, "loop", {"off", "on"});
-		configParam(FALL_PARAM, 0.01f, 10.f, 0.01f, "fall", "s");
-		configInput(TRIGGER_INPUT, "trigger");
-		configInput(RISE_CV_INPUT, "rise cv");
-		configInput(FALL_CV_INPUT, "fall cv");
-		configOutput(FUNCTION_OUTPUT, "function");
+		for (int i = 0; i < CHANNEL_COUNT; i++) {
+			configParam(RISE_PARAM + i, 0.01f, 10.f, 0.01f, "Rise time", " s", 0.01f, 0.f);
+			configParam(FALL_PARAM + i, 0.01f, 10.f, 0.01f, "Fall time", " s", 0.01f, 0.f);
+			configSwitch(LOOP_PARAM + i, 0.f, 1.f, 0.f, "Loop");
+			configParam(PUSH_PARAM + i, 0.f, 1.f, 0.f, "Push");
+			configInput(TRIGGER_INPUT + i, "Trigger");
+			configInput(RISE_CV_INPUT + i, "Rise CV");
+			configInput(FALL_CV_INPUT + i, "Fall CV");
+			configOutput(FUNCTION_OUTPUT + i, "Function");
+			configOutput(EOC_OUTPUT + i, "EOC");
+		}
 	}
 
 	void process(const ProcessArgs& args) override {
@@ -52,36 +62,29 @@ struct Funcgen : Module {
 
 		float rise_time = params[RISE_PARAM].getValue();
 		float fall_time = params[FALL_PARAM].getValue();
+		envelope[0].set_rise(rise_time);
+		envelope[0].set_fall(fall_time);
 		if (inputs[RISE_CV_INPUT].isConnected()) {
-			rise_time = clamp(rise_time + inputs[RISE_CV_INPUT].getVoltage() / 10.f, 0.01f, 10.f);
+			rise_time = clamp(rise_time * inputs[RISE_CV_INPUT].getVoltage() / 10.f, 0.01f, 10.f);
+			envelope[0].set_rise(rise_time);
 		}
 		if (inputs[FALL_CV_INPUT].isConnected()) {
-			fall_time = clamp(fall_time + inputs[FALL_CV_INPUT].getVoltage() / 10.f, 0.01f, 10.f);
+			fall_time = clamp(fall_time * inputs[FALL_CV_INPUT].getVoltage() / 10.f, 0.01f, 10.f);
+			envelope[0].set_fall(fall_time);
 		}
 
-		loop = params[LOOP_PARAM].getValue() > 0.5f;
-		if (trigger.process(inputs[TRIGGER_INPUT].getVoltage())) {
-			stage = RISING;
+		bool loop = params[LOOP_PARAM].getValue() > 0.5f;
+		envelope[0].set_loop(loop);
+
+		if (trigger[0].process(inputs[TRIGGER_INPUT].getVoltage()) || push[0].process(params[PUSH_PARAM].getValue())) {
+			envelope[0].retrigger();		
 		}
-		if (stage == RISING) {
-			env += st * ENV_MAX_VOLTAGE / rise_time;
-			if (env >= ENV_MAX_VOLTAGE) {
-				env = ENV_MAX_VOLTAGE;
-				stage = FALLING;
-			}
+		envelope[0].process(st);
+		if (eoc_trigger[0].process(envelope[0].eoc)) {
+			eoc_pulse[0].trigger(1e-3f);
 		}
-		if (stage == FALLING) {
-			env -= st * ENV_MAX_VOLTAGE / fall_time;
-			if (env <= 0.0f) {
-				env = 0.0f;
-				if (loop) {
-					stage = RISING;
-				} else {
-					stage = IDLE;
-				}
-			}
-		}
-		outputs[FUNCTION_OUTPUT].setVoltage(env);
+		outputs[FUNCTION_OUTPUT].setVoltage(envelope[0].env);
+		outputs[EOC_OUTPUT].setVoltage(eoc_pulse[0].process(st) ? 10.f : 0.f);
 	}
 };
 
@@ -96,15 +99,36 @@ struct FuncgenWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(18.463, 43.273)), module, Funcgen::RISE_PARAM));
-		addParam(createParamCentered<CKSS>(mm2px(Vec(30.391, 43.273)), module, Funcgen::LOOP_PARAM));
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(42.497, 43.273)), module, Funcgen::FALL_PARAM));
+		float dx = RACK_GRID_WIDTH * 2;
+		float dy = RACK_GRID_WIDTH * 2;
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(30.391, 30.413)), module, Funcgen::TRIGGER_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.463, 30.413)), module, Funcgen::RISE_CV_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(42.497, 30.413)), module, Funcgen::FALL_CV_INPUT));
+		float y_start = RACK_GRID_WIDTH * 2;
+		float x_start = RACK_GRID_WIDTH;
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(30.391, 56.344)), module, Funcgen::FUNCTION_OUTPUT));
+		for (int i = 0; i < CHANNEL_COUNT; i++) {
+			float x = x_start + 5 * dx * (i / 2) + dx;
+			float y = y_start + 5 * dy * (i % 2) + dy;
+			addParam(createParamCentered<TL1105>(Vec(x, y), module, Funcgen::PUSH_PARAM + i));
+			x += dx;
+			addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::TRIGGER_INPUT + i));
+			y += dy;
+			x -= dx * 2;
+			addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Funcgen::RISE_PARAM + i));
+			x += dx;
+			addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Funcgen::LOOP_PARAM + i));
+			x += dx;
+			addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Funcgen::FALL_PARAM + i));
+			y += dy;
+			x -= dx * 2;
+			addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::RISE_CV_INPUT + i));
+			x += dx;
+			addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::FUNCTION_OUTPUT + i));
+			x += dx;
+			addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::FALL_CV_INPUT + i));
+			y += dy;
+			x -= dx;
+			addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::EOC_OUTPUT + i));
+		}
 	}
 };
 
