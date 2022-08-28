@@ -18,13 +18,13 @@ struct Envelope {
     
     Envelope() {}
 
-    void set_rise(float& rise_time) {
+    void set_rise(float rise_time) {
         this->rise_time = clamp(rise_time, 0.01f, 10.f);
     }
-    void set_fall(float& fall_time) {
+    void set_fall(float fall_time) {
         this->fall_time = clamp(fall_time, 0.01f, 10.f);
     }
-    void set_loop(bool& loop) {
+    void set_loop(bool loop) {
         this->loop = loop;
     }
     void trigger() {
