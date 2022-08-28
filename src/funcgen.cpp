@@ -62,29 +62,31 @@ struct Funcgen : Module {
 
 		float rise_time = params[RISE_PARAM].getValue();
 		float fall_time = params[FALL_PARAM].getValue();
-		envelope[0].set_rise(rise_time);
-		envelope[0].set_fall(fall_time);
-		if (inputs[RISE_CV_INPUT].isConnected()) {
-			rise_time = clamp(rise_time * inputs[RISE_CV_INPUT].getVoltage() / 10.f, 0.01f, 10.f);
-			envelope[0].set_rise(rise_time);
-		}
-		if (inputs[FALL_CV_INPUT].isConnected()) {
-			fall_time = clamp(fall_time * inputs[FALL_CV_INPUT].getVoltage() / 10.f, 0.01f, 10.f);
-			envelope[0].set_fall(fall_time);
-		}
+		for (int i = 0; i < CHANNEL_COUNT; i++) {
+			envelope[i].set_rise(rise_time);
+			envelope[i].set_fall(fall_time);
+			if (inputs[RISE_CV_INPUT].isConnected()) {
+				rise_time = clamp(rise_time * inputs[RISE_CV_INPUT + i].getVoltage() / 10.f, 0.01f, 10.f);
+				envelope[i].set_rise(rise_time);
+			}
+			if (inputs[FALL_CV_INPUT].isConnected()) {
+				fall_time = clamp(fall_time * inputs[FALL_CV_INPUT + i].getVoltage() / 10.f, 0.01f, 10.f);
+				envelope[i].set_fall(fall_time);
+			}
 
-		bool loop = params[LOOP_PARAM].getValue() > 0.5f;
-		envelope[0].set_loop(loop);
+			bool loop = params[LOOP_PARAM + i].getValue() > 0.5f;
+			envelope[i].set_loop(loop);
 
-		if (trigger[0].process(inputs[TRIGGER_INPUT].getVoltage()) || push[0].process(params[PUSH_PARAM].getValue())) {
-			envelope[0].retrigger();		
+			if (trigger[i].process(inputs[TRIGGER_INPUT + i].getVoltage()) || push[i].process(params[PUSH_PARAM + i].getValue())) {
+				envelope[i].retrigger();		
+			}
+			envelope[i].process(st);
+			if (eoc_trigger[i].process(envelope[i].eoc)) {
+				eoc_pulse[i].trigger(1e-3f);
+			}
+			outputs[FUNCTION_OUTPUT + i].setVoltage(envelope[i].env);
+			outputs[EOC_OUTPUT + i].setVoltage(eoc_pulse[i].process(st) ? 10.f : 0.f);
 		}
-		envelope[0].process(st);
-		if (eoc_trigger[0].process(envelope[0].eoc)) {
-			eoc_pulse[0].trigger(1e-3f);
-		}
-		outputs[FUNCTION_OUTPUT].setVoltage(envelope[0].env);
-		outputs[EOC_OUTPUT].setVoltage(eoc_pulse[0].process(st) ? 10.f : 0.f);
 	}
 };
 
@@ -115,7 +117,7 @@ struct FuncgenWidget : ModuleWidget {
 			x -= dx * 2;
 			addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Funcgen::RISE_PARAM + i));
 			x += dx;
-			addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Funcgen::LOOP_PARAM + i));
+			addParam(createParamCentered<CKSS>(Vec(x, y), module, Funcgen::LOOP_PARAM + i));
 			x += dx;
 			addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Funcgen::FALL_PARAM + i));
 			y += dy;
