@@ -1,6 +1,8 @@
 #include "plugin.hpp"
 
 
+#define ENV_MAX_VOLTAGE 10.f
+
 struct Funcgen : Module {
 	enum ParamId {
 		RISE_PARAM,
@@ -21,12 +23,16 @@ struct Funcgen : Module {
 	enum LightId {
 		LIGHTS_LEN
 	};
+	enum Stage {
+		IDLE,
+		RISING,
+		FALLING
+	};
 
+	Stage stage = IDLE;
 	float env = 0.0f;
 
 	bool loop = false;
-	bool rising = false;
-	bool falling = false;
 
 	dsp::SchmittTrigger trigger;
 
@@ -55,26 +61,27 @@ struct Funcgen : Module {
 
 		loop = params[LOOP_PARAM].getValue() > 0.5f;
 		if (trigger.process(inputs[TRIGGER_INPUT].getVoltage())) {
-			rising = true;
-			falling = false;
+			stage = RISING;
 		}
-		if (rising) {
-			env += st / rise_time;
-			if (env >= 1.0f) {
-				rising = false;
-				falling = true;
+		if (stage == RISING) {
+			env += st * ENV_MAX_VOLTAGE / rise_time;
+			if (env >= ENV_MAX_VOLTAGE) {
+				env = ENV_MAX_VOLTAGE;
+				stage = FALLING;
 			}
 		}
-		if (falling) {
-			env -= st / fall_time;
+		if (stage == FALLING) {
+			env -= st * ENV_MAX_VOLTAGE / fall_time;
 			if (env <= 0.0f) {
-				falling = false;
+				env = 0.0f;
 				if (loop) {
-					rising = true;
+					stage = RISING;
+				} else {
+					stage = IDLE;
 				}
 			}
 		}
-		outputs[FUNCTION_OUTPUT].setVoltage(10.0f * env);
+		outputs[FUNCTION_OUTPUT].setVoltage(env);
 	}
 };
 
