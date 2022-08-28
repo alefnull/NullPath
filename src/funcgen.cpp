@@ -45,8 +45,8 @@ struct Funcgen : Module {
 	Funcgen() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
 		for (int i = 0; i < CHANNEL_COUNT; i++) {
-			configParam(RISE_PARAM + i, 0.01f, 10.f, 0.01f, "Rise time", " s", 0.01f, 0.f);
-			configParam(FALL_PARAM + i, 0.01f, 10.f, 0.01f, "Fall time", " s", 0.01f, 0.f);
+			configParam(RISE_PARAM + i, 0.01f, 10.f, 0.01f, "Rise time", " s");
+			configParam(FALL_PARAM + i, 0.01f, 10.f, 0.01f, "Fall time", " s");
 			configSwitch(LOOP_PARAM + i, 0.f, 1.f, 0.f, "Loop");
 			configParam(PUSH_PARAM + i, 0.f, 1.f, 0.f, "Push");
 			configInput(TRIGGER_INPUT + i, "Trigger");
