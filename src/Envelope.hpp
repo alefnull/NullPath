@@ -34,6 +34,10 @@ struct Envelope {
     void retrigger() {
         stage = RISING;
     }
+    void reset() {
+        stage = IDLE;
+        env = 0.0f;
+    }
     void process(float st) {
         switch (stage) {
             case IDLE:
