@@ -103,15 +103,18 @@ struct Funcgen : Module {
 		float st = args.sampleTime;
 		cascade_mode = params[MODE_PARAM].getValue() > 0.5f;
 		normal_mode = !cascade_mode;
+
 		for (int i = 0; i < CHANNEL_COUNT; i++) {
 			float rise_time = params[RISE_PARAM + i].getValue();
 			float fall_time = params[FALL_PARAM + i].getValue();
 			envelope[i].set_rise(rise_time);
 			envelope[i].set_fall(fall_time);
+
 			if (inputs[RISE_CV_INPUT].isConnected()) {
 				rise_time = clamp(rise_time * inputs[RISE_CV_INPUT + i].getVoltage() / 10.f, 0.01f, 10.f);
 				envelope[i].set_rise(rise_time);
 			}
+
 			if (inputs[FALL_CV_INPUT].isConnected()) {
 				fall_time = clamp(fall_time * inputs[FALL_CV_INPUT + i].getVoltage() / 10.f, 0.01f, 10.f);
 				envelope[i].set_fall(fall_time);
@@ -123,32 +126,40 @@ struct Funcgen : Module {
 			if (trigger[i].process(inputs[TRIGGER_INPUT + i].getVoltage()) || push[i].process(params[PUSH_PARAM + i].getValue())) {
 				envelope[i].retrigger();		
 			}
+
 			envelope[i].process(st);
+
 			if (eoc_trigger[i].process(envelope[i].eoc)) {
 				eoc_pulse[i].trigger(1e-3f);
 			}
+
 			outputs[FUNCTION_OUTPUT + i].setVoltage(envelope[i].env);
+
 			bool eoc = eoc_pulse[i].process(st);
 			outputs[EOC_OUTPUT + i].setVoltage(eoc ? 10.f : 0.f);
 			if (eoc && cascade_mode) {
 				envelope[(i + 1) % 4].retrigger();
 			}
+
 			float cascade_output = std::max(envelope[0].env, envelope[1].env);
 			cascade_output = std::max(cascade_output, envelope[2].env);
 			cascade_output = std::max(cascade_output, envelope[3].env);
 			outputs[CASCADE_OUTPUT].setVoltage(cascade_output);
 		}
+
 		if (normal_mode_trigger.process(normal_mode)) {
 			for (int i = 0; i < CHANNEL_COUNT; i++) {
 				envelope[i].reset();
 			}
 		}
+
 		if (cascade_mode && (cascade_trigger.process(inputs[CASCADE_TRIGGER_INPUPT].getVoltage()) || cascade_push.process(params[CASCADE_TRIGGER_PARAM].getValue()))) {
 			envelope[0].retrigger();
 			envelope[1].reset();
 			envelope[2].reset();
 			envelope[3].reset();
 		}
+
 		float a = envelope[0].env;
 		float b = envelope[1].env;
 		float c = envelope[2].env;
