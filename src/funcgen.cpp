@@ -26,6 +26,7 @@ struct Funcgen : Module {
 		ENUMS(FUNCTION_OUTPUT, CHANNEL_COUNT),
 		ENUMS(EOC_OUTPUT, CHANNEL_COUNT),
 		CASCADE_OUTPUT,
+		CASCADE_EOC_OUTPUT,
 		MIN_OUTPUT,
 		MAX_OUTPUT,
 		AGTB_OUTPUT,
@@ -62,13 +63,14 @@ struct Funcgen : Module {
 	dsp::BooleanTrigger normal_mode_trigger;
 	dsp::BooleanTrigger eoc_trigger[CHANNEL_COUNT];
 	dsp::PulseGenerator eoc_pulse[CHANNEL_COUNT];
+	dsp::PulseGenerator cascade_eoc_pulse;
 
 	bool normal_mode = true;
 	bool cascade_mode = false;
 
 	Funcgen() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
-		configSwitch(MODE_PARAM, 0.f, 1.f, 0.f, "Mode", {"Normal", "Round-robin"});
+		configOutput(CASCADE_EOC_OUTPUT, "Cascade EOC");
 		for (int i = 0; i < CHANNEL_COUNT; i++) {
 			configParam(RISE_PARAM + i, 0.01f, 10.f, 0.01f, "Rise time", " s");
 			configParam(FALL_PARAM + i, 0.01f, 10.f, 0.01f, "Fall time", " s");
@@ -145,6 +147,9 @@ struct Funcgen : Module {
 			cascade_output = std::max(cascade_output, envelope[2].env);
 			cascade_output = std::max(cascade_output, envelope[3].env);
 			outputs[CASCADE_OUTPUT].setVoltage(cascade_output);
+
+		if (cascade_mode) {
+			outputs[CASCADE_EOC_OUTPUT].setVoltage(outputs[EOC_OUTPUT + 3].getVoltage());
 		}
 
 		if (normal_mode_trigger.process(normal_mode)) {
@@ -234,6 +239,8 @@ struct FuncgenWidget : ModuleWidget {
 		addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::CASCADE_TRIGGER_INPUPT));
 		x += dx;
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::CASCADE_OUTPUT));
+		x += dx;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::CASCADE_EOC_OUTPUT));
 		x = box.size.x - (RACK_GRID_WIDTH * 6);
 		y = y_start + dy;
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::AGTB_OUTPUT));
