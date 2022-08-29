@@ -59,9 +59,11 @@ struct Funcgen : Module {
 	dsp::SchmittTrigger push[CHANNEL_COUNT];
 	dsp::SchmittTrigger cascade_trigger;
 	dsp::SchmittTrigger cascade_push;
+	dsp::BooleanTrigger normal_mode_trigger;
 	dsp::BooleanTrigger eoc_trigger[CHANNEL_COUNT];
 	dsp::PulseGenerator eoc_pulse[CHANNEL_COUNT];
 
+	bool normal_mode = true;
 	bool cascade_mode = false;
 
 	Funcgen() {
@@ -100,6 +102,7 @@ struct Funcgen : Module {
 	void process(const ProcessArgs& args) override {
 		float st = args.sampleTime;
 		cascade_mode = params[MODE_PARAM].getValue() > 0.5f;
+		normal_mode = !cascade_mode;
 		for (int i = 0; i < CHANNEL_COUNT; i++) {
 			float rise_time = params[RISE_PARAM + i].getValue();
 			float fall_time = params[FALL_PARAM + i].getValue();
@@ -135,8 +138,16 @@ struct Funcgen : Module {
 			cascade_output = std::max(cascade_output, envelope[3].env);
 			outputs[CASCADE_OUTPUT].setVoltage(cascade_output);
 		}
+		if (normal_mode_trigger.process(normal_mode)) {
+			for (int i = 0; i < CHANNEL_COUNT; i++) {
+				envelope[i].reset();
+			}
+		}
 		if (cascade_mode && (cascade_trigger.process(inputs[CASCADE_TRIGGER_INPUPT].getVoltage()) || cascade_push.process(params[CASCADE_TRIGGER_PARAM].getValue()))) {
 			envelope[0].retrigger();
+			envelope[1].reset();
+			envelope[2].reset();
+			envelope[3].reset();
 		}
 		float a = envelope[0].env;
 		float b = envelope[1].env;
