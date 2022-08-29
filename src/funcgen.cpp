@@ -19,7 +19,7 @@ struct Funcgen : Module {
 		ENUMS(TRIGGER_INPUT, CHANNEL_COUNT),
 		ENUMS(RISE_CV_INPUT, CHANNEL_COUNT),
 		ENUMS(FALL_CV_INPUT, CHANNEL_COUNT),
-		CASCADE_TRIGGER_INPUPT,
+		CASCADE_TRIGGER_INPUT,
 		INPUTS_LEN
 	};
 	enum OutputId {
@@ -77,15 +77,14 @@ struct Funcgen : Module {
 			configParam(RISE_PARAM + i, 0.01f, 10.f, 0.01f, "Rise time", " s");
 			configParam(FALL_PARAM + i, 0.01f, 10.f, 0.01f, "Fall time", " s");
 			configSwitch(LOOP_PARAM + i, 0.f, 1.f, 0.f, "Loop");
-			configParam(CASCADE_TRIGGER_PARAM, 0.f, 1.f, 0.f, "Round-robin push");
+			configParam(CASCADE_TRIGGER_PARAM, 0.f, 1.f, 0.f, "Cascade push");
 			configParam(PUSH_PARAM + i, 0.f, 1.f, 0.f, "Push");
 			configInput(TRIGGER_INPUT + i, "Trigger");
 			configInput(RISE_CV_INPUT + i, "Rise CV");
 			configInput(FALL_CV_INPUT + i, "Fall CV");
-			configInput(CASCADE_TRIGGER_INPUPT, "Round-robin trigger");
+			configInput(CASCADE_TRIGGER_INPUT, "Cascade trigger");
 			configOutput(FUNCTION_OUTPUT + i, "Function");
 			configOutput(EOC_OUTPUT + i, "EOC");
-			configOutput(CASCADE_OUTPUT, "Round-robin");
 		}
 		configOutput(MIN_OUTPUT, "Min");
 		configOutput(MAX_OUTPUT, "Max");
@@ -144,11 +143,12 @@ struct Funcgen : Module {
 			if (eoc && cascade_mode) {
 				envelope[(i + 1) % 4].retrigger();
 			}
+		}
 
-			float cascade_output = std::max(envelope[0].env, envelope[1].env);
-			cascade_output = std::max(cascade_output, envelope[2].env);
-			cascade_output = std::max(cascade_output, envelope[3].env);
-			outputs[CASCADE_OUTPUT].setVoltage(cascade_output);
+		float cascade_output = std::max(envelope[0].env, envelope[1].env);
+		cascade_output = std::max(cascade_output, envelope[2].env);
+		cascade_output = std::max(cascade_output, envelope[3].env);
+		outputs[CASCADE_OUTPUT].setVoltage(cascade_output);
 
 		if (cascade_mode) {
 			outputs[CASCADE_EOC_OUTPUT].setVoltage(outputs[EOC_OUTPUT + 3].getVoltage());
@@ -160,7 +160,7 @@ struct Funcgen : Module {
 			}
 		}
 
-		if (cascade_mode && (cascade_trigger.process(inputs[CASCADE_TRIGGER_INPUPT].getVoltage()) || cascade_push.process(params[CASCADE_TRIGGER_PARAM].getValue()))) {
+		if (cascade_mode && (cascade_trigger.process(inputs[CASCADE_TRIGGER_INPUT].getVoltage()) || cascade_push.process(params[CASCADE_TRIGGER_PARAM].getValue()))) {
 			envelope[0].retrigger();
 			envelope[1].reset();
 			envelope[2].reset();
@@ -238,7 +238,7 @@ struct FuncgenWidget : ModuleWidget {
 		x += dx;
 		addParam(createParamCentered<CKSS>(Vec(x, y), module, Funcgen::MODE_PARAM));
 		x += dx;
-		addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::CASCADE_TRIGGER_INPUPT));
+		addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::CASCADE_TRIGGER_INPUT));
 		x += dx;
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::CASCADE_OUTPUT));
 		x += dx;
