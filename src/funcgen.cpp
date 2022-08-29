@@ -126,8 +126,10 @@ struct Funcgen : Module {
 			bool loop = params[LOOP_PARAM + i].getValue() > 0.5f;
 			envelope[i].set_loop(loop && !cascade_mode);
 
+			if (!cascade_mode) {
 			if (trigger[i].process(inputs[TRIGGER_INPUT + i].getVoltage()) || push[i].process(params[PUSH_PARAM + i].getValue())) {
 				envelope[i].retrigger();		
+				}
 			}
 
 			envelope[i].process(st);
