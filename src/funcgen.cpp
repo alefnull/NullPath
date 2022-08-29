@@ -12,20 +12,20 @@ struct Funcgen : Module {
 		ENUMS(FALL_PARAM, CHANNEL_COUNT),
 		ENUMS(PUSH_PARAM, CHANNEL_COUNT),
 		MODE_PARAM,
-		RR_TRIGGER_PARAM,
+		CASCADE_TRIGGER_PARAM,
 		PARAMS_LEN
 	};
 	enum InputId {
 		ENUMS(TRIGGER_INPUT, CHANNEL_COUNT),
 		ENUMS(RISE_CV_INPUT, CHANNEL_COUNT),
 		ENUMS(FALL_CV_INPUT, CHANNEL_COUNT),
-		RR_TRIGGER_INPUT,
+		CASCADE_TRIGGER_INPUPT,
 		INPUTS_LEN
 	};
 	enum OutputId {
 		ENUMS(FUNCTION_OUTPUT, CHANNEL_COUNT),
 		ENUMS(EOC_OUTPUT, CHANNEL_COUNT),
-		ROUND_ROBIN_OUTPUT,
+		CASCADE_OUTPUT,
 		OUTPUTS_LEN
 	};
 	enum LightId {
@@ -43,12 +43,12 @@ struct Funcgen : Module {
 
 	dsp::SchmittTrigger trigger[CHANNEL_COUNT];
 	dsp::SchmittTrigger push[CHANNEL_COUNT];
-	dsp::SchmittTrigger rr_trigger;
-	dsp::SchmittTrigger rr_push;
+	dsp::SchmittTrigger cascade_trigger;
+	dsp::SchmittTrigger cascade_push;
 	dsp::BooleanTrigger eoc_trigger[CHANNEL_COUNT];
 	dsp::PulseGenerator eoc_pulse[CHANNEL_COUNT];
 
-	bool round_robin = false;
+	bool cascade_mode = false;
 
 	Funcgen() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
@@ -57,21 +57,21 @@ struct Funcgen : Module {
 			configParam(RISE_PARAM + i, 0.01f, 10.f, 0.01f, "Rise time", " s");
 			configParam(FALL_PARAM + i, 0.01f, 10.f, 0.01f, "Fall time", " s");
 			configSwitch(LOOP_PARAM + i, 0.f, 1.f, 0.f, "Loop");
-			configParam(RR_TRIGGER_PARAM, 0.f, 1.f, 0.f, "Round-robin push");
+			configParam(CASCADE_TRIGGER_PARAM, 0.f, 1.f, 0.f, "Round-robin push");
 			configParam(PUSH_PARAM + i, 0.f, 1.f, 0.f, "Push");
 			configInput(TRIGGER_INPUT + i, "Trigger");
 			configInput(RISE_CV_INPUT + i, "Rise CV");
 			configInput(FALL_CV_INPUT + i, "Fall CV");
-			configInput(RR_TRIGGER_INPUT, "Round-robin trigger");
+			configInput(CASCADE_TRIGGER_INPUPT, "Round-robin trigger");
 			configOutput(FUNCTION_OUTPUT + i, "Function");
 			configOutput(EOC_OUTPUT + i, "EOC");
-			configOutput(ROUND_ROBIN_OUTPUT, "Round-robin");
+			configOutput(CASCADE_OUTPUT, "Round-robin");
 		}
 	}
 
 	void process(const ProcessArgs& args) override {
 		float st = args.sampleTime;
-		round_robin = params[MODE_PARAM].getValue() > 0.5f;
+		cascade_mode = params[MODE_PARAM].getValue() > 0.5f;
 		for (int i = 0; i < CHANNEL_COUNT; i++) {
 			float rise_time = params[RISE_PARAM + i].getValue();
 			float fall_time = params[FALL_PARAM + i].getValue();
@@ -87,7 +87,7 @@ struct Funcgen : Module {
 			}
 
 			bool loop = params[LOOP_PARAM + i].getValue() > 0.5f;
-			envelope[i].set_loop(loop && !round_robin);
+			envelope[i].set_loop(loop && !cascade_mode);
 
 			if (trigger[i].process(inputs[TRIGGER_INPUT + i].getVoltage()) || push[i].process(params[PUSH_PARAM + i].getValue())) {
 				envelope[i].retrigger();		
@@ -99,16 +99,15 @@ struct Funcgen : Module {
 			outputs[FUNCTION_OUTPUT + i].setVoltage(envelope[i].env);
 			bool eoc = eoc_pulse[i].process(st);
 			outputs[EOC_OUTPUT + i].setVoltage(eoc ? 10.f : 0.f);
-			if (eoc && round_robin) {
-				DEBUG("EOC & RR");
+			if (eoc && cascade_mode) {
 				envelope[(i + 1) % 4].retrigger();
 			}
-			float rro = std::max(envelope[0].env, envelope[1].env);
-			rro = std::max(rro, envelope[2].env);
-			rro = std::max(rro, envelope[3].env);
-			outputs[ROUND_ROBIN_OUTPUT].setVoltage(rro);
+			float cascade_output = std::max(envelope[0].env, envelope[1].env);
+			cascade_output = std::max(cascade_output, envelope[2].env);
+			cascade_output = std::max(cascade_output, envelope[3].env);
+			outputs[CASCADE_OUTPUT].setVoltage(cascade_output);
 		}
-		if (round_robin && (rr_trigger.process(inputs[RR_TRIGGER_INPUT].getVoltage()) || rr_push.process(params[RR_TRIGGER_PARAM].getValue()))) {
+		if (cascade_mode && (cascade_trigger.process(inputs[CASCADE_TRIGGER_INPUPT].getVoltage()) || cascade_push.process(params[CASCADE_TRIGGER_PARAM].getValue()))) {
 			envelope[0].retrigger();
 		}
 	}
@@ -154,13 +153,16 @@ struct FuncgenWidget : ModuleWidget {
 			y += dy;
 			x -= dx;
 			addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::EOC_OUTPUT + i));
-			if (i == 0) {
-				addParam(createParamCentered<TL1105>(Vec(box.size.x / 2 - dx, y + 5 * dy), module, Funcgen::RR_TRIGGER_PARAM));
-				addParam(createParamCentered<CKSS>(Vec(box.size.x / 2, y + 5 * dy + dy), module, Funcgen::MODE_PARAM));
-				addInput(createInputCentered<PJ301MPort>(Vec(box.size.x / 2 + dx, y + 5 * dy), module, Funcgen::RR_TRIGGER_INPUT));
-				addOutput(createOutputCentered<PJ301MPort>(Vec(box.size.x / 2, y + 5 * dy), module, Funcgen::ROUND_ROBIN_OUTPUT));
-			}
 		}
+		x = x_start;
+		y = box.size.y - (RACK_GRID_WIDTH * 2);
+		addParam(createParamCentered<TL1105>(Vec(x, y), module, Funcgen::CASCADE_TRIGGER_PARAM));
+		x += dx;
+		addParam(createParamCentered<CKSS>(Vec(x, y), module, Funcgen::MODE_PARAM));
+		x += dx;
+		addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::CASCADE_TRIGGER_INPUPT));
+		x += dx;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::CASCADE_OUTPUT));
 	}
 };
 
