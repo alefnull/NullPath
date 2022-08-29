@@ -70,7 +70,9 @@ struct Funcgen : Module {
 
 	Funcgen() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
+		configSwitch(MODE_PARAM, 0.f, 1.f, 0.f, "Mode", {"Normal", "Cascade"});
 		configOutput(CASCADE_EOC_OUTPUT, "Cascade EOC");
+		configOutput(CASCADE_OUTPUT, "Cascade");
 		for (int i = 0; i < CHANNEL_COUNT; i++) {
 			configParam(RISE_PARAM + i, 0.01f, 10.f, 0.01f, "Rise time", " s");
 			configParam(FALL_PARAM + i, 0.01f, 10.f, 0.01f, "Fall time", " s");
