@@ -26,6 +26,20 @@ struct Funcgen : Module {
 		ENUMS(FUNCTION_OUTPUT, CHANNEL_COUNT),
 		ENUMS(EOC_OUTPUT, CHANNEL_COUNT),
 		CASCADE_OUTPUT,
+		MIN_OUTPUT,
+		MAX_OUTPUT,
+		AGTB_OUTPUT,
+		AGTC_OUTPUT,
+		AGTD_OUTPUT,
+		BGTA_OUTPUT,
+		BGTC_OUTPUT,
+		BGTD_OUTPUT,
+		CGTA_OUTPUT,
+		CGTB_OUTPUT,
+		CGTD_OUTPUT,
+		DGTA_OUTPUT,
+		DGTB_OUTPUT,
+		DGTC_OUTPUT,
 		OUTPUTS_LEN
 	};
 	enum LightId {
@@ -67,6 +81,20 @@ struct Funcgen : Module {
 			configOutput(EOC_OUTPUT + i, "EOC");
 			configOutput(CASCADE_OUTPUT, "Round-robin");
 		}
+		configOutput(MIN_OUTPUT, "Min");
+		configOutput(MAX_OUTPUT, "Max");
+		configOutput(AGTB_OUTPUT, "A > B");
+		configOutput(AGTC_OUTPUT, "A > C");
+		configOutput(AGTD_OUTPUT, "A > D");
+		configOutput(BGTA_OUTPUT, "B > A");
+		configOutput(BGTC_OUTPUT, "B > C");
+		configOutput(BGTD_OUTPUT, "B > D");
+		configOutput(CGTA_OUTPUT, "C > A");
+		configOutput(CGTB_OUTPUT, "C > B");
+		configOutput(CGTD_OUTPUT, "C > D");
+		configOutput(DGTA_OUTPUT, "D > A");
+		configOutput(DGTB_OUTPUT, "D > B");
+		configOutput(DGTC_OUTPUT, "D > C");
 	}
 
 	void process(const ProcessArgs& args) override {
@@ -110,6 +138,24 @@ struct Funcgen : Module {
 		if (cascade_mode && (cascade_trigger.process(inputs[CASCADE_TRIGGER_INPUPT].getVoltage()) || cascade_push.process(params[CASCADE_TRIGGER_PARAM].getValue()))) {
 			envelope[0].retrigger();
 		}
+		float a = envelope[0].env;
+		float b = envelope[1].env;
+		float c = envelope[2].env;
+		float d = envelope[3].env;
+		outputs[MIN_OUTPUT].setVoltage(std::min(a, std::min(b, std::min(c, d))));
+		outputs[MAX_OUTPUT].setVoltage(std::max(a, std::max(b, std::max(c, d))));
+		outputs[AGTB_OUTPUT].setVoltage(a > b ? 10.f : 0.f);
+		outputs[AGTC_OUTPUT].setVoltage(a > c ? 10.f : 0.f);
+		outputs[AGTD_OUTPUT].setVoltage(a > d ? 10.f : 0.f);
+		outputs[BGTA_OUTPUT].setVoltage(b > a ? 10.f : 0.f);
+		outputs[BGTC_OUTPUT].setVoltage(b > c ? 10.f : 0.f);
+		outputs[BGTD_OUTPUT].setVoltage(b > d ? 10.f : 0.f);
+		outputs[CGTA_OUTPUT].setVoltage(c > a ? 10.f : 0.f);
+		outputs[CGTB_OUTPUT].setVoltage(c > b ? 10.f : 0.f);
+		outputs[CGTD_OUTPUT].setVoltage(c > d ? 10.f : 0.f);
+		outputs[DGTA_OUTPUT].setVoltage(d > a ? 10.f : 0.f);
+		outputs[DGTB_OUTPUT].setVoltage(d > b ? 10.f : 0.f);
+		outputs[DGTC_OUTPUT].setVoltage(d > c ? 10.f : 0.f);
 	}
 };
 
@@ -130,9 +176,12 @@ struct FuncgenWidget : ModuleWidget {
 		float y_start = RACK_GRID_WIDTH;
 		float x_start = RACK_GRID_WIDTH;
 
+		float x = x_start;
+		float y = y_start;
+
 		for (int i = 0; i < CHANNEL_COUNT; i++) {
-			float x = x_start + 5 * dx * (i / 2) + dx;
-			float y = y_start + 4 * dy * (i % 2) + dy;
+			x = x_start + 4 * dx * (i / 2) + dx;
+			y = y_start + 4 * dy * (i % 2) + RACK_GRID_WIDTH;
 			addParam(createParamCentered<TL1105>(Vec(x, y), module, Funcgen::PUSH_PARAM + i));
 			x += dx;
 			addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::TRIGGER_INPUT + i));
@@ -163,6 +212,39 @@ struct FuncgenWidget : ModuleWidget {
 		addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::CASCADE_TRIGGER_INPUPT));
 		x += dx;
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::CASCADE_OUTPUT));
+		x = box.size.x - (RACK_GRID_WIDTH * 6);
+		y = y_start + dy;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::AGTB_OUTPUT));
+		x += dx;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::AGTC_OUTPUT));
+		x += dx;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::AGTD_OUTPUT));
+		x -= dx * 2;
+		y += dy;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::BGTA_OUTPUT));
+		x += dx;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::BGTC_OUTPUT));
+		x += dx;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::BGTD_OUTPUT));
+		x -= dx * 2;
+		y += dy;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::CGTA_OUTPUT));
+		x += dx;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::CGTB_OUTPUT));
+		x += dx;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::CGTD_OUTPUT));
+		x -= dx * 2;
+		y += dy;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::DGTA_OUTPUT));
+		x += dx;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::DGTB_OUTPUT));
+		x += dx;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::DGTC_OUTPUT));
+		x -= dx * 2;
+		y += dy * 2;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::MIN_OUTPUT));
+		x += dx;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::MAX_OUTPUT));
 	}
 };
 
