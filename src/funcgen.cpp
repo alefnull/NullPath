@@ -45,12 +45,12 @@ struct Funcgen : Module {
 		ABSAB_OUTPUT,
 		ABSAC_OUTPUT,
 		ABSAD_OUTPUT,
-		ABSBA_OUTPUT,
 		ABSBC_OUTPUT,
 		ABSBD_OUTPUT,
+		ABSCD_OUTPUT,
+		ABSBA_OUTPUT,
 		ABSCA_OUTPUT,
 		ABSCB_OUTPUT,
-		ABSCD_OUTPUT,
 		ABSDA_OUTPUT,
 		ABSDB_OUTPUT,
 		ABSDC_OUTPUT,
@@ -123,15 +123,15 @@ struct Funcgen : Module {
 		configOutput(ABSAB_OUTPUT, "10 - abs(A - B)");
 		configOutput(ABSAC_OUTPUT, "10 - abs(A - C)");
 		configOutput(ABSAD_OUTPUT, "10 - abs(A - D)");
-		configOutput(ABSBA_OUTPUT, "10 - abs(B - A)");
 		configOutput(ABSBC_OUTPUT, "10 - abs(B - C)");
 		configOutput(ABSBD_OUTPUT, "10 - abs(B - D)");
-		configOutput(ABSCA_OUTPUT, "10 - abs(C - A)");
-		configOutput(ABSCB_OUTPUT, "10 - abs(C - B)");
 		configOutput(ABSCD_OUTPUT, "10 - abs(C - D)");
-		configOutput(ABSDA_OUTPUT, "10 - abs(D - A)");
-		configOutput(ABSDB_OUTPUT, "10 - abs(D - B)");
-		configOutput(ABSDC_OUTPUT, "10 - abs(D - C)");
+		configOutput(ABSBA_OUTPUT, "abs(A - B)");
+		configOutput(ABSCA_OUTPUT, "abs(A - C)");
+		configOutput(ABSCB_OUTPUT, "abs(B - C)");
+		configOutput(ABSDA_OUTPUT, "abs(A - D)");
+		configOutput(ABSDB_OUTPUT, "abs(B - D)");
+		configOutput(ABSDC_OUTPUT, "abs(C - D)");
 	}
 
 	void process(const ProcessArgs& args) override {
@@ -269,15 +269,15 @@ struct Funcgen : Module {
 		outputs[ABSAB_OUTPUT].setVoltage(10 - std::abs(a - b));
 		outputs[ABSAC_OUTPUT].setVoltage(10 - std::abs(a - c));
 		outputs[ABSAD_OUTPUT].setVoltage(10 - std::abs(a - d));
-		outputs[ABSBA_OUTPUT].setVoltage(10 - std::abs(b - a));
 		outputs[ABSBC_OUTPUT].setVoltage(10 - std::abs(b - c));
 		outputs[ABSBD_OUTPUT].setVoltage(10 - std::abs(b - d));
-		outputs[ABSCA_OUTPUT].setVoltage(10 - std::abs(c - a));
-		outputs[ABSCB_OUTPUT].setVoltage(10 - std::abs(c - b));
 		outputs[ABSCD_OUTPUT].setVoltage(10 - std::abs(c - d));
-		outputs[ABSDA_OUTPUT].setVoltage(10 - std::abs(d - a));
-		outputs[ABSDB_OUTPUT].setVoltage(10 - std::abs(d - b));
-		outputs[ABSDC_OUTPUT].setVoltage(10 - std::abs(d - c));
+		outputs[ABSBA_OUTPUT].setVoltage(std::abs(a - b));
+		outputs[ABSCA_OUTPUT].setVoltage(std::abs(a - c));
+		outputs[ABSCB_OUTPUT].setVoltage(std::abs(b - c));
+		outputs[ABSDA_OUTPUT].setVoltage(std::abs(a - d));
+		outputs[ABSDB_OUTPUT].setVoltage(std::abs(b - d));
+		outputs[ABSDC_OUTPUT].setVoltage(std::abs(c - d));
 	}
 };
 
@@ -380,18 +380,18 @@ struct FuncgenWidget : ModuleWidget {
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::ABSAD_OUTPUT));
 		x -= dx * 2;
 		y += dy;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::ABSBA_OUTPUT));
-		x += dx;
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::ABSBC_OUTPUT));
 		x += dx;
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::ABSBD_OUTPUT));
+		x += dx;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::ABSCD_OUTPUT));
 		x -= dx * 2;
 		y += dy;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::ABSBA_OUTPUT));
+		x += dx;
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::ABSCA_OUTPUT));
 		x += dx;
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::ABSCB_OUTPUT));
-		x += dx;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::ABSCD_OUTPUT));
 		x -= dx * 2;
 		y += dy;
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::ABSDA_OUTPUT));
