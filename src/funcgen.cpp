@@ -61,6 +61,7 @@ struct Funcgen : Module {
 		OUTPUTS_LEN
 	};
 	enum LightId {
+		ENUMS(OUTPUT_LIGHT, CHANNEL_COUNT),
 		LIGHTS_LEN
 	};
 	enum Stage {
@@ -328,6 +329,10 @@ struct Funcgen : Module {
 			}
 		}
 		outputs[BOTAVG_OUTPUT].setVoltage((min_a + min_b) / 2.f);
+
+		for (int i = 0; i < CHANNEL_COUNT; i++) {
+			lights[i].setBrightness(envelope[i].env / 10.f);
+		}
 	}
 };
 
@@ -354,6 +359,20 @@ struct FuncgenWidget : ModuleWidget {
 		for (int i = 0; i < CHANNEL_COUNT; i++) {
 			x = x_start + 4 * dx * (i / 2) + dx;
 			y = y_start + 5 * dy * (i % 2) + RACK_GRID_WIDTH;
+			x -= dx;
+			if (i == 0) {
+				addChild(createLight<MediumLight<RedLight>>(Vec(x, y), module, Funcgen::OUTPUT_LIGHT + i));
+			}
+			else if (i == 1) {
+				addChild(createLight<MediumLight<GreenLight>>(Vec(x, y), module, Funcgen::OUTPUT_LIGHT + i));
+			}
+			else if (i == 2) {
+				addChild(createLight<MediumLight<BlueLight>>(Vec(x, y), module, Funcgen::OUTPUT_LIGHT + i));
+			}
+			else if (i == 3) {
+				addChild(createLight<MediumLight<YellowLight>>(Vec(x, y), module, Funcgen::OUTPUT_LIGHT + i));
+			}
+			x += dx;
 			addParam(createParamCentered<TL1105>(Vec(x, y), module, Funcgen::PUSH_PARAM + i));
 			x += dx;
 			addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::TRIGGER_INPUT + i));
