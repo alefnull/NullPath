@@ -29,6 +29,7 @@ struct Funcgen : Module {
 		CASCADE_EOC_OUTPUT,
 		MIN_OUTPUT,
 		MAX_OUTPUT,
+		AVG_OUTPUT,
 		AGTB_OUTPUT,
 		AGTC_OUTPUT,
 		AGTD_OUTPUT,
@@ -92,8 +93,9 @@ struct Funcgen : Module {
 			configOutput(FUNCTION_OUTPUT + i, "Function");
 			configOutput(EOC_OUTPUT + i, "EOC");
 		}
-		configOutput(MIN_OUTPUT, "Min");
-		configOutput(MAX_OUTPUT, "Max");
+		configOutput(MIN_OUTPUT, "Minimum");
+		configOutput(MAX_OUTPUT, "Maximum");
+		configOutput(AVG_OUTPUT, "Average");
 		configOutput(AGTB_OUTPUT, "A > B");
 		configOutput(AGTC_OUTPUT, "A > C");
 		configOutput(AGTD_OUTPUT, "A > D");
@@ -227,6 +229,7 @@ struct Funcgen : Module {
 		float d = envelope[3].env;
 		outputs[MIN_OUTPUT].setVoltage(std::min(a, std::min(b, std::min(c, d))));
 		outputs[MAX_OUTPUT].setVoltage(std::max(a, std::max(b, std::max(c, d))));
+		outputs[AVG_OUTPUT].setVoltage((a + b + c + d) / CHANNEL_COUNT);
 		outputs[AGTB_OUTPUT].setVoltage(a > b ? 10.f : 0.f);
 		outputs[AGTC_OUTPUT].setVoltage(a > c ? 10.f : 0.f);
 		outputs[AGTD_OUTPUT].setVoltage(a > d ? 10.f : 0.f);
@@ -330,6 +333,8 @@ struct FuncgenWidget : ModuleWidget {
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::MIN_OUTPUT));
 		x += dx;
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::MAX_OUTPUT));
+		x += dx;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::AVG_OUTPUT));
 	}
 };
 
