@@ -42,6 +42,18 @@ struct Funcgen : Module {
 		DGTA_OUTPUT,
 		DGTB_OUTPUT,
 		DGTC_OUTPUT,
+		ABSAB_OUTPUT,
+		ABSAC_OUTPUT,
+		ABSAD_OUTPUT,
+		ABSBA_OUTPUT,
+		ABSBC_OUTPUT,
+		ABSBD_OUTPUT,
+		ABSCA_OUTPUT,
+		ABSCB_OUTPUT,
+		ABSCD_OUTPUT,
+		ABSDA_OUTPUT,
+		ABSDB_OUTPUT,
+		ABSDC_OUTPUT,
 		OUTPUTS_LEN
 	};
 	enum LightId {
@@ -108,6 +120,18 @@ struct Funcgen : Module {
 		configOutput(DGTA_OUTPUT, "D > A");
 		configOutput(DGTB_OUTPUT, "D > B");
 		configOutput(DGTC_OUTPUT, "D > C");
+		configOutput(ABSAB_OUTPUT, "10 - abs(A - B)");
+		configOutput(ABSAC_OUTPUT, "10 - abs(A - C)");
+		configOutput(ABSAD_OUTPUT, "10 - abs(A - D)");
+		configOutput(ABSBA_OUTPUT, "10 - abs(B - A)");
+		configOutput(ABSBC_OUTPUT, "10 - abs(B - C)");
+		configOutput(ABSBD_OUTPUT, "10 - abs(B - D)");
+		configOutput(ABSCA_OUTPUT, "10 - abs(C - A)");
+		configOutput(ABSCB_OUTPUT, "10 - abs(C - B)");
+		configOutput(ABSCD_OUTPUT, "10 - abs(C - D)");
+		configOutput(ABSDA_OUTPUT, "10 - abs(D - A)");
+		configOutput(ABSDB_OUTPUT, "10 - abs(D - B)");
+		configOutput(ABSDC_OUTPUT, "10 - abs(D - C)");
 	}
 
 	void process(const ProcessArgs& args) override {
@@ -242,6 +266,18 @@ struct Funcgen : Module {
 		outputs[DGTA_OUTPUT].setVoltage(d > a ? 10.f : 0.f);
 		outputs[DGTB_OUTPUT].setVoltage(d > b ? 10.f : 0.f);
 		outputs[DGTC_OUTPUT].setVoltage(d > c ? 10.f : 0.f);
+		outputs[ABSAB_OUTPUT].setVoltage(10 - std::abs(a - b));
+		outputs[ABSAC_OUTPUT].setVoltage(10 - std::abs(a - c));
+		outputs[ABSAD_OUTPUT].setVoltage(10 - std::abs(a - d));
+		outputs[ABSBA_OUTPUT].setVoltage(10 - std::abs(b - a));
+		outputs[ABSBC_OUTPUT].setVoltage(10 - std::abs(b - c));
+		outputs[ABSBD_OUTPUT].setVoltage(10 - std::abs(b - d));
+		outputs[ABSCA_OUTPUT].setVoltage(10 - std::abs(c - a));
+		outputs[ABSCB_OUTPUT].setVoltage(10 - std::abs(c - b));
+		outputs[ABSCD_OUTPUT].setVoltage(10 - std::abs(c - d));
+		outputs[ABSDA_OUTPUT].setVoltage(10 - std::abs(d - a));
+		outputs[ABSDB_OUTPUT].setVoltage(10 - std::abs(d - b));
+		outputs[ABSDC_OUTPUT].setVoltage(10 - std::abs(d - c));
 	}
 };
 
@@ -335,6 +371,34 @@ struct FuncgenWidget : ModuleWidget {
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::MAX_OUTPUT));
 		x += dx;
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::AVG_OUTPUT));
+		x -= dx * 2;
+		y += dy * 2;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::ABSAB_OUTPUT));
+		x += dx;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::ABSAC_OUTPUT));
+		x += dx;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::ABSAD_OUTPUT));
+		x -= dx * 2;
+		y += dy;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::ABSBA_OUTPUT));
+		x += dx;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::ABSBC_OUTPUT));
+		x += dx;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::ABSBD_OUTPUT));
+		x -= dx * 2;
+		y += dy;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::ABSCA_OUTPUT));
+		x += dx;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::ABSCB_OUTPUT));
+		x += dx;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::ABSCD_OUTPUT));
+		x -= dx * 2;
+		y += dy;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::ABSDA_OUTPUT));
+		x += dx;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::ABSDB_OUTPUT));
+		x += dx;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::ABSDC_OUTPUT));
 	}
 };
 
