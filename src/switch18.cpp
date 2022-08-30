@@ -257,6 +257,8 @@ struct Switch18Widget : ModuleWidget {
 		}
 
 		void setValue(float value) override {
+			value = (int)(value * 1000);
+			value = (float)value / 1000;
 			*fade_duration = clamp(value, 0.005f, 10.f);
 		}
 
