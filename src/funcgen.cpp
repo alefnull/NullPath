@@ -56,6 +56,8 @@ struct Funcgen : Module {
 		ABSDA_OUTPUT,
 		ABSDB_OUTPUT,
 		ABSDC_OUTPUT,
+		TOPAVG_OUTPUT,
+		BOTAVG_OUTPUT,
 		OUTPUTS_LEN
 	};
 	enum LightId {
@@ -298,6 +300,32 @@ struct Funcgen : Module {
 		outputs[ABSDA_OUTPUT].setVoltage(std::abs(a - d));
 		outputs[ABSDB_OUTPUT].setVoltage(std::abs(b - d));
 		outputs[ABSDC_OUTPUT].setVoltage(std::abs(c - d));
+		// find the two channels with the highest amplitude
+		float max_a = 0.f;
+		float max_b = 0.f;
+		for (int i = 0; i < CHANNEL_COUNT; i++) {
+			if (envelope[i].env > max_a) {
+				max_b = max_a;
+				max_a = envelope[i].env;
+			}
+			else if (envelope[i].env > max_b) {
+				max_b = envelope[i].env;
+			}
+		}
+		outputs[TOPAVG_OUTPUT].setVoltage((max_a + max_b) / 2.f);
+		// find the two channels with the lowest amplitude
+		float min_a = 10.f;
+		float min_b = 10.f;
+		for (int i = 0; i < CHANNEL_COUNT; i++) {
+			if (envelope[i].env < min_a) {
+				min_b = min_a;
+				min_a = envelope[i].env;
+			}
+			else if (envelope[i].env < min_b) {
+				min_b = envelope[i].env;
+			}
+		}
+		outputs[BOTAVG_OUTPUT].setVoltage((min_a + min_b) / 2.f);
 	}
 };
 
@@ -389,14 +417,19 @@ struct FuncgenWidget : ModuleWidget {
 		x += dx;
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::DGTC_OUTPUT));
 		x -= dx * 2;
-		y += dy * 2;
+		y += dy;
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::MIN_OUTPUT));
 		x += dx;
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::MAX_OUTPUT));
 		x += dx;
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::AVG_OUTPUT));
-		x -= dx * 2;
-		y += dy * 2;
+		x -= dx * 1.5f;
+		y += dy;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::TOPAVG_OUTPUT));
+		x += dx;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::BOTAVG_OUTPUT));
+		x -= dx * 1.5f;
+		y += dy;
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::ABSAB_OUTPUT));
 		x += dx;
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::ABSAC_OUTPUT));
