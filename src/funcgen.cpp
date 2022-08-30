@@ -19,12 +19,14 @@ struct Funcgen : Module {
 		ENUMS(TRIGGER_INPUT, CHANNEL_COUNT),
 		ENUMS(RISE_CV_INPUT, CHANNEL_COUNT),
 		ENUMS(FALL_CV_INPUT, CHANNEL_COUNT),
+		ENUMS(TAH_GATE_INPUT, CHANNEL_COUNT),
 		CASCADE_TRIGGER_INPUT,
 		INPUTS_LEN
 	};
 	enum OutputId {
 		ENUMS(FUNCTION_OUTPUT, CHANNEL_COUNT),
 		ENUMS(EOC_OUTPUT, CHANNEL_COUNT),
+		ENUMS(TAH_OUTPUT, CHANNEL_COUNT),
 		CASCADE_OUTPUT,
 		CASCADE_EOC_OUTPUT,
 		MIN_OUTPUT,
@@ -75,10 +77,13 @@ struct Funcgen : Module {
 	
 	Envelope envelope[CHANNEL_COUNT];
 
+	float tah_value[CHANNEL_COUNT];
+
 	dsp::SchmittTrigger trigger[CHANNEL_COUNT];
 	dsp::SchmittTrigger push[CHANNEL_COUNT];
 	dsp::SchmittTrigger cascade_trigger;
 	dsp::SchmittTrigger cascade_push;
+	dsp::SchmittTrigger tah_trigger[CHANNEL_COUNT];
 	dsp::BooleanTrigger normal_mode_trigger;
 	dsp::BooleanTrigger eoc_trigger[CHANNEL_COUNT];
 	dsp::PulseGenerator eoc_pulse[CHANNEL_COUNT];
@@ -104,6 +109,8 @@ struct Funcgen : Module {
 			configInput(CASCADE_TRIGGER_INPUT, "Cascade trigger");
 			configOutput(FUNCTION_OUTPUT + i, "Function");
 			configOutput(EOC_OUTPUT + i, "EOC");
+			configInput(TAH_GATE_INPUT + i, "Track & Hold gate");
+			configOutput(TAH_OUTPUT + i, "Track & Hold");
 		}
 		configOutput(MIN_OUTPUT, "Minimum");
 		configOutput(MAX_OUTPUT, "Maximum");
@@ -174,6 +181,18 @@ struct Funcgen : Module {
 				}
 			}
 
+
+			if (tah_trigger[i].process(inputs[TAH_GATE_INPUT + i].getVoltage())) {
+				tah_value[i] = envelope[i].env;
+			}
+
+			if (inputs[TAH_GATE_INPUT + i].getVoltage() > 0.f) {
+				outputs[TAH_OUTPUT + i].setVoltage(tah_value[i]);
+			}
+			else {
+				outputs[TAH_OUTPUT + i].setVoltage(envelope[i].env);
+			}
+
 			envelope[i].process(st);
 
 			if (eoc_trigger[i].process(envelope[i].eoc)) {
@@ -181,6 +200,7 @@ struct Funcgen : Module {
 			}
 
 			outputs[FUNCTION_OUTPUT + i].setVoltage(envelope[i].env);
+
 
 			bool eoc = eoc_pulse[i].process(st);
 			outputs[EOC_OUTPUT + i].setVoltage(eoc ? 10.f : 0.f);
@@ -303,7 +323,7 @@ struct FuncgenWidget : ModuleWidget {
 
 		for (int i = 0; i < CHANNEL_COUNT; i++) {
 			x = x_start + 4 * dx * (i / 2) + dx;
-			y = y_start + 4 * dy * (i % 2) + RACK_GRID_WIDTH;
+			y = y_start + 5 * dy * (i % 2) + RACK_GRID_WIDTH;
 			addParam(createParamCentered<TL1105>(Vec(x, y), module, Funcgen::PUSH_PARAM + i));
 			x += dx;
 			addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::TRIGGER_INPUT + i));
@@ -322,8 +342,12 @@ struct FuncgenWidget : ModuleWidget {
 			x += dx;
 			addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::FALL_CV_INPUT + i));
 			y += dy;
-			x -= dx;
+			x -= dx * 2;
 			addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::EOC_OUTPUT + i));
+			x += dx;
+			addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::TAH_GATE_INPUT + i));
+			x += dx;
+			addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::TAH_OUTPUT + i));
 		}
 		x = x_start;
 		y = box.size.y - (RACK_GRID_WIDTH * 2);
