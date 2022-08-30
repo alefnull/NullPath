@@ -117,6 +117,8 @@ struct Funcgen : Module {
 		configOutput(MIN_OUTPUT, "Minimum");
 		configOutput(MAX_OUTPUT, "Maximum");
 		configOutput(AVG_OUTPUT, "Average");
+		configOutput(TOPAVG_OUTPUT, "Top 2 Average");
+		configOutput(BOTAVG_OUTPUT, "Bottom 2 Average");
 		configOutput(AGTB_OUTPUT, "A > B");
 		configOutput(AGTC_OUTPUT, "A > C");
 		configOutput(AGTD_OUTPUT, "A > D");
