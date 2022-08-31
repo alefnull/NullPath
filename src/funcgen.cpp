@@ -110,12 +110,12 @@ struct Funcgen : Module {
 			configParam(RISE_PARAM + i, 0.01f, 10.f, 0.01f, "Rise time", " s");
 			configParam(FALL_PARAM + i, 0.01f, 10.f, 0.01f, "Fall time", " s");
 			configSwitch(LOOP_PARAM + i, 0.f, 1.f, 0.f, "Loop");
-			configParam(CASCADE_TRIGGER_PARAM, 0.f, 1.f, 0.f, "Cascade push");
+			configParam(CASCADE_TRIGGER_PARAM, 0.f, 1.f, 0.f, "Cascade Re-Trigger");
 			configParam(PUSH_PARAM + i, 0.f, 1.f, 0.f, "Push");
 			configInput(TRIGGER_INPUT + i, "Trigger");
 			configInput(RISE_CV_INPUT + i, "Rise CV");
 			configInput(FALL_CV_INPUT + i, "Fall CV");
-			configInput(CASCADE_TRIGGER_INPUT, "Cascade trigger");
+			configInput(CASCADE_TRIGGER_INPUT, "Cascade Re-Trigger");
 			configOutput(FUNCTION_OUTPUT + i, "Function");
 			configOutput(EOC_OUTPUT + i, "EOC");
 			configInput(TAH_GATE_INPUT + i, "Track & Hold gate");
@@ -192,7 +192,6 @@ struct Funcgen : Module {
 				}
 			}
 
-
 			if (tah_trigger[i].process(inputs[TAH_GATE_INPUT + i].getVoltage())) {
 				tah_value[i] = envelope[i].env;
 			}
@@ -211,7 +210,6 @@ struct Funcgen : Module {
 			}
 
 			outputs[FUNCTION_OUTPUT + i].setVoltage(envelope[i].env);
-
 
 			bool eoc = eoc_pulse[i].process(st);
 			outputs[EOC_OUTPUT + i].setVoltage(eoc ? 10.f : 0.f);
@@ -317,6 +315,7 @@ struct Funcgen : Module {
 		outputs[ABSDA_OUTPUT].setVoltage(std::abs(a - d));
 		outputs[ABSDB_OUTPUT].setVoltage(std::abs(b - d));
 		outputs[ABSDC_OUTPUT].setVoltage(std::abs(c - d));
+
 		// find the two channels with the highest amplitude
 		float max_a = 0.f;
 		float max_b = 0.f;
@@ -330,6 +329,7 @@ struct Funcgen : Module {
 			}
 		}
 		outputs[TOPAVG_OUTPUT].setVoltage((max_a + max_b) / 2.f);
+
 		// find the two channels with the lowest amplitude
 		float min_a = 10.f;
 		float min_b = 10.f;
