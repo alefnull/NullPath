@@ -4,6 +4,8 @@
 
 #define CHANNEL_COUNT 4
 #define ENV_MAX_VOLTAGE 10.f
+#define MIN_TIME 0.01f
+#define MAX_TIME 10.f
 
 struct Funcgen : Module {
 	enum ParamId {
@@ -79,7 +81,7 @@ struct Funcgen : Module {
 
 	Stage stage = IDLE;
 	Mode mode = NORMAL;
-	
+
 	Envelope envelope[CHANNEL_COUNT];
 
 	float tah_value[CHANNEL_COUNT];
@@ -107,8 +109,8 @@ struct Funcgen : Module {
 		configOutput(CASCADE_EOC_OUTPUT, "Cascade EOC");
 		configOutput(CASCADE_OUTPUT, "Cascade");
 		for (int i = 0; i < CHANNEL_COUNT; i++) {
-			configParam(RISE_PARAM + i, 0.01f, 10.f, 0.01f, "Rise time", " s");
-			configParam(FALL_PARAM + i, 0.01f, 10.f, 0.01f, "Fall time", " s");
+			configParam(RISE_PARAM + i, MIN_TIME, MAX_TIME, 1.f, "Rise time", " s");
+			configParam(FALL_PARAM + i, MIN_TIME, MAX_TIME, 1.f, "Fall time", " s");
 			configSwitch(LOOP_PARAM + i, 0.f, 1.f, 0.f, "Loop");
 			configParam(CASCADE_TRIGGER_PARAM, 0.f, 1.f, 0.f, "Cascade Re-Trigger");
 			configParam(PUSH_PARAM + i, 0.f, 1.f, 0.f, "Push");
@@ -174,12 +176,12 @@ struct Funcgen : Module {
 			envelope[i].set_fall(fall_time);
 
 			if (inputs[RISE_CV_INPUT].isConnected()) {
-				rise_time = clamp(rise_time * inputs[RISE_CV_INPUT + i].getVoltage() / 10.f, 0.01f, 10.f);
+				rise_time = clamp(rise_time * inputs[RISE_CV_INPUT + i].getVoltage() / 10.f, MIN_TIME, MAX_TIME);
 				envelope[i].set_rise(rise_time);
 			}
 
 			if (inputs[FALL_CV_INPUT].isConnected()) {
-				fall_time = clamp(fall_time * inputs[FALL_CV_INPUT + i].getVoltage() / 10.f, 0.01f, 10.f);
+				fall_time = clamp(fall_time * inputs[FALL_CV_INPUT + i].getVoltage() / 10.f, MIN_TIME, MAX_TIME);
 				envelope[i].set_fall(fall_time);
 			}
 
