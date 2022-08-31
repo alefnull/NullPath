@@ -374,22 +374,18 @@ struct FuncgenWidget : ModuleWidget {
 			x = x_start + 4 * dx * (i / 2) + dx;
 			y = y_start + 5 * dy * (i % 2) + RACK_GRID_WIDTH;
 			x -= dx;
-			x -= dx * 0.25f;
-			y -= dy * 0.25f;
 			if (i == 0) {
-				addChild(createLight<LargeLight<RedLight>>(Vec(x, y), module, Funcgen::OUTPUT_LIGHT + i));
+				addChild(createLightCentered<LargeLight<RedLight>>(Vec(x, y), module, Funcgen::OUTPUT_LIGHT + i));
 			}
 			else if (i == 1) {
-				addChild(createLight<LargeLight<GreenLight>>(Vec(x, y), module, Funcgen::OUTPUT_LIGHT + i));
+				addChild(createLightCentered<LargeLight<GreenLight>>(Vec(x, y), module, Funcgen::OUTPUT_LIGHT + i));
 			}
 			else if (i == 2) {
-				addChild(createLight<LargeLight<BlueLight>>(Vec(x, y), module, Funcgen::OUTPUT_LIGHT + i));
+				addChild(createLightCentered<LargeLight<BlueLight>>(Vec(x, y), module, Funcgen::OUTPUT_LIGHT + i));
 			}
 			else if (i == 3) {
-				addChild(createLight<LargeLight<YellowLight>>(Vec(x, y), module, Funcgen::OUTPUT_LIGHT + i));
+				addChild(createLightCentered<LargeLight<YellowLight>>(Vec(x, y), module, Funcgen::OUTPUT_LIGHT + i));
 			}
-			x += dx * 0.25f;
-			y += dy * 0.25f;
 			x += dx;
 			addParam(createParamCentered<TL1105>(Vec(x, y), module, Funcgen::PUSH_PARAM + i));
 			x += dx;
