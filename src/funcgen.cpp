@@ -12,6 +12,7 @@ struct Funcgen : Module {
 		ENUMS(FALL_PARAM, CHANNEL_COUNT),
 		ENUMS(PUSH_PARAM, CHANNEL_COUNT),
 		MODE_PARAM,
+		TRIGGER_ALL_PARAM,
 		CASCADE_TRIGGER_PARAM,
 		PARAMS_LEN
 	};
@@ -20,6 +21,7 @@ struct Funcgen : Module {
 		ENUMS(RISE_CV_INPUT, CHANNEL_COUNT),
 		ENUMS(FALL_CV_INPUT, CHANNEL_COUNT),
 		ENUMS(TAH_GATE_INPUT, CHANNEL_COUNT),
+		TRIGGER_ALL_INPUT,
 		CASCADE_TRIGGER_INPUT,
 		INPUTS_LEN
 	};
@@ -86,6 +88,8 @@ struct Funcgen : Module {
 	dsp::SchmittTrigger push[CHANNEL_COUNT];
 	dsp::SchmittTrigger cascade_trigger;
 	dsp::SchmittTrigger cascade_push;
+	dsp::SchmittTrigger trigger_all;
+	dsp::SchmittTrigger trigger_all_push;
 	dsp::SchmittTrigger tah_trigger[CHANNEL_COUNT];
 	dsp::BooleanTrigger normal_mode_trigger;
 	dsp::BooleanTrigger eoc_trigger[CHANNEL_COUNT];
@@ -98,6 +102,8 @@ struct Funcgen : Module {
 	Funcgen() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
 		configSwitch(MODE_PARAM, 0.f, 2.f, 0.f, "Mode", {"Normal", "Cascade", "Chaotic Cascade"});
+		configInput(TRIGGER_ALL_INPUT, "Trigger all");
+		configParam(TRIGGER_ALL_PARAM, 0.f, 1.f, 0.f, "Trigger all");
 		configOutput(CASCADE_EOC_OUTPUT, "Cascade EOC");
 		configOutput(CASCADE_OUTPUT, "Cascade");
 		for (int i = 0; i < CHANNEL_COUNT; i++) {
@@ -214,6 +220,14 @@ struct Funcgen : Module {
 			}
 			else if (eoc && mode == CHAOTIC_CASCADE) {
 				envelope[chaos_index].retrigger();
+			}
+		}
+
+		if (mode == NORMAL) {
+			if (trigger_all.process(inputs[TRIGGER_ALL_INPUT].getVoltage()) || trigger_all_push.process(params[TRIGGER_ALL_PARAM].getValue())) {
+				for (int i = 0; i < CHANNEL_COUNT; i++) {
+					envelope[i].retrigger();
+				}
 			}
 		}
 
@@ -413,6 +427,10 @@ struct FuncgenWidget : ModuleWidget {
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::CASCADE_OUTPUT));
 		x += dx;
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::CASCADE_EOC_OUTPUT));
+		x += dx * 2;
+		addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::TRIGGER_ALL_INPUT));
+		x += dx;
+		addParam(createParamCentered<TL1105>(Vec(x, y), module, Funcgen::TRIGGER_ALL_PARAM));
 		x = box.size.x - (RACK_GRID_WIDTH * 6);
 		y = y_start + dy;
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::AGTB_OUTPUT));
