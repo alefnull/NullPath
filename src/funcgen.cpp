@@ -6,6 +6,7 @@
 #define ENV_MAX_VOLTAGE 10.f
 #define MIN_TIME 0.01f
 #define MAX_TIME 10.f
+#define LAMBDA_BASE MAX_TIME / MIN_TIME
 
 struct Funcgen : Module {
 	enum ParamId {
@@ -32,7 +33,6 @@ struct Funcgen : Module {
 		ENUMS(EOC_OUTPUT, CHANNEL_COUNT),
 		ENUMS(TAH_OUTPUT, CHANNEL_COUNT),
 		CASCADE_OUTPUT,
-		CASCADE_EOC_OUTPUT,
 		MIN_OUTPUT,
 		MAX_OUTPUT,
 		AVG_OUTPUT,
@@ -66,6 +66,7 @@ struct Funcgen : Module {
 	};
 	enum LightId {
 		ENUMS(OUTPUT_LIGHT, CHANNEL_COUNT),
+		ENUMS(CASCADE_LIGHT, CHANNEL_COUNT),
 		LIGHTS_LEN
 	};
 	enum Stage {
@@ -74,15 +75,15 @@ struct Funcgen : Module {
 		FALLING
 	};
 	enum Mode {
-		NORMAL,
 		CASCADE,
 		CHAOTIC_CASCADE,
 	};
 
 	Stage stage = IDLE;
-	Mode mode = NORMAL;
+	Mode mode = CASCADE;
 
 	Envelope envelope[CHANNEL_COUNT];
+	Envelope cm_envelope[CHANNEL_COUNT];
 
 	float tah_value[CHANNEL_COUNT];
 
@@ -93,20 +94,18 @@ struct Funcgen : Module {
 	dsp::SchmittTrigger trigger_all;
 	dsp::SchmittTrigger trigger_all_push;
 	dsp::SchmittTrigger tah_trigger[CHANNEL_COUNT];
-	dsp::BooleanTrigger normal_mode_trigger;
 	dsp::BooleanTrigger eoc_trigger[CHANNEL_COUNT];
+	dsp::BooleanTrigger cm_eoc_trigger[CHANNEL_COUNT];
 	dsp::PulseGenerator eoc_pulse[CHANNEL_COUNT];
-	dsp::PulseGenerator cascade_eoc_pulse;
+	dsp::PulseGenerator cm_eoc_pulse[CHANNEL_COUNT];
 
-	bool normal_mode = true;
 	int chaos_index = 0;
 
 	Funcgen() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
-		configSwitch(MODE_PARAM, 0.f, 2.f, 0.f, "Mode", {"Normal", "Cascade", "Chaotic Cascade"});
+		configSwitch(MODE_PARAM, 0.f, 1.f, 0.f, "Mode", {"Cascade", "Chaotic Cascade"});
 		configInput(TRIGGER_ALL_INPUT, "Trigger all");
 		configParam(TRIGGER_ALL_PARAM, 0.f, 1.f, 0.f, "Trigger all");
-		configOutput(CASCADE_EOC_OUTPUT, "Cascade EOC");
 		configOutput(CASCADE_OUTPUT, "Cascade");
 		for (int i = 0; i < CHANNEL_COUNT; i++) {
 			configParam(RISE_PARAM + i, MIN_TIME, MAX_TIME, 1.f, "Rise time", " s");
@@ -156,16 +155,11 @@ struct Funcgen : Module {
 
 	void process(const ProcessArgs& args) override {
 		float st = args.sampleTime;
+
 		if (params[MODE_PARAM].getValue() == 0.f) {
-			normal_mode = true;
-			mode = NORMAL;
-		}
-		else if (params[MODE_PARAM].getValue() == 1.f) {
-			normal_mode = false;
 			mode = CASCADE;
 		}
-		else if (params[MODE_PARAM].getValue() == 2.f) {
-			normal_mode = false;
+		else if (params[MODE_PARAM].getValue() == 1.f) {
 			mode = CHAOTIC_CASCADE;
 		}
 
@@ -174,24 +168,26 @@ struct Funcgen : Module {
 			float fall_time = params[FALL_PARAM + i].getValue();
 			envelope[i].set_rise(rise_time);
 			envelope[i].set_fall(fall_time);
+			cm_envelope[i].set_rise(rise_time);
+			cm_envelope[i].set_fall(fall_time);
 
 			if (inputs[RISE_CV_INPUT].isConnected()) {
 				rise_time = clamp(rise_time * inputs[RISE_CV_INPUT + i].getVoltage() / 10.f, MIN_TIME, MAX_TIME);
 				envelope[i].set_rise(rise_time);
+				cm_envelope[i].set_rise(rise_time);
 			}
 
 			if (inputs[FALL_CV_INPUT].isConnected()) {
 				fall_time = clamp(fall_time * inputs[FALL_CV_INPUT + i].getVoltage() / 10.f, MIN_TIME, MAX_TIME);
 				envelope[i].set_fall(fall_time);
+				cm_envelope[i].set_fall(fall_time);
 			}
 
 			bool loop = params[LOOP_PARAM + i].getValue() > 0.5f;
-			envelope[i].set_loop(loop && mode == NORMAL);
+			envelope[i].set_loop(loop);
 
-			if (mode == NORMAL) {
-				if (trigger[i].process(inputs[TRIGGER_INPUT + i].getVoltage()) || push[i].process(params[PUSH_PARAM + i].getValue())) {
-					envelope[i].retrigger();		
-				}
+			if (trigger[i].process(inputs[TRIGGER_INPUT + i].getVoltage()) || push[i].process(params[PUSH_PARAM + i].getValue())) {
+				envelope[i].retrigger();		
 			}
 
 			if (tah_trigger[i].process(inputs[TAH_GATE_INPUT + i].getVoltage())) {
@@ -206,81 +202,79 @@ struct Funcgen : Module {
 			}
 
 			envelope[i].process(st);
+			cm_envelope[i].process(st);
 
 			if (eoc_trigger[i].process(envelope[i].eoc)) {
 				eoc_pulse[i].trigger(1e-3f);
 			}
 
+			if (cm_eoc_trigger[i].process(cm_envelope[i].eoc)) {
+				cm_eoc_pulse[i].trigger(1e-3f);
+			}
+
 			outputs[FUNCTION_OUTPUT + i].setVoltage(envelope[i].env);
 
 			bool eoc = eoc_pulse[i].process(st);
+			bool cm_eoc = cm_eoc_pulse[i].process(st);
 			outputs[EOC_OUTPUT + i].setVoltage(eoc ? 10.f : 0.f);
-			if (eoc && mode == CASCADE) {
-				envelope[(i + 1) % 4].retrigger();
+			if (mode == CASCADE) {
+				if (cm_eoc) {
+					cm_envelope[(i + 1) % CHANNEL_COUNT].retrigger();
+				}
 			}
-			else if (eoc && mode == CHAOTIC_CASCADE) {
-				envelope[chaos_index].retrigger();
+			else if (mode == CHAOTIC_CASCADE) {
+				if (cm_eoc) {
+					cm_envelope[chaos_index].retrigger();
+				}
 			}
 		}
 
-		if (mode == NORMAL) {
-			if (trigger_all.process(inputs[TRIGGER_ALL_INPUT].getVoltage()) || trigger_all_push.process(params[TRIGGER_ALL_PARAM].getValue())) {
-				for (int i = 0; i < CHANNEL_COUNT; i++) {
-					envelope[i].retrigger();
-				}
+		if (trigger_all.process(inputs[TRIGGER_ALL_INPUT].getVoltage()) || trigger_all_push.process(params[TRIGGER_ALL_PARAM].getValue())) {
+			for (int i = 0; i < CHANNEL_COUNT; i++) {
+				envelope[i].retrigger();
+			}
+			if (mode == CASCADE) {
+				cm_envelope[0].retrigger();
+			}
+			else if (mode == CHAOTIC_CASCADE) {
+				cm_envelope[chaos_index].retrigger();
 			}
 		}
 
 		float cascade_output = 0.f;
 		if (mode == CASCADE) {
-			cascade_output = std::max(envelope[0].env, envelope[1].env);
-			cascade_output = std::max(cascade_output, envelope[2].env);
-			cascade_output = std::max(cascade_output, envelope[3].env);
+			cascade_output = std::max(cm_envelope[0].env, cm_envelope[1].env);
+			cascade_output = std::max(cascade_output, cm_envelope[2].env);
+			cascade_output = std::max(cascade_output, cm_envelope[3].env);
 		}
 		else if (mode == CHAOTIC_CASCADE) {
-			cascade_output = envelope[chaos_index].env;
-			if (eoc_pulse[chaos_index].process(st)) {
+			cascade_output = cm_envelope[chaos_index].env;
+			if (cm_eoc_pulse[chaos_index].process(st)) {
 				int last_index = chaos_index;
 				while (last_index == chaos_index) {
 					chaos_index = random::u32() % CHANNEL_COUNT;
 				}
 				for (int i = 0; i < CHANNEL_COUNT; i++) {
 					if (i != chaos_index) {
-						envelope[i].reset();
+						cm_envelope[i].reset();
 					}
 				}
 			}
 		}
 		outputs[CASCADE_OUTPUT].setVoltage(cascade_output);
 
-		if (mode == CASCADE) {
-			outputs[CASCADE_EOC_OUTPUT].setVoltage(outputs[EOC_OUTPUT + 3].getVoltage());
-		}
-		else if (mode == CHAOTIC_CASCADE) {
-			outputs[CASCADE_EOC_OUTPUT].setVoltage(outputs[EOC_OUTPUT + chaos_index].getVoltage());
-		}
-		else {
-			outputs[CASCADE_EOC_OUTPUT].setVoltage(0.f);
-		}
-
-		if (normal_mode_trigger.process(normal_mode)) {
-			for (int i = 0; i < CHANNEL_COUNT; i++) {
-				envelope[i].reset();
-			}
-		}
-
 		if (cascade_trigger.process(inputs[CASCADE_TRIGGER_INPUT].getVoltage() || cascade_push.process(params[CASCADE_TRIGGER_PARAM].getValue()))) {
 			if (mode == CASCADE) {
-				envelope[0].retrigger();
-				envelope[1].reset();
-				envelope[2].reset();
-				envelope[3].reset();
+				cm_envelope[0].retrigger();
+				cm_envelope[1].reset();
+				cm_envelope[2].reset();
+				cm_envelope[3].reset();
 			}
 			else if (mode == CHAOTIC_CASCADE) {
-				envelope[chaos_index].retrigger();
+				cm_envelope[chaos_index].retrigger();
 				for (int i = 0; i < CHANNEL_COUNT; i++) {
 					if (i != chaos_index) {
-						envelope[i].reset();
+						cm_envelope[i].reset();
 					}
 				}
 			}
@@ -348,6 +342,7 @@ struct Funcgen : Module {
 
 		for (int i = 0; i < CHANNEL_COUNT; i++) {
 			lights[i].setBrightness(envelope[i].env / 10.f);
+			lights[CASCADE_LIGHT + i].setBrightness(cm_envelope[i].env / 10.f);
 		}
 	}
 };
@@ -418,13 +413,16 @@ struct FuncgenWidget : ModuleWidget {
 		y = box.size.y - (RACK_GRID_WIDTH * 2);
 		addParam(createParamCentered<TL1105>(Vec(x, y), module, Funcgen::CASCADE_TRIGGER_PARAM));
 		x += dx;
-		addParam(createParamCentered<CKSSThree>(Vec(x, y), module, Funcgen::MODE_PARAM));
+		addParam(createParamCentered<CKSS>(Vec(x, y), module, Funcgen::MODE_PARAM));
 		x += dx;
 		addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::CASCADE_TRIGGER_INPUT));
 		x += dx;
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::CASCADE_OUTPUT));
 		x += dx;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::CASCADE_EOC_OUTPUT));
+		addChild(createLightCentered<LargeLight<RedLight>>(Vec(x, y), module, Funcgen::CASCADE_LIGHT));
+		addChild(createLightCentered<LargeLight<GreenLight>>(Vec(x, y), module, Funcgen::CASCADE_LIGHT + 1));
+		addChild(createLightCentered<LargeLight<BlueLight>>(Vec(x, y), module, Funcgen::CASCADE_LIGHT + 2));
+		addChild(createLightCentered<LargeLight<YellowLight>>(Vec(x, y), module, Funcgen::CASCADE_LIGHT + 3));
 		x += dx * 2;
 		addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::TRIGGER_ALL_INPUT));
 		x += dx;
