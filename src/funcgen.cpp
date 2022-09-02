@@ -85,6 +85,7 @@ struct Funcgen : Module {
 	Envelope envelope[CHANNEL_COUNT];
 	Envelope cm_envelope[CHANNEL_COUNT];
 
+	int chaos_index = 0;
 	float tah_value[CHANNEL_COUNT];
 
 	dsp::SchmittTrigger trigger[CHANNEL_COUNT];
@@ -96,10 +97,10 @@ struct Funcgen : Module {
 	dsp::SchmittTrigger tah_trigger[CHANNEL_COUNT];
 	dsp::BooleanTrigger eoc_trigger[CHANNEL_COUNT];
 	dsp::BooleanTrigger cm_eoc_trigger[CHANNEL_COUNT];
+	dsp::BooleanTrigger loop_trigger[CHANNEL_COUNT];
 	dsp::PulseGenerator eoc_pulse[CHANNEL_COUNT];
 	dsp::PulseGenerator cm_eoc_pulse[CHANNEL_COUNT];
 
-	int chaos_index = 0;
 
 	Funcgen() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
@@ -192,6 +193,17 @@ struct Funcgen : Module {
 
 			bool loop = params[LOOP_PARAM + i].getValue() > 0.5f;
 			envelope[i].set_loop(loop);
+
+			if (args.frame == 0) {
+				if (params[LOOP_PARAM + i].getValue() > 0.5f) {
+					envelope[i].retrigger();
+				}
+			}
+
+			if (loop_trigger[i].process(params[LOOP_PARAM + i].getValue())) {
+				envelope[i].retrigger();
+				cm_envelope[i].retrigger();
+			}
 
 			if (trigger[i].process(inputs[TRIGGER_INPUT + i].getVoltage()) || push[i].process(params[PUSH_PARAM + i].getValue())) {
 				envelope[i].retrigger();		
