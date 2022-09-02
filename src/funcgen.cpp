@@ -242,6 +242,9 @@ struct Funcgen : Module {
 			}
 			if (mode == CASCADE) {
 				cm_envelope[0].retrigger();
+				cm_envelope[1].reset();
+				cm_envelope[2].reset();
+				cm_envelope[3].reset();
 			}
 			else if (mode == CHAOTIC_CASCADE) {
 				cm_envelope[chaos_index].retrigger();
