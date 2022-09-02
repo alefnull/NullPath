@@ -151,6 +151,13 @@ struct Funcgen : Module {
 		configOutput(ABSDA_OUTPUT, "abs(A - D)");
 		configOutput(ABSDB_OUTPUT, "abs(B - D)");
 		configOutput(ABSDC_OUTPUT, "abs(C - D)");
+		if (mode == CASCADE) {
+			cm_envelope[0].retrigger();
+		}
+		else if (mode == CHAOTIC_CASCADE) {
+			chaos_index = random::u32() % CHANNEL_COUNT;
+			cm_envelope[chaos_index].retrigger();
+		}
 	}
 
 	void process(const ProcessArgs& args) override {
