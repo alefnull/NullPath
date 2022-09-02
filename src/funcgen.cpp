@@ -178,14 +178,14 @@ struct Funcgen : Module {
 			cm_envelope[i].set_rise(rise_time);
 			cm_envelope[i].set_fall(fall_time);
 
-			if (inputs[RISE_CV_INPUT].isConnected()) {
-				rise_time = clamp(rise_time * inputs[RISE_CV_INPUT + i].getVoltage() / 10.f, MIN_TIME, MAX_TIME);
+			if (inputs[RISE_CV_INPUT + i].isConnected()) {
+				rise_time = clamp(rise_time * (inputs[RISE_CV_INPUT + i].getVoltage() / 10.f), MIN_TIME, MAX_TIME);
 				envelope[i].set_rise(rise_time);
 				cm_envelope[i].set_rise(rise_time);
 			}
 
-			if (inputs[FALL_CV_INPUT].isConnected()) {
-				fall_time = clamp(fall_time * inputs[FALL_CV_INPUT + i].getVoltage() / 10.f, MIN_TIME, MAX_TIME);
+			if (inputs[FALL_CV_INPUT + i].isConnected()) {
+				fall_time = clamp(fall_time * (inputs[FALL_CV_INPUT + i].getVoltage() / 10.f), MIN_TIME, MAX_TIME);
 				envelope[i].set_fall(fall_time);
 				cm_envelope[i].set_fall(fall_time);
 			}
