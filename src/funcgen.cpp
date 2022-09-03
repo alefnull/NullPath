@@ -79,17 +79,11 @@ struct Funcgen : Module {
 		ENUMS(CASCADE_LIGHT, CHANNEL_COUNT),
 		LIGHTS_LEN
 	};
-	enum Stage {
-		IDLE,
-		RISING,
-		FALLING
-	};
 	enum Mode {
 		CASCADE,
 		CHAOTIC_CASCADE,
 	};
 
-	Stage stage = IDLE;
 	Mode mode = CASCADE;
 
 	Envelope envelope[CHANNEL_COUNT];
@@ -119,6 +113,8 @@ struct Funcgen : Module {
 		configInput(TRIGGER_ALL_INPUT, "Trigger all");
 		configParam(TRIGGER_ALL_PARAM, 0.f, 1.f, 0.f, "Trigger all");
 		configOutput(CASCADE_OUTPUT, "Cascade");
+		configParam(CASCADE_TRIGGER_PARAM, 0.f, 1.f, 0.f, "Cascade Re-Trigger");
+		configInput(CASCADE_TRIGGER_INPUT, "Cascade Re-Trigger");
 		configOutput(CASCADE_RISING_OUTPUT, "Cascade Rising");
 		configOutput(CASCADE_FALLING_OUTPUT, "Cascade Falling");
 		for (int i = 0; i < CHANNEL_COUNT; i++) {
@@ -130,7 +126,6 @@ struct Funcgen : Module {
 			configInput(TRIGGER_INPUT + i, "Trigger");
 			configInput(RISE_CV_INPUT + i, "Rise CV");
 			configInput(FALL_CV_INPUT + i, "Fall CV");
-			configInput(CASCADE_TRIGGER_INPUT, "Cascade Re-Trigger");
 			configOutput(FUNCTION_OUTPUT + i, "Function");
 			configOutput(RISING_OUTPUT + i, "Rising");
 			configOutput(FALLING_OUTPUT + i, "Falling");
@@ -167,8 +162,6 @@ struct Funcgen : Module {
 		configOutput(ABSDA_OUTPUT, "abs(A - D)");
 		configOutput(ABSDB_OUTPUT, "abs(B - D)");
 		configOutput(ABSDC_OUTPUT, "abs(C - D)");
-
-		configParam(ENV_FUNC_PARAM, -1.f, 1.f, 0.f, "Envelope Function");
 
 		if (mode == CASCADE) {
 			current_index = 0;
@@ -218,18 +211,12 @@ struct Funcgen : Module {
 			bool loop = params[LOOP_PARAM + i].getValue() < 0.5f;
 			envelope[i].set_loop(loop);
 
-			if (args.frame == 0) {
-				if (params[LOOP_PARAM + i].getValue() > 0.5f) {
-					envelope[i].retrigger();
-				}
-			}
-
 			if (loop_trigger[i].process(params[LOOP_PARAM + i].getValue())) {
 				envelope[i].retrigger();
 			}
 
 			if (trigger[i].process(inputs[TRIGGER_INPUT + i].getVoltage()) || push[i].process(params[PUSH_PARAM + i].getValue())) {
-				envelope[i].retrigger();		
+				envelope[i].retrigger();
 			}
 
 			if (tah_trigger[i].process(inputs[TAH_GATE_INPUT + i].getVoltage())) {
@@ -425,24 +412,28 @@ struct FuncgenWidget : ModuleWidget {
 		addParam(createParamCentered<NP::Knob>(mm2px(Vec(36.572, 36.657)), module, Funcgen::FALL_PARAM + 0));
 		addParam(createParamCentered<NP::LoopSwitch>(mm2px(Vec(36.572, 15.665)), module, Funcgen::LOOP_PARAM + 0));
 		addParam(createParamCentered<NP::SpeedSwitch>(mm2px(Vec(24.192, 44.891)), module, Funcgen::SPEED_PARAM + 0));
+
 		addParam(createParamCentered<NP::Knob>(mm2px(Vec(116.706, 36.657)), module, Funcgen::RISE_PARAM + 1));
 		addParam(createParamCentered<NP::SmallKnob>(mm2px(Vec(125.521, 32.424)), module, Funcgen::RISE_SHAPE_PARAM + 1));
 		addParam(createParamCentered<NP::SmallKnob>(mm2px(Vec(132.4, 32.424)), module, Funcgen::FALL_SHAPE_PARAM + 1));
 		addParam(createParamCentered<NP::Knob>(mm2px(Vec(141.466, 36.657)), module, Funcgen::FALL_PARAM + 1));
 		addParam(createParamCentered<NP::LoopSwitch>(mm2px(Vec(141.466, 15.665)), module, Funcgen::LOOP_PARAM + 1));
 		addParam(createParamCentered<NP::SpeedSwitch>(mm2px(Vec(129.086, 44.891)), module, Funcgen::SPEED_PARAM + 1));
+
 		addParam(createParamCentered<NP::Knob>(mm2px(Vec(11.812, 103.342)), module, Funcgen::RISE_PARAM + 3));
 		addParam(createParamCentered<NP::SmallKnob>(mm2px(Vec(20.626, 99.108)), module, Funcgen::RISE_SHAPE_PARAM + 3));
 		addParam(createParamCentered<NP::SmallKnob>(mm2px(Vec(27.506, 99.108)), module, Funcgen::FALL_SHAPE_PARAM + 3));
 		addParam(createParamCentered<NP::Knob>(mm2px(Vec(36.572, 103.342)), module, Funcgen::FALL_PARAM + 3));
 		addParam(createParamCentered<NP::LoopSwitch>(mm2px(Vec(36.572, 82.349)), module, Funcgen::LOOP_PARAM + 3));
 		addParam(createParamCentered<NP::SpeedSwitch>(mm2px(Vec(24.192, 111.576)), module, Funcgen::SPEED_PARAM + 3));
+
 		addParam(createParamCentered<NP::Knob>(mm2px(Vec(116.704, 103.342)), module, Funcgen::RISE_PARAM + 2));
 		addParam(createParamCentered<NP::SmallKnob>(mm2px(Vec(125.519, 99.108)), module, Funcgen::RISE_SHAPE_PARAM + 2));
 		addParam(createParamCentered<NP::SmallKnob>(mm2px(Vec(132.398, 99.108)), module, Funcgen::FALL_SHAPE_PARAM + 2));
 		addParam(createParamCentered<NP::Knob>(mm2px(Vec(141.464, 103.342)), module, Funcgen::FALL_PARAM + 2));
 		addParam(createParamCentered<NP::LoopSwitch>(mm2px(Vec(141.464, 82.349)), module, Funcgen::LOOP_PARAM + 2));
 		addParam(createParamCentered<NP::SpeedSwitch>(mm2px(Vec(129.084, 111.576)), module, Funcgen::SPEED_PARAM + 2));
+
 		addParam(createParamCentered<NP::Button>(mm2px(Vec(81.478, 43.048)), module, Funcgen::TRIGGER_ALL_PARAM));
 		addParam(createParamCentered<NP::LoopSwitch>(mm2px(Vec(89.03, 59.95)), module, Funcgen::CASCADE_LOOP_PARAM));
 		addParam(createParamCentered<NP::SpeedSwitch>(mm2px(Vec(97.077, 65.028)), module, Funcgen::CASCADE_SPEED_PARAM));
@@ -513,11 +504,11 @@ struct FuncgenWidget : ModuleWidget {
 		// mm2px(Vec(12.531, 7.897))
 		//addChild(createWidget<Widget>(mm2px(Vec(17.846, 87.74))));
 		pos = mm2px(Vec(12.531, 7.897) * 0.5 + Vec(17.846, 87.74));
-		addChild(createLightCentered<LargeLight<BlueLight>>(pos, module, Funcgen::OUTPUT_LIGHT + 3));
+		addChild(createLightCentered<LargeLight<YellowLight>>(pos, module, Funcgen::OUTPUT_LIGHT + 3));
 		// mm2px(Vec(12.531, 7.897))
 		//addChild(createWidget<Widget>(mm2px(Vec(122.739, 87.74))));
 		pos = mm2px(Vec(12.531, 7.897) * 0.5 + Vec(122.739, 87.74));
-		addChild(createLightCentered<LargeLight<YellowLight>>(pos, module, Funcgen::OUTPUT_LIGHT + 2));
+		addChild(createLightCentered<LargeLight<BlueLight>>(pos, module, Funcgen::OUTPUT_LIGHT + 2));
 		// mm2px(Vec(12.531, 7.897))
 		//addChild(createWidget<Widget>(mm2px(Vec(70.304, 65.287))));
 		pos = mm2px(Vec(12.531, 7.897) * 0.5 + Vec(70.304, 65.287));
