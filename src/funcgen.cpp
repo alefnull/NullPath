@@ -69,10 +69,10 @@ struct Funcgen : Module {
 		ABSDC_OUTPUT,
 		TOPAVG_OUTPUT,
 		BOTAVG_OUTPUT,
-		ENUMS(RISING_OUTPUT, CHANNEL_COUNT), //TODO Implement
-		ENUMS(FALLING_OUTPUT, CHANNEL_COUNT), //TODO Implement
-		CASCADE_RISING_OUTPUT, //TODO Implement
-		CASCADE_FALLING_OUTPUT, //TODO Implement
+		ENUMS(RISING_OUTPUT, CHANNEL_COUNT),
+		ENUMS(FALLING_OUTPUT, CHANNEL_COUNT),
+		CASCADE_RISING_OUTPUT,
+		CASCADE_FALLING_OUTPUT,
 		OUTPUTS_LEN
 	};
 	enum LightId {
@@ -97,6 +97,7 @@ struct Funcgen : Module {
 	Envelope cm_envelope[CHANNEL_COUNT];
 
 	int chaos_index = 0;
+	int current_index = 0;
 	float tah_value[CHANNEL_COUNT];
 
 	dsp::SchmittTrigger trigger[CHANNEL_COUNT];
@@ -119,6 +120,8 @@ struct Funcgen : Module {
 		configInput(TRIGGER_ALL_INPUT, "Trigger all");
 		configParam(TRIGGER_ALL_PARAM, 0.f, 1.f, 0.f, "Trigger all");
 		configOutput(CASCADE_OUTPUT, "Cascade");
+		configOutput(CASCADE_RISING_OUTPUT, "Cascade Rising");
+		configOutput(CASCADE_FALLING_OUTPUT, "Cascade Falling");
 		for (int i = 0; i < CHANNEL_COUNT; i++) {
 			configParam(RISE_PARAM + i, MIN_TIME, MAX_TIME, 1.f, "Rise time", " s");
 			configParam(FALL_PARAM + i, MIN_TIME, MAX_TIME, 1.f, "Fall time", " s");
@@ -130,6 +133,8 @@ struct Funcgen : Module {
 			configInput(FALL_CV_INPUT + i, "Fall CV");
 			configInput(CASCADE_TRIGGER_INPUT, "Cascade Re-Trigger");
 			configOutput(FUNCTION_OUTPUT + i, "Function");
+			configOutput(RISING_OUTPUT + i, "Rising");
+			configOutput(FALLING_OUTPUT + i, "Falling");
 			configOutput(EOC_OUTPUT + i, "EOC");
 			configInput(TAH_GATE_INPUT + i, "Track & Hold gate");
 			configOutput(TAH_OUTPUT + i, "Track & Hold");
@@ -167,10 +172,12 @@ struct Funcgen : Module {
 		configParam(ENV_FUNC_PARAM, -1.f, 1.f, 0.f, "Envelope Function");
 
 		if (mode == CASCADE) {
+			current_index = 0;
 			cm_envelope[0].retrigger();
 		}
 		else if (mode == CHAOTIC_CASCADE) {
 			chaos_index = random::u32() % CHANNEL_COUNT;
+			current_index = chaos_index;
 			cm_envelope[chaos_index].retrigger();
 		}
 	}
@@ -250,17 +257,22 @@ struct Funcgen : Module {
 
 			outputs[FUNCTION_OUTPUT + i].setVoltage(envelope[i].env);
 
+			outputs[RISING_OUTPUT + i].setVoltage(envelope[i].stage == Envelope::RISING ? 10.f : 0.f);
+			outputs[FALLING_OUTPUT + i].setVoltage(envelope[i].stage == Envelope::FALLING ? 10.f : 0.f);
+
 			bool eoc = eoc_pulse[i].process(st);
 			bool cm_eoc = cm_eoc_pulse[i].process(st);
 			outputs[EOC_OUTPUT + i].setVoltage(eoc ? 10.f : 0.f);
 			if (mode == CASCADE) {
 				if (cm_eoc) {
-					cm_envelope[(i + 1) % CHANNEL_COUNT].retrigger();
+					current_index = (i + 1) % CHANNEL_COUNT;
+					cm_envelope[current_index].retrigger();
 				}
 			}
 			else if (mode == CHAOTIC_CASCADE) {
 				if (cm_eoc) {
-					cm_envelope[chaos_index].retrigger();
+					current_index = chaos_index;
+					cm_envelope[current_index].retrigger();
 				}
 			}
 		}
@@ -270,13 +282,20 @@ struct Funcgen : Module {
 				envelope[i].retrigger();
 			}
 			if (mode == CASCADE) {
+				current_index = 0;
 				cm_envelope[0].retrigger();
 				cm_envelope[1].reset();
 				cm_envelope[2].reset();
 				cm_envelope[3].reset();
 			}
 			else if (mode == CHAOTIC_CASCADE) {
+				current_index = chaos_index;
 				cm_envelope[chaos_index].retrigger();
+				for (int i = 0; i < CHANNEL_COUNT; i++) {
+					if (i != chaos_index) {
+						cm_envelope[i].reset();
+					}
+				}
 			}
 		}
 
@@ -301,15 +320,19 @@ struct Funcgen : Module {
 			}
 		}
 		outputs[CASCADE_OUTPUT].setVoltage(cascade_output);
+		outputs[CASCADE_RISING_OUTPUT].setVoltage(cm_envelope[current_index].stage == Envelope::RISING ? 10.f : 0.f);
+		outputs[CASCADE_FALLING_OUTPUT].setVoltage(cm_envelope[current_index].stage == Envelope::FALLING ? 10.f : 0.f);
 
 		if (cascade_trigger.process(inputs[CASCADE_TRIGGER_INPUT].getVoltage() || cascade_push.process(params[CASCADE_TRIGGER_PARAM].getValue()))) {
 			if (mode == CASCADE) {
+				current_index = 0;
 				cm_envelope[0].retrigger();
 				cm_envelope[1].reset();
 				cm_envelope[2].reset();
 				cm_envelope[3].reset();
 			}
 			else if (mode == CHAOTIC_CASCADE) {
+				current_index = chaos_index;
 				cm_envelope[chaos_index].retrigger();
 				for (int i = 0; i < CHANNEL_COUNT; i++) {
 					if (i != chaos_index) {

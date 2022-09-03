@@ -19,7 +19,7 @@ struct Envelope {
     };
 
     Stage stage = IDLE;
-    float func = 0.f;
+    int current_index = 0;
     float _env = MIN_VALUE;
     float env = 0;
     float rise_time = 0.01f;
@@ -48,6 +48,8 @@ struct Envelope {
     void set_fall_shape(float shape){
     	this->fall_shape = shape;
     }
+    void set_index(int index) {
+        this->current_index = index;
     }
     void trigger() {
         stage = RISING;
