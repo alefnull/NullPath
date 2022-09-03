@@ -29,7 +29,6 @@ struct Funcgen : Module {
 		ENUMS(TRIGGER_INPUT, CHANNEL_COUNT),
 		ENUMS(RISE_CV_INPUT, CHANNEL_COUNT),
 		ENUMS(FALL_CV_INPUT, CHANNEL_COUNT),
-		ENUMS(TAH_GATE_INPUT, CHANNEL_COUNT),
 		TRIGGER_ALL_INPUT,
 		CASCADE_TRIGGER_INPUT,
 		INPUTS_LEN
@@ -37,7 +36,6 @@ struct Funcgen : Module {
 	enum OutputId {
 		ENUMS(FUNCTION_OUTPUT, CHANNEL_COUNT),
 		ENUMS(EOC_OUTPUT, CHANNEL_COUNT),
-		ENUMS(TAH_OUTPUT, CHANNEL_COUNT),
 		CASCADE_OUTPUT,
 		MIN_OUTPUT,
 		MAX_OUTPUT,
@@ -91,7 +89,6 @@ struct Funcgen : Module {
 
 	int chaos_index = 0;
 	int current_index = 0;
-	float tah_value[CHANNEL_COUNT];
 
 	dsp::SchmittTrigger trigger[CHANNEL_COUNT];
 	dsp::SchmittTrigger push[CHANNEL_COUNT];
@@ -99,7 +96,6 @@ struct Funcgen : Module {
 	dsp::SchmittTrigger cascade_push;
 	dsp::SchmittTrigger trigger_all;
 	dsp::SchmittTrigger trigger_all_push;
-	dsp::SchmittTrigger tah_trigger[CHANNEL_COUNT];
 	dsp::BooleanTrigger eoc_trigger[CHANNEL_COUNT];
 	dsp::BooleanTrigger cm_eoc_trigger[CHANNEL_COUNT];
 	dsp::BooleanTrigger loop_trigger[CHANNEL_COUNT];
@@ -134,8 +130,6 @@ struct Funcgen : Module {
 			configOutput(RISING_OUTPUT + i, "Rising");
 			configOutput(FALLING_OUTPUT + i, "Falling");
 			configOutput(EOC_OUTPUT + i, "EOC");
-			configInput(TAH_GATE_INPUT + i, "Track & Hold gate");
-			configOutput(TAH_OUTPUT + i, "Track & Hold");
 		}
 		configOutput(MIN_OUTPUT, "Minimum");
 		configOutput(MAX_OUTPUT, "Maximum");
@@ -232,17 +226,6 @@ struct Funcgen : Module {
 
 			if (trigger[i].process(inputs[TRIGGER_INPUT + i].getVoltage()) || push[i].process(params[PUSH_PARAM + i].getValue())) {
 				envelope[i].retrigger();
-			}
-
-			if (tah_trigger[i].process(inputs[TAH_GATE_INPUT + i].getVoltage())) {
-				tah_value[i] = envelope[i].env;
-			}
-
-			if (inputs[TAH_GATE_INPUT + i].getVoltage() > 0.f) {
-				outputs[TAH_OUTPUT + i].setVoltage(tah_value[i]);
-			}
-			else {
-				outputs[TAH_OUTPUT + i].setVoltage(envelope[i].env);
 			}
 
 			envelope[i].process(st);
