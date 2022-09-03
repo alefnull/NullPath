@@ -183,6 +183,7 @@ struct Funcgen : Module {
 			envelope[i].set_function(env_func);
 			envelope[i].set_rise(rise_time);
 			envelope[i].set_fall(fall_time);
+			cm_envelope[i].set_function(env_func);
 			cm_envelope[i].set_rise(rise_time);
 			cm_envelope[i].set_fall(fall_time);
 
