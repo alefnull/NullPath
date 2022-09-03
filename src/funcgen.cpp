@@ -1,4 +1,5 @@
 #include "plugin.hpp"
+#include "widgets.hpp"
 #include "Envelope.hpp"
 
 
@@ -18,6 +19,11 @@ struct Funcgen : Module {
 		TRIGGER_ALL_PARAM,
 		CASCADE_TRIGGER_PARAM,
 		ENV_FUNC_PARAM,
+		ENUMS(RISE_SHAPE_PARAM, CHANNEL_COUNT), //TODO IMPLEMENT
+		ENUMS(FALL_SHAPE_PARAM, CHANNEL_COUNT), //TODO IMPLEMENT
+		ENUMS(SPEED_PARAM, CHANNEL_COUNT), //TODO IMPLEMENT
+		CASCADE_LOOP_PARAM, //TODO IMPLEMENT
+		CASCADE_SPEED_PARAM, //TODO IMPLEMENT
 		PARAMS_LEN
 	};
 	enum InputId {
@@ -63,6 +69,10 @@ struct Funcgen : Module {
 		ABSDC_OUTPUT,
 		TOPAVG_OUTPUT,
 		BOTAVG_OUTPUT,
+		ENUMS(RISING_OUTPUT, CHANNEL_COUNT), //TODO Implement
+		ENUMS(FALLING_OUTPUT, CHANNEL_COUNT), //TODO Implement
+		CASCADE_RISING_OUTPUT, //TODO Implement
+		CASCADE_FALLING_OUTPUT, //TODO Implement
 		OUTPUTS_LEN
 	};
 	enum LightId {
@@ -199,7 +209,7 @@ struct Funcgen : Module {
 				cm_envelope[i].set_fall(fall_time);
 			}
 
-			bool loop = params[LOOP_PARAM + i].getValue() > 0.5f;
+			bool loop = params[LOOP_PARAM + i].getValue() < 0.5f;
 			envelope[i].set_loop(loop);
 
 			if (args.frame == 0) {
@@ -380,152 +390,119 @@ struct Funcgen : Module {
 struct FuncgenWidget : ModuleWidget {
 	FuncgenWidget(Funcgen* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/funcgen.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/Cascade.svg")));
 
-		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		addChild(createWidget<ScrewBlack>(Vec(RACK_GRID_WIDTH, 0)));
+		addChild(createWidget<ScrewBlack>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
+		addChild(createWidget<ScrewBlack>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		addChild(createWidget<ScrewBlack>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		float dx = RACK_GRID_WIDTH * 2;
-		float dy = RACK_GRID_WIDTH * 2;
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(11.812, 36.657)), module, Funcgen::RISE_PARAM + 0));
+		addParam(createParamCentered<NP::SmallKnob>(mm2px(Vec(20.626, 32.424)), module, Funcgen::RISE_SHAPE_PARAM + 0));
+		addParam(createParamCentered<NP::SmallKnob>(mm2px(Vec(27.506, 32.424)), module, Funcgen::FALL_SHAPE_PARAM + 0));
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(36.572, 36.657)), module, Funcgen::FALL_PARAM + 0));
+		addParam(createParamCentered<NP::LoopSwitch>(mm2px(Vec(36.572, 15.665)), module, Funcgen::LOOP_PARAM + 0));
+		addParam(createParamCentered<NP::SpeedSwitch>(mm2px(Vec(24.192, 44.891)), module, Funcgen::SPEED_PARAM + 0));
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(116.706, 36.657)), module, Funcgen::RISE_PARAM + 1));
+		addParam(createParamCentered<NP::SmallKnob>(mm2px(Vec(125.521, 32.424)), module, Funcgen::RISE_SHAPE_PARAM + 1));
+		addParam(createParamCentered<NP::SmallKnob>(mm2px(Vec(132.4, 32.424)), module, Funcgen::FALL_SHAPE_PARAM + 1));
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(141.466, 36.657)), module, Funcgen::FALL_PARAM + 1));
+		addParam(createParamCentered<NP::LoopSwitch>(mm2px(Vec(141.466, 15.665)), module, Funcgen::LOOP_PARAM + 1));
+		addParam(createParamCentered<NP::SpeedSwitch>(mm2px(Vec(129.086, 44.891)), module, Funcgen::SPEED_PARAM + 1));
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(11.812, 103.342)), module, Funcgen::RISE_PARAM + 3));
+		addParam(createParamCentered<NP::SmallKnob>(mm2px(Vec(20.626, 99.108)), module, Funcgen::RISE_SHAPE_PARAM + 3));
+		addParam(createParamCentered<NP::SmallKnob>(mm2px(Vec(27.506, 99.108)), module, Funcgen::FALL_SHAPE_PARAM + 3));
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(36.572, 103.342)), module, Funcgen::FALL_PARAM + 3));
+		addParam(createParamCentered<NP::LoopSwitch>(mm2px(Vec(36.572, 82.349)), module, Funcgen::LOOP_PARAM + 3));
+		addParam(createParamCentered<NP::SpeedSwitch>(mm2px(Vec(24.192, 111.576)), module, Funcgen::SPEED_PARAM + 3));
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(116.704, 103.342)), module, Funcgen::RISE_PARAM + 2));
+		addParam(createParamCentered<NP::SmallKnob>(mm2px(Vec(125.519, 99.108)), module, Funcgen::RISE_SHAPE_PARAM + 2));
+		addParam(createParamCentered<NP::SmallKnob>(mm2px(Vec(132.398, 99.108)), module, Funcgen::FALL_SHAPE_PARAM + 2));
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(141.464, 103.342)), module, Funcgen::FALL_PARAM + 2));
+		addParam(createParamCentered<NP::LoopSwitch>(mm2px(Vec(141.464, 82.349)), module, Funcgen::LOOP_PARAM + 2));
+		addParam(createParamCentered<NP::SpeedSwitch>(mm2px(Vec(129.084, 111.576)), module, Funcgen::SPEED_PARAM + 2));
+		addParam(createParamCentered<NP::Button>(mm2px(Vec(81.478, 43.048)), module, Funcgen::TRIGGER_ALL_PARAM));
+		addParam(createParamCentered<NP::LoopSwitch>(mm2px(Vec(89.03, 59.95)), module, Funcgen::CASCADE_LOOP_PARAM));
+		addParam(createParamCentered<NP::SpeedSwitch>(mm2px(Vec(97.077, 65.028)), module, Funcgen::CASCADE_SPEED_PARAM));
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(55.767, 64.957)), module, Funcgen::MODE_PARAM));
 
-		float y_start = RACK_GRID_WIDTH;
-		float x_start = RACK_GRID_WIDTH;
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(11.812, 15.465)), module, Funcgen::TRIGGER_INPUT + 0));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(11.812, 47.572)), module, Funcgen::RISE_CV_INPUT + 0));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(36.572, 47.572)), module, Funcgen::FALL_CV_INPUT + 0));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(116.706, 15.465)), module, Funcgen::TRIGGER_INPUT + 1));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(116.706, 47.572)), module, Funcgen::RISE_CV_INPUT + 1));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(141.466, 47.572)), module, Funcgen::FALL_CV_INPUT + 1));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(11.812, 82.15)), module, Funcgen::TRIGGER_INPUT + 3));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(11.812, 114.257)), module, Funcgen::RISE_CV_INPUT + 3));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(36.572, 114.257)), module, Funcgen::FALL_CV_INPUT + 3));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(116.704, 82.15)), module, Funcgen::TRIGGER_INPUT + 2));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(116.704, 114.257)), module, Funcgen::RISE_CV_INPUT + 2));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(141.464, 114.257)), module, Funcgen::FALL_CV_INPUT + 2));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(64.247, 59.678)), module, Funcgen::CASCADE_TRIGGER_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(72.146, 42.982)), module, Funcgen::TRIGGER_ALL_INPUT));
 
-		float x = x_start;
-		float y = y_start;
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(11.812, 24.934)), module, Funcgen::RISING_OUTPUT + 0));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(24.163, 15.465)), module, Funcgen::FUNCTION_OUTPUT + 0));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(36.572, 25.018)), module, Funcgen::FALLING_OUTPUT + 0));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(116.706, 24.934)), module, Funcgen::RISING_OUTPUT + 1));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(129.058, 15.465)), module, Funcgen::FUNCTION_OUTPUT + 1));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(141.466, 25.018)), module, Funcgen::FALLING_OUTPUT + 1));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(11.812, 91.619)), module, Funcgen::RISING_OUTPUT + 3));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(24.163, 82.15)), module, Funcgen::FUNCTION_OUTPUT + 3));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(36.572, 91.702)), module, Funcgen::FALLING_OUTPUT + 3));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(116.704, 91.619)), module, Funcgen::RISING_OUTPUT + 2));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(129.055, 82.15)), module, Funcgen::FUNCTION_OUTPUT + 2));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(141.464, 91.702)), module, Funcgen::FALLING_OUTPUT + 2));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(60.649, 23.774)), module, Funcgen::AGTB_OUTPUT));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(71.232, 23.774)), module, Funcgen::ABSAB_OUTPUT));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(81.816, 23.774)), module, Funcgen::ABSBA_OUTPUT));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(92.399, 23.774)), module, Funcgen::BGTA_OUTPUT));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(113.089, 67.27)), module, Funcgen::BGTC_OUTPUT));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(123.673, 67.27)), module, Funcgen::ABSBC_OUTPUT));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(134.256, 67.27)), module, Funcgen::ABSCB_OUTPUT));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(144.839, 67.27)), module, Funcgen::CGTB_OUTPUT));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(60.451, 110.876)), module, Funcgen::CGTD_OUTPUT));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(71.034, 110.876)), module, Funcgen::ABSCD_OUTPUT));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(81.618, 110.876)), module, Funcgen::ABSDC_OUTPUT));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(92.201, 110.876)), module, Funcgen::DGTC_OUTPUT));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(7.568, 67.27)), module, Funcgen::AGTD_OUTPUT));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(18.151, 67.27)), module, Funcgen::ABSAD_OUTPUT));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(28.735, 67.27)), module, Funcgen::ABSDA_OUTPUT));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(39.318, 67.27)), module, Funcgen::DGTA_OUTPUT));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(56.948, 90.039)), module, Funcgen::MIN_OUTPUT));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(66.734, 89.254)), module, Funcgen::BOTAVG_OUTPUT));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(76.524, 88.46)), module, Funcgen::AVG_OUTPUT));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(86.314, 87.666)), module, Funcgen::TOPAVG_OUTPUT));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(96.107, 86.864)), module, Funcgen::MAX_OUTPUT));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(76.621, 59.826)), module, Funcgen::CASCADE_OUTPUT));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(64.27, 69.295)), module, Funcgen::CASCADE_RISING_OUTPUT));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(89.033, 69.37)), module, Funcgen::CASCADE_FALLING_OUTPUT));
 
-		for (int i = 0; i < CHANNEL_COUNT; i++) {
-			x = x_start + 4 * dx * (i / 2) + dx;
-			y = y_start + 5 * dy * (i % 2) + RACK_GRID_WIDTH;
-			x -= dx;
-			if (i == 0) {
-				addChild(createLightCentered<LargeLight<RedLight>>(Vec(x, y), module, Funcgen::OUTPUT_LIGHT + i));
-			}
-			else if (i == 1) {
-				addChild(createLightCentered<LargeLight<GreenLight>>(Vec(x, y), module, Funcgen::OUTPUT_LIGHT + i));
-			}
-			else if (i == 2) {
-				addChild(createLightCentered<LargeLight<BlueLight>>(Vec(x, y), module, Funcgen::OUTPUT_LIGHT + i));
-			}
-			else if (i == 3) {
-				addChild(createLightCentered<LargeLight<YellowLight>>(Vec(x, y), module, Funcgen::OUTPUT_LIGHT + i));
-			}
-			x += dx;
-			addParam(createParamCentered<TL1105>(Vec(x, y), module, Funcgen::PUSH_PARAM + i));
-			x += dx;
-			addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::TRIGGER_INPUT + i));
-			y += dy;
-			x -= dx * 2;
-			addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Funcgen::RISE_PARAM + i));
-			x += dx;
-			addParam(createParamCentered<CKSS>(Vec(x, y), module, Funcgen::LOOP_PARAM + i));
-			x += dx;
-			addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Funcgen::FALL_PARAM + i));
-			y += dy;
-			x -= dx * 2;
-			addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::RISE_CV_INPUT + i));
-			x += dx;
-			addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::FUNCTION_OUTPUT + i));
-			x += dx;
-			addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::FALL_CV_INPUT + i));
-			y += dy;
-			x -= dx * 2;
-			addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::EOC_OUTPUT + i));
-			x += dx;
-			addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::TAH_GATE_INPUT + i));
-			x += dx;
-			addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::TAH_OUTPUT + i));
-		}
-		x = x_start;
-		y = box.size.y - (RACK_GRID_WIDTH * 2);
-		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Funcgen::ENV_FUNC_PARAM));
-		x += dx;
-		addParam(createParamCentered<TL1105>(Vec(x, y), module, Funcgen::CASCADE_TRIGGER_PARAM));
-		x += dx;
-		addParam(createParamCentered<CKSS>(Vec(x, y), module, Funcgen::MODE_PARAM));
-		x += dx;
-		addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::CASCADE_TRIGGER_INPUT));
-		x += dx;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::CASCADE_OUTPUT));
-		x += dx;
-		addChild(createLightCentered<LargeLight<RedLight>>(Vec(x, y), module, Funcgen::CASCADE_LIGHT));
-		addChild(createLightCentered<LargeLight<GreenLight>>(Vec(x, y), module, Funcgen::CASCADE_LIGHT + 1));
-		addChild(createLightCentered<LargeLight<BlueLight>>(Vec(x, y), module, Funcgen::CASCADE_LIGHT + 2));
-		addChild(createLightCentered<LargeLight<YellowLight>>(Vec(x, y), module, Funcgen::CASCADE_LIGHT + 3));
-		x += dx * 2;
-		addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::TRIGGER_ALL_INPUT));
-		x += dx;
-		addParam(createParamCentered<TL1105>(Vec(x, y), module, Funcgen::TRIGGER_ALL_PARAM));
-		x = box.size.x - (RACK_GRID_WIDTH * 6);
-		y = y_start + dy;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::AGTB_OUTPUT));
-		x += dx;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::AGTC_OUTPUT));
-		x += dx;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::AGTD_OUTPUT));
-		x -= dx * 2;
-		y += dy;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::BGTA_OUTPUT));
-		x += dx;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::BGTC_OUTPUT));
-		x += dx;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::BGTD_OUTPUT));
-		x -= dx * 2;
-		y += dy;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::CGTA_OUTPUT));
-		x += dx;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::CGTB_OUTPUT));
-		x += dx;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::CGTD_OUTPUT));
-		x -= dx * 2;
-		y += dy;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::DGTA_OUTPUT));
-		x += dx;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::DGTB_OUTPUT));
-		x += dx;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::DGTC_OUTPUT));
-		x -= dx * 2;
-		y += dy;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::MIN_OUTPUT));
-		x += dx;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::MAX_OUTPUT));
-		x += dx;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::AVG_OUTPUT));
-		x -= dx * 1.5f;
-		y += dy;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::TOPAVG_OUTPUT));
-		x += dx;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::BOTAVG_OUTPUT));
-		x -= dx * 1.5f;
-		y += dy;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::ABSAB_OUTPUT));
-		x += dx;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::ABSAC_OUTPUT));
-		x += dx;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::ABSAD_OUTPUT));
-		x -= dx * 2;
-		y += dy;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::ABSBC_OUTPUT));
-		x += dx;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::ABSBD_OUTPUT));
-		x += dx;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::ABSCD_OUTPUT));
-		x -= dx * 2;
-		y += dy;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::ABSBA_OUTPUT));
-		x += dx;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::ABSCA_OUTPUT));
-		x += dx;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::ABSCB_OUTPUT));
-		x -= dx * 2;
-		y += dy;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::ABSDA_OUTPUT));
-		x += dx;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::ABSDB_OUTPUT));
-		x += dx;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Funcgen::ABSDC_OUTPUT));
+		Vec pos;
+
+		// mm2px(Vec(12.531, 7.897))
+		//addChild(createWidget<Widget>(mm2px(Vec(17.846, 21.056))));		
+		pos = mm2px(Vec(12.531, 7.897) * 0.5 + Vec(17.846, 21.056));
+		addChild(createLightCentered<LargeLight<RedLight>>(pos, module, Funcgen::OUTPUT_LIGHT + 0));
+		// mm2px(Vec(12.531, 7.897))
+		//addChild(createWidget<Widget>(mm2px(Vec(122.741, 21.056))));
+		pos = mm2px(Vec(12.531, 7.897) * 0.5 + Vec(122.741, 21.056));
+		addChild(createLightCentered<LargeLight<GreenLight>>(pos, module, Funcgen::OUTPUT_LIGHT + 1));
+		// mm2px(Vec(12.531, 7.897))
+		//addChild(createWidget<Widget>(mm2px(Vec(17.846, 87.74))));
+		pos = mm2px(Vec(12.531, 7.897) * 0.5 + Vec(17.846, 87.74));
+		addChild(createLightCentered<LargeLight<BlueLight>>(pos, module, Funcgen::OUTPUT_LIGHT + 3));
+		// mm2px(Vec(12.531, 7.897))
+		//addChild(createWidget<Widget>(mm2px(Vec(122.739, 87.74))));
+		pos = mm2px(Vec(12.531, 7.897) * 0.5 + Vec(122.739, 87.74));
+		addChild(createLightCentered<LargeLight<YellowLight>>(pos, module, Funcgen::OUTPUT_LIGHT + 2));
+		// mm2px(Vec(12.531, 7.897))
+		//addChild(createWidget<Widget>(mm2px(Vec(70.304, 65.287))));
+		pos = mm2px(Vec(12.531, 7.897) * 0.5 + Vec(70.304, 65.287));
+		addChild(createLightCentered<LargeLight<RedLight>>(pos, module, Funcgen::CASCADE_LIGHT + 0));
+		addChild(createLightCentered<LargeLight<GreenLight>>(pos, module, Funcgen::CASCADE_LIGHT + 1));
+		addChild(createLightCentered<LargeLight<BlueLight>>(pos, module, Funcgen::CASCADE_LIGHT + 3));
+		addChild(createLightCentered<LargeLight<YellowLight>>(pos, module, Funcgen::CASCADE_LIGHT + 2));
 	}
 };
 
