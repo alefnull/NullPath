@@ -6,8 +6,7 @@
 #define CHANNEL_COUNT 4
 #define ENV_MAX_VOLTAGE 10.f
 #define MIN_TIME 0.01f
-#define MAX_TIME 10.f
-#define LAMBDA_BASE MAX_TIME / MIN_TIME
+#define MAX_TIME 5.f
 
 struct Funcgen : Module {
 	enum ParamId {
