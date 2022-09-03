@@ -18,11 +18,11 @@ struct Funcgen : Module {
 		TRIGGER_ALL_PARAM,
 		CASCADE_TRIGGER_PARAM,
 		ENV_FUNC_PARAM,
-		ENUMS(RISE_SHAPE_PARAM, CHANNEL_COUNT), //TODO IMPLEMENT
-		ENUMS(FALL_SHAPE_PARAM, CHANNEL_COUNT), //TODO IMPLEMENT
-		ENUMS(SPEED_PARAM, CHANNEL_COUNT), //TODO IMPLEMENT
+		ENUMS(RISE_SHAPE_PARAM, CHANNEL_COUNT),
+		ENUMS(FALL_SHAPE_PARAM, CHANNEL_COUNT),
+		ENUMS(SPEED_PARAM, CHANNEL_COUNT),
 		CASCADE_LOOP_PARAM, //TODO IMPLEMENT
-		CASCADE_SPEED_PARAM, //TODO IMPLEMENT
+		CASCADE_SPEED_PARAM,
 		PARAMS_LEN
 	};
 	enum InputId {
@@ -115,13 +115,17 @@ struct Funcgen : Module {
 		configOutput(CASCADE_OUTPUT, "Cascade");
 		configParam(CASCADE_TRIGGER_PARAM, 0.f, 1.f, 0.f, "Cascade Re-Trigger");
 		configInput(CASCADE_TRIGGER_INPUT, "Cascade Re-Trigger");
+		configSwitch(CASCADE_LOOP_PARAM, 0.f, 1.f, 0.f, "Cascade Loop", {"Off", "On"});
+		configSwitch(CASCADE_SPEED_PARAM, 0.f, 2.f, 0.f, "Cascade Speed", {"Slow", "Normal", "Fast"});
 		configOutput(CASCADE_RISING_OUTPUT, "Cascade Rising");
 		configOutput(CASCADE_FALLING_OUTPUT, "Cascade Falling");
 		for (int i = 0; i < CHANNEL_COUNT; i++) {
 			configParam(RISE_PARAM + i, MIN_TIME, MAX_TIME, 1.f, "Rise time", " s");
 			configParam(FALL_PARAM + i, MIN_TIME, MAX_TIME, 1.f, "Fall time", " s");
-			configSwitch(LOOP_PARAM + i, 0.f, 1.f, 0.f, "Loop");
-			configParam(CASCADE_TRIGGER_PARAM, 0.f, 1.f, 0.f, "Cascade Re-Trigger");
+			configSwitch(LOOP_PARAM + i, 0.f, 1.f, 0.f, "Loop", {"Off", "On"});
+			configParam(RISE_SHAPE_PARAM + i, -1.f, 1.f, 0.f, "Rise shape");
+			configParam(FALL_SHAPE_PARAM + i, -1.f, 1.f, 0.f, "Fall shape");
+			configSwitch(SPEED_PARAM + i, 0.f, 2.f, 1.f, "Speed", {"Slow", "Normal", "Fast"});
 			configParam(PUSH_PARAM + i, 0.f, 1.f, 0.f, "Push");
 			configInput(TRIGGER_INPUT + i, "Trigger");
 			configInput(RISE_CV_INPUT + i, "Rise CV");
