@@ -26,6 +26,8 @@ struct Envelope {
     float fall_time = 0.01f;
     bool loop = false;
     bool eoc = false;
+    float sampleTime = 0;
+    int processCount = 0;
     
     Envelope() {}
 
@@ -53,6 +55,15 @@ struct Envelope {
         _env = MIN_VALUE;
     }
     void process(float st) {
+    	processCount++;
+    	sampleTime+=st;
+    	if(processCount < 64){
+    		return;
+    	}else{
+    		processCount = 0;
+    		st = sampleTime;
+    		sampleTime = 0;
+    	}
         switch (stage) {
             case IDLE:
                 eoc = false;
@@ -71,9 +82,9 @@ struct Envelope {
                 break;
             case FALLING:
            		switch(func){
-                	case EASE_OUT: _env -= (_env) * 6.21461f * st / rise_time; break;
-                	case LINEAR: _env -= st / rise_time; break;
-                	case EASE_IN: _env -= (1.f- _env) * 6.21461f * st / rise_time; break;
+                	case EASE_OUT: _env -= (_env) * 6.21461f * st / fall_time; break;
+                	case LINEAR: _env -= st / fall_time; break;
+                	case EASE_IN: _env -= (1.f- _env) * 6.21461f * st / fall_time; break;
                 }
                 if (_env <= MIN_VALUE) {
                     _env = MIN_VALUE;
