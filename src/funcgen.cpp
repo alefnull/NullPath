@@ -154,7 +154,7 @@ struct Funcgen : Module {
 		configOutput(ABSDB_OUTPUT, "abs(B - D)");
 		configOutput(ABSDC_OUTPUT, "abs(C - D)");
 
-		configSwitch(ENV_FUNC_PARAM, 0, 2, 1, "Envelope Function", {"Ease Out","Linear","Ease In"});
+		configParam(ENV_FUNC_PARAM, -1.f, 1.f, 0.f, "Envelope Function");
 
 		if (mode == CASCADE) {
 			cm_envelope[0].retrigger();
@@ -175,7 +175,8 @@ struct Funcgen : Module {
 			mode = CHAOTIC_CASCADE;
 		}
 
-		Envelope::Func env_func = (Envelope::Func)params[ENV_FUNC_PARAM].getValue();
+		float env_func = params[ENV_FUNC_PARAM].getValue();
+
 		for (int i = 0; i < CHANNEL_COUNT; i++) {
 			float rise_time = params[RISE_PARAM + i].getValue();
 			float fall_time = params[FALL_PARAM + i].getValue();
@@ -438,7 +439,7 @@ struct FuncgenWidget : ModuleWidget {
 		}
 		x = x_start;
 		y = box.size.y - (RACK_GRID_WIDTH * 2);
-		addParam(createParamCentered<CKSSThree>(Vec(x, y), module, Funcgen::ENV_FUNC_PARAM));
+		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Funcgen::ENV_FUNC_PARAM));
 		x += dx;
 		addParam(createParamCentered<TL1105>(Vec(x, y), module, Funcgen::CASCADE_TRIGGER_PARAM));
 		x += dx;
