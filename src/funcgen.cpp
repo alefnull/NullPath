@@ -202,7 +202,6 @@ struct Funcgen : Module {
 
 			if (loop_trigger[i].process(params[LOOP_PARAM + i].getValue())) {
 				envelope[i].retrigger();
-				cm_envelope[i].retrigger();
 			}
 
 			if (trigger[i].process(inputs[TRIGGER_INPUT + i].getVoltage()) || push[i].process(params[PUSH_PARAM + i].getValue())) {
