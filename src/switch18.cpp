@@ -161,7 +161,7 @@ struct Switch18 : Module, SwitchBase {
 						outputs[STEP_1_OUTPUT +i].setVoltage(0.f);
 					}
 				}
-				lights[STEP_1_LIGHT + i].setBrightness(i == current_step ? 1.f : 0.f);
+				lights[STEP_1_LIGHT + i].setBrightness(volumes[i]);
 			}
 		}
 

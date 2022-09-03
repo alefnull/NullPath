@@ -179,7 +179,7 @@ struct Switch81 : Module, SwitchBase {
 		}
 
 		for (int i = 0; i < STEP_COUNT; i++) {
-			lights[STEP_1_LIGHT + i].setBrightness(i == current_step ? 1.f : 0.f);
+			lights[STEP_1_LIGHT + i].setBrightness(volumes[i]);
 		}
 
 		if (reset.process(inputs[RESET_INPUT].getVoltage())) {
