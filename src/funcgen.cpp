@@ -190,12 +190,12 @@ struct Funcgen : Module {
 		for (int i = 0; i < CHANNEL_COUNT; i++) {
 			float rise_time = params[RISE_PARAM + i].getValue();
 			float fall_time = params[FALL_PARAM + i].getValue();
-			envelope[i].set_function(env_func);
-			envelope[i].set_rise(rise_time);
-			envelope[i].set_fall(fall_time);
-			cm_envelope[i].set_function(env_func);
-			cm_envelope[i].set_rise(rise_time);
-			cm_envelope[i].set_fall(fall_time);
+			float rise_shape = params[RISE_SHAPE_PARAM + i].getValue();
+			float fall_shape = params[FALL_SHAPE_PARAM + i].getValue();
+			envelope[i].set_rise_shape(rise_shape);
+			envelope[i].set_fall_shape(fall_shape);
+			cm_envelope[i].set_rise_shape(rise_shape);
+			cm_envelope[i].set_fall_shape(fall_shape);
 
 			if (inputs[RISE_CV_INPUT + i].isConnected()) {
 				rise_time = clamp(rise_time * (inputs[RISE_CV_INPUT + i].getVoltage() / 10.f), MIN_TIME, MAX_TIME);
