@@ -166,16 +166,6 @@ struct Funcgen : Module {
 		configOutput(ABSDA_OUTPUT, "abs(A - D)");
 		configOutput(ABSDB_OUTPUT, "abs(B - D)");
 		configOutput(ABSDC_OUTPUT, "abs(C - D)");
-
-		if (mode == CASCADE) {
-			current_index = 0;
-			cm_envelope[0].retrigger();
-		}
-		else if (mode == CHAOTIC_CASCADE) {
-			chaos_index = random::u32() % CHANNEL_COUNT;
-			current_index = chaos_index;
-			cm_envelope[chaos_index].retrigger();
-		}
 	}
 
 	float convert_param_to_multiplier(int param) {
