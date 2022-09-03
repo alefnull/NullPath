@@ -174,6 +174,22 @@ struct Funcgen : Module {
 		}
 	}
 
+	float convert_param_to_multiplier(int param) {
+		float multiplier = 1.f;
+		switch (param) {
+			case 0:
+				multiplier = 0.5f;
+				break;
+			case 1:
+				multiplier = 1.f;
+				break;
+			case 2:
+				multiplier = 2.f;
+				break;
+		}
+		return multiplier;
+	}
+
 	void process(const ProcessArgs& args) override {
 		float st = args.sampleTime;
 
@@ -184,17 +200,22 @@ struct Funcgen : Module {
 			mode = CHAOTIC_CASCADE;
 		}
 
-		float env_func = params[ENV_FUNC_PARAM].getValue();
+		float cascade_speed = convert_param_to_multiplier(params[CASCADE_SPEED_PARAM].getValue());
 
 		for (int i = 0; i < CHANNEL_COUNT; i++) {
 			float rise_time = params[RISE_PARAM + i].getValue();
 			float fall_time = params[FALL_PARAM + i].getValue();
+			float speed = convert_param_to_multiplier(params[SPEED_PARAM + i].getValue());
 			float rise_shape = params[RISE_SHAPE_PARAM + i].getValue();
 			float fall_shape = params[FALL_SHAPE_PARAM + i].getValue();
 			envelope[i].set_rise_shape(rise_shape);
+			envelope[i].set_rise(rise_time * speed);
 			envelope[i].set_fall_shape(fall_shape);
+			envelope[i].set_fall(fall_time * speed);
 			cm_envelope[i].set_rise_shape(rise_shape);
+			cm_envelope[i].set_rise(rise_time * cascade_speed);
 			cm_envelope[i].set_fall_shape(fall_shape);
+			cm_envelope[i].set_fall(fall_time * cascade_speed);
 
 			if (inputs[RISE_CV_INPUT + i].isConnected()) {
 				rise_time = clamp(rise_time * (inputs[RISE_CV_INPUT + i].getVoltage() / 10.f), MIN_TIME, MAX_TIME);
