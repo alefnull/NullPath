@@ -384,7 +384,6 @@ struct Funcgen : Module {
 	}
 
 	void end_envelope(int index) {
-		bool loop = params[LOOP_PARAM].getValue() > 0.5f;
 		switch (mode) {
 			case EACH:
 				if (index == 3) {
@@ -404,20 +403,14 @@ struct Funcgen : Module {
 				}
 				break;
 			case RANDOM:
-				end_cycle(loop);
+				end_cycle();
 				break;
 		}
 	}
 
-	void end_cycle(bool loop) {
-		if (loop) {
+	void end_cycle() {
+		if (params[CASCADE_LOOP_PARAM].getValue() > 0.5f) {
 			start_cycle();
-		}
-		else {
-			// reset all envelopes
-			for (int i = 0; i < CHANNEL_COUNT; i++) {
-				cm_envelope[i].reset();
-			}
 		}
 	}
 };
