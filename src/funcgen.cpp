@@ -77,19 +77,23 @@ struct Funcgen : Module {
 		ENUMS(CASCADE_LIGHT, CHANNEL_COUNT),
 		LIGHTS_LEN
 	};
+	// enum Mode {
+	// 	CASCADE,
+	// 	CHAOTIC_CASCADE,
+	// };
 	enum Mode {
-		CASCADE,
-		CHAOTIC_CASCADE,
+		EACH,
+		SHUFFLE,
+		RANDOM
 	};
-
-	Mode mode = CASCADE;
-
-	Envelope envelope[CHANNEL_COUNT];
-	Envelope cm_envelope[CHANNEL_COUNT];
 
 	int chaos_index = 0;
 	int current_index = 0;
-
+	int shuffle_list[CHANNEL_COUNT] = {0,1,2,3};
+	// Mode mode = CASCADE;
+	Mode mode = EACH;
+	Envelope envelope[CHANNEL_COUNT];
+	Envelope cm_envelope[CHANNEL_COUNT];
 	dsp::SchmittTrigger trigger[CHANNEL_COUNT];
 	dsp::SchmittTrigger push[CHANNEL_COUNT];
 	dsp::SchmittTrigger cascade_trigger;
@@ -105,7 +109,7 @@ struct Funcgen : Module {
 
 	Funcgen() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
-		configSwitch(MODE_PARAM, 0.f, 1.f, 0.f, "Mode", {"Cascade", "Chaotic Cascade"});
+		configSwitch(MODE_PARAM, 0.f, 2.f, 0.f, "Mode", {"Cascade", "Chaotic Cascade", "Third Mode"});
 		configInput(TRIGGER_ALL_INPUT, "Trigger all");
 		configParam(TRIGGER_ALL_PARAM, 0.f, 1.f, 0.f, "Trigger all");
 		configOutput(CASCADE_OUTPUT, "Cascade");
@@ -162,31 +166,16 @@ struct Funcgen : Module {
 		configOutput(ABSDC_OUTPUT, "abs(C - D)");
 	}
 
-	float convert_param_to_multiplier(int param) {
-		float multiplier = 1.f;
-		switch (param) {
-			case 0:
-				multiplier = 0.5f;
-				break;
-			case 1:
-				multiplier = 1.f;
-				break;
-			case 2:
-				multiplier = 2.f;
-				break;
-		}
-		return multiplier;
-	}
-
 	void process(const ProcessArgs& args) override {
 		float st = args.sampleTime;
 
-		if (params[MODE_PARAM].getValue() == 0.f) {
-			mode = CASCADE;
-		}
-		else if (params[MODE_PARAM].getValue() == 1.f) {
-			mode = CHAOTIC_CASCADE;
-		}
+		// if (params[MODE_PARAM].getValue() == 0.f) {
+		// 	mode = CASCADE;
+		// }
+		// else if (params[MODE_PARAM].getValue() == 1.f) {
+		// 	mode = CHAOTIC_CASCADE;
+		// }
+		mode = Funcgen::Mode(params[MODE_PARAM].getValue());
 
 		float cascade_speed = convert_param_to_multiplier(params[CASCADE_SPEED_PARAM].getValue());
 
@@ -247,13 +236,15 @@ struct Funcgen : Module {
 			bool eoc = eoc_pulse[i].process(st);
 			bool cm_eoc = cm_eoc_pulse[i].process(st);
 			outputs[EOC_OUTPUT + i].setVoltage(eoc ? 10.f : 0.f);
-			if (mode == CASCADE) {
+			// if (mode == CASCADE) {
+			if (mode == EACH) {
 				if (cm_eoc) {
 					current_index = (i + 1) % CHANNEL_COUNT;
 					cm_envelope[current_index].retrigger();
 				}
 			}
-			else if (mode == CHAOTIC_CASCADE) {
+			// else if (mode == CHAOTIC_CASCADE) {
+			else if (mode == SHUFFLE) {
 				if (cm_eoc) {
 					current_index = chaos_index;
 					cm_envelope[current_index].retrigger();
@@ -265,14 +256,16 @@ struct Funcgen : Module {
 			for (int i = 0; i < CHANNEL_COUNT; i++) {
 				envelope[i].retrigger();
 			}
-			if (mode == CASCADE) {
+			// if (mode == CASCADE) {
+			if (mode == EACH) {
 				current_index = 0;
 				cm_envelope[0].retrigger();
 				cm_envelope[1].reset();
 				cm_envelope[2].reset();
 				cm_envelope[3].reset();
 			}
-			else if (mode == CHAOTIC_CASCADE) {
+			// else if (mode == CHAOTIC_CASCADE) {
+			else if (mode == SHUFFLE) {
 				current_index = chaos_index;
 				cm_envelope[chaos_index].retrigger();
 				for (int i = 0; i < CHANNEL_COUNT; i++) {
@@ -284,12 +277,14 @@ struct Funcgen : Module {
 		}
 
 		float cascade_output = 0.f;
-		if (mode == CASCADE) {
+		// if (mode == CASCADE) {
+		if (mode == EACH) {
 			cascade_output = std::max(cm_envelope[0].env, cm_envelope[1].env);
 			cascade_output = std::max(cascade_output, cm_envelope[2].env);
 			cascade_output = std::max(cascade_output, cm_envelope[3].env);
 		}
-		else if (mode == CHAOTIC_CASCADE) {
+		// else if (mode == CHAOTIC_CASCADE) {
+		else if (mode == SHUFFLE) {
 			cascade_output = cm_envelope[chaos_index].env;
 			if (cm_eoc_pulse[chaos_index].process(st)) {
 				int last_index = chaos_index;
@@ -307,15 +302,17 @@ struct Funcgen : Module {
 		outputs[CASCADE_RISING_OUTPUT].setVoltage(cm_envelope[current_index].stage == Envelope::RISING ? 10.f : 0.f);
 		outputs[CASCADE_FALLING_OUTPUT].setVoltage(cm_envelope[current_index].stage == Envelope::FALLING ? 10.f : 0.f);
 
-		if (cascade_trigger.process(inputs[CASCADE_TRIGGER_INPUT].getVoltage() || cascade_push.process(params[CASCADE_TRIGGER_PARAM].getValue()))) {
-			if (mode == CASCADE) {
+		if (cascade_trigger.process(inputs[CASCADE_TRIGGER_INPUT].getVoltage()) || cascade_push.process(params[CASCADE_TRIGGER_PARAM].getValue())) {
+			// if (mode == CASCADE) {
+			if (mode == EACH) {
 				current_index = 0;
 				cm_envelope[0].retrigger();
 				cm_envelope[1].reset();
 				cm_envelope[2].reset();
 				cm_envelope[3].reset();
 			}
-			else if (mode == CHAOTIC_CASCADE) {
+			// else if (mode == CHAOTIC_CASCADE) {
+			else if (mode == SHUFFLE) {
 				current_index = chaos_index;
 				cm_envelope[chaos_index].retrigger();
 				for (int i = 0; i < CHANNEL_COUNT; i++) {
