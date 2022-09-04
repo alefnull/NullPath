@@ -397,6 +397,24 @@ struct Funcgen : Module {
 			start_cycle();
 		}
 	}
+
+	void dataFromJson(json_t *rootJ) override {
+		DEBUG("dataFromJson");
+		for (int i = 0; i < CHANNEL_COUNT; i++) {
+			if (params[LOOP_PARAM + i].getValue() > 0.5f) {
+				envelope[i].trigger();
+			}
+		}
+		if (params[CASCADE_LOOP_PARAM].getValue() > 0.5f) {
+			start_cycle();
+		}
+	}
+
+	json_t *dataToJson() override {
+		DEBUG("dataToJson");
+		json_t *rootJ = json_object();
+		return rootJ;
+	}
 };
 
 
