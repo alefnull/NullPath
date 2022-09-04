@@ -88,7 +88,7 @@ struct Funcgen : Module {
 	int shuffle_list[CHANNEL_COUNT] = {0,1,2,3};
 	Mode mode = EACH;
 	Envelope envelope[CHANNEL_COUNT];
-	Envelope cm_envelope[CHANNEL_COUNT];
+	Envelope cm_envelope;
 	dsp::SchmittTrigger trigger[CHANNEL_COUNT];
 	dsp::SchmittTrigger push[CHANNEL_COUNT];
 	dsp::SchmittTrigger cascade_trigger;
@@ -96,10 +96,10 @@ struct Funcgen : Module {
 	dsp::SchmittTrigger trigger_all;
 	dsp::SchmittTrigger trigger_all_push;
 	dsp::BooleanTrigger eoc_trigger[CHANNEL_COUNT];
-	dsp::BooleanTrigger cm_eoc_trigger[CHANNEL_COUNT];
+	dsp::BooleanTrigger cm_eoc_trigger;
 	dsp::BooleanTrigger loop_trigger[CHANNEL_COUNT];
 	dsp::PulseGenerator eoc_pulse[CHANNEL_COUNT];
-	dsp::PulseGenerator cm_eoc_pulse[CHANNEL_COUNT];
+	dsp::PulseGenerator cm_eoc_pulse;
 
 
 	Funcgen() {
@@ -178,21 +178,21 @@ struct Funcgen : Module {
 			envelope[i].set_rise(rise_time * speed);
 			envelope[i].set_fall_shape(fall_shape);
 			envelope[i].set_fall(fall_time * speed);
-			cm_envelope[i].set_rise_shape(rise_shape);
-			cm_envelope[i].set_rise(rise_time * cascade_speed);
-			cm_envelope[i].set_fall_shape(fall_shape);
-			cm_envelope[i].set_fall(fall_time * cascade_speed);
+			cm_envelope.set_rise_shape(rise_shape);
+			cm_envelope.set_rise(rise_time * cascade_speed);
+			cm_envelope.set_fall_shape(fall_shape);
+			cm_envelope.set_fall(fall_time * cascade_speed);
 
 			if (inputs[RISE_CV_INPUT + i].isConnected()) {
 				rise_time = clamp(rise_time * (inputs[RISE_CV_INPUT + i].getVoltage() / 10.f), MIN_TIME, MAX_TIME);
 				envelope[i].set_rise(rise_time);
-				cm_envelope[i].set_rise(rise_time);
+				cm_envelope.set_rise(rise_time);
 			}
 
 			if (inputs[FALL_CV_INPUT + i].isConnected()) {
 				fall_time = clamp(fall_time * (inputs[FALL_CV_INPUT + i].getVoltage() / 10.f), MIN_TIME, MAX_TIME);
 				envelope[i].set_fall(fall_time);
-				cm_envelope[i].set_fall(fall_time);
+				cm_envelope.set_fall(fall_time);
 			}
 
 			bool loop = params[LOOP_PARAM + i].getValue() > 0.5f;
@@ -207,7 +207,7 @@ struct Funcgen : Module {
 			}
 
 			envelope[i].process(st);
-			cm_envelope[i].process(st);
+			cm_envelope.process(st);
 
 			if (eoc_trigger[i].process(envelope[i].eoc)) {
 				eoc_pulse[i].trigger(1e-3f);
@@ -286,8 +286,8 @@ struct Funcgen : Module {
 			}
 		}
 		outputs[CASCADE_OUTPUT].setVoltage(cascade_output);
-		outputs[CASCADE_RISING_OUTPUT].setVoltage(cm_envelope[current_index].stage == Envelope::RISING ? 10.f : 0.f);
-		outputs[CASCADE_FALLING_OUTPUT].setVoltage(cm_envelope[current_index].stage == Envelope::FALLING ? 10.f : 0.f);
+		outputs[CASCADE_RISING_OUTPUT].setVoltage(cm_envelope.stage == Envelope::RISING ? 10.f : 0.f);
+		outputs[CASCADE_FALLING_OUTPUT].setVoltage(cm_envelope.stage == Envelope::FALLING ? 10.f : 0.f);
 
 		if (cascade_trigger.process(inputs[CASCADE_TRIGGER_INPUT].getVoltage()) || cascade_push.process(params[CASCADE_TRIGGER_PARAM].getValue())) {
 			// if (mode == CASCADE) {
@@ -372,7 +372,8 @@ struct Funcgen : Module {
 
 		for (int i = 0; i < CHANNEL_COUNT; i++) {
 			lights[i].setBrightness(envelope[i].env / 10.f);
-			lights[CASCADE_LIGHT + i].setBrightness(cm_envelope[i].env / 10.f);
+			// lights[CASCADE_LIGHT + i].setBrightness(cm_envelope[i].env / 10.f);
+			lights[CASCADE_LIGHT].setBrightness(cm_envelope.env / 10.f);
 		}
 	}
 
@@ -430,12 +431,9 @@ struct Funcgen : Module {
 	}
 
 	void start_envelope(int index) {
-		cm_envelope[index].trigger();
-		for (int i = 0; i < CHANNEL_COUNT; i++) {
-			if (i != index) {
-				cm_envelope[i].reset();
-			}
-		}
+		current_index = index;
+		DEBUG("start_envelope %d", index);
+		cm_envelope.trigger();
 	}
 
 	void end_envelope(int index) {
@@ -447,12 +445,7 @@ struct Funcgen : Module {
 				}
 				else {
 					current_index = index + 1;
-					cm_envelope[current_index].trigger();
-					for (int i = 0; i < CHANNEL_COUNT; i++) {
-						if (i != current_index) {
-							cm_envelope[i].reset();
-						}
-					}
+					start_envelope(current_index);
 				}
 				break;
 			case SHUFFLE:
