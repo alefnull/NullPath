@@ -363,10 +363,7 @@ struct Funcgen : Module {
 		switch (mode) {
 			case EACH:
 			 	current_index = 0;
-				cm_envelope[0].trigger();
-				cm_envelope[1].reset();
-				cm_envelope[2].reset();
-				cm_envelope[3].reset();
+				start_envelope(current_index);
 				break;
 			case SHUFFLE:
 			 	// shuffle the shuffle_list array
