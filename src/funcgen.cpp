@@ -451,7 +451,8 @@ struct Funcgen : Module {
 		}
 	}
 
-	void end_envelope(int index, bool loop) {
+	void end_envelope(int index) {
+		bool loop = params[LOOP_PARAM].getValue() > 0.5f;
 		switch (mode) {
 			case EACH:
 				if (index == 3) {
