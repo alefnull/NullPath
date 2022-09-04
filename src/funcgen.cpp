@@ -349,6 +349,16 @@ struct Funcgen : Module {
 		return multiplier;
 	}
 
+	void shuffle(int array[], int len) {
+		int temp = 0;
+		for (int i = 0; i < len; i++) {
+			temp = array[i];
+			int rand = random::u32() % len;
+			array[i] = array[rand];
+			array[rand] = temp;
+		}
+	}
+
 	void start_cycle() {
 		switch (mode) {
 			case EACH:
