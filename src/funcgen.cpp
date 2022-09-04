@@ -213,32 +213,22 @@ struct Funcgen : Module {
 				eoc_pulse[i].trigger(1e-3f);
 			}
 
-			if (cm_eoc_trigger[i].process(cm_envelope[i].eoc)) {
-				cm_eoc_pulse[i].trigger(1e-3f);
-			}
-
 			outputs[FUNCTION_OUTPUT + i].setVoltage(envelope[i].env);
 
 			outputs[RISING_OUTPUT + i].setVoltage(envelope[i].stage == Envelope::RISING ? 10.f : 0.f);
 			outputs[FALLING_OUTPUT + i].setVoltage(envelope[i].stage == Envelope::FALLING ? 10.f : 0.f);
 
 			bool eoc = eoc_pulse[i].process(st);
-			bool cm_eoc = cm_eoc_pulse[i].process(st);
 			outputs[EOC_OUTPUT + i].setVoltage(eoc ? 10.f : 0.f);
-			// if (mode == CASCADE) {
-			if (mode == EACH) {
-				if (cm_eoc) {
-					current_index = (i + 1) % CHANNEL_COUNT;
-					cm_envelope[current_index].retrigger();
-				}
-			}
-			// else if (mode == CHAOTIC_CASCADE) {
-			else if (mode == SHUFFLE) {
-				if (cm_eoc) {
-					current_index = chaos_index;
-					cm_envelope[current_index].retrigger();
-				}
-			}
+		}
+
+		if (cm_eoc_trigger.process(cm_envelope.eoc)) {
+			cm_eoc_pulse.trigger(1e-3f);
+		}
+
+		bool cm_eoc = cm_eoc_pulse.process(st);
+		if (cm_eoc) {
+			end_envelope(current_index);
 		}
 
 		if (trigger_all.process(inputs[TRIGGER_ALL_INPUT].getVoltage()) || trigger_all_push.process(params[TRIGGER_ALL_PARAM].getValue())) {
