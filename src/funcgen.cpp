@@ -206,7 +206,7 @@ struct Funcgen : Module {
 				cm_envelope[i].set_fall(fall_time);
 			}
 
-			bool loop = params[LOOP_PARAM + i].getValue() < 0.5f;
+			bool loop = params[LOOP_PARAM + i].getValue() > 0.5f;
 			envelope[i].set_loop(loop);
 
 			if (loop_trigger[i].process(params[LOOP_PARAM + i].getValue())) {
