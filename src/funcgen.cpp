@@ -388,7 +388,7 @@ struct Funcgen : Module {
 		switch (mode) {
 			case EACH:
 				if (index == 3) {
-					start_cycle();
+					end_cycle();
 				}
 				else {
 					current_index = index + 1;
