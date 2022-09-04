@@ -112,7 +112,7 @@ struct Funcgen : Module {
 		configParam(CASCADE_TRIGGER_PARAM, 0.f, 1.f, 0.f, "Cascade Re-Trigger");
 		configInput(CASCADE_TRIGGER_INPUT, "Cascade Re-Trigger");
 		configSwitch(CASCADE_LOOP_PARAM, 0.f, 1.f, 0.f, "Cascade Loop", {"Off", "On"});
-		configSwitch(CASCADE_SPEED_PARAM, 0.f, 2.f, 0.f, "Cascade Speed", {"Slow", "Normal", "Fast"});
+		configSwitch(CASCADE_SPEED_PARAM, 0.f, 2.f, 1.f, "Cascade Speed", {"Slow", "Normal", "Fast"});
 		configOutput(CASCADE_RISING_OUTPUT, "Cascade Rising");
 		configOutput(CASCADE_FALLING_OUTPUT, "Cascade Falling");
 		for (int i = 0; i < CHANNEL_COUNT; i++) {
@@ -319,13 +319,13 @@ struct Funcgen : Module {
 		float multiplier = 1.f;
 		switch (param) {
 			case 0:
-				multiplier = 0.5f;
+				multiplier = 0.2f;
 				break;
 			case 1:
 				multiplier = 1.f;
 				break;
 			case 2:
-				multiplier = 2.f;
+				multiplier = 5.f;
 				break;
 		}
 		return multiplier;
