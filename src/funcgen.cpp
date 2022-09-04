@@ -396,10 +396,10 @@ struct Funcgen : Module {
 		switch (mode) {
 			case EACH:
 			 	current_index = 0;
-				envelope[0].trigger();
-				envelope[1].reset();
-				envelope[2].reset();
-				envelope[3].reset();
+				cm_envelope[0].trigger();
+				cm_envelope[1].reset();
+				cm_envelope[2].reset();
+				cm_envelope[3].reset();
 				break;
 			case SHUFFLE:
 			 	// shuffle the shuffle_list array
@@ -411,18 +411,18 @@ struct Funcgen : Module {
 				}
 				current_index = shuffle_list[0];
 				// start the first envelope
-				envelope[shuffle_list[0]].trigger();
+				cm_envelope[shuffle_list[0]].trigger();
 				for (int i = 1; i < CHANNEL_COUNT; i++) {
-					envelope[shuffle_list[i]].reset();
+					cm_envelope[shuffle_list[i]].reset();
 				}
 				break;
 			case RANDOM:
 				// start a random envelope
 				current_index = random::u32() % CHANNEL_COUNT;
-				envelope[current_index].trigger();
+				cm_envelope[current_index].trigger();
 				for (int i = 0; i < CHANNEL_COUNT; i++) {
 					if (i != current_index) {
-						envelope[i].reset();
+						cm_envelope[i].reset();
 					}
 				}
 				break;
@@ -430,10 +430,10 @@ struct Funcgen : Module {
 	}
 
 	void start_envelope(int index) {
-		envelope[index].trigger();
+		cm_envelope[index].trigger();
 		for (int i = 0; i < CHANNEL_COUNT; i++) {
 			if (i != index) {
-				envelope[i].reset();
+				cm_envelope[i].reset();
 			}
 		}
 	}
@@ -447,10 +447,10 @@ struct Funcgen : Module {
 				}
 				else {
 					current_index = index + 1;
-					envelope[current_index].trigger();
+					cm_envelope[current_index].trigger();
 					for (int i = 0; i < CHANNEL_COUNT; i++) {
 						if (i != current_index) {
-							envelope[i].reset();
+							cm_envelope[i].reset();
 						}
 					}
 				}
@@ -476,7 +476,7 @@ struct Funcgen : Module {
 		else {
 			// reset all envelopes
 			for (int i = 0; i < CHANNEL_COUNT; i++) {
-				envelope[i].reset();
+				cm_envelope[i].reset();
 			}
 		}
 	}
