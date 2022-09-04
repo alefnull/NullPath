@@ -391,6 +391,110 @@ struct Funcgen : Module {
 			lights[CASCADE_LIGHT + i].setBrightness(cm_envelope[i].env / 10.f);
 		}
 	}
+
+	float convert_param_to_multiplier(int param) {
+		float multiplier = 1.f;
+		switch (param) {
+			case 0:
+				multiplier = 0.5f;
+				break;
+			case 1:
+				multiplier = 1.f;
+				break;
+			case 2:
+				multiplier = 2.f;
+				break;
+		}
+		return multiplier;
+	}
+
+	void start_cycle() {
+		switch (mode) {
+			case EACH:
+			 	current_index = 0;
+				envelope[0].trigger();
+				envelope[1].reset();
+				envelope[2].reset();
+				envelope[3].reset();
+				break;
+			case SHUFFLE:
+			 	// shuffle the shuffle_list array
+				for (int i = 0; i < CHANNEL_COUNT; i++) {
+					int j = random::u32() % CHANNEL_COUNT;
+					int temp = shuffle_list[i];
+					shuffle_list[i] = shuffle_list[j];
+					shuffle_list[j] = temp;
+				}
+				current_index = shuffle_list[0];
+				// start the first envelope
+				envelope[shuffle_list[0]].trigger();
+				for (int i = 1; i < CHANNEL_COUNT; i++) {
+					envelope[shuffle_list[i]].reset();
+				}
+				break;
+			case RANDOM:
+				// start a random envelope
+				current_index = random::u32() % CHANNEL_COUNT;
+				envelope[current_index].trigger();
+				for (int i = 0; i < CHANNEL_COUNT; i++) {
+					if (i != current_index) {
+						envelope[i].reset();
+					}
+				}
+				break;
+		}
+	}
+
+	void start_envelope(int index) {
+		envelope[index].trigger();
+		for (int i = 0; i < CHANNEL_COUNT; i++) {
+			if (i != index) {
+				envelope[i].reset();
+			}
+		}
+	}
+
+	void end_envelope(int index, bool loop) {
+		switch (mode) {
+			case EACH:
+				if (index == 3) {
+					start_cycle();
+				}
+				else {
+					current_index = index + 1;
+					envelope[current_index].trigger();
+					for (int i = 0; i < CHANNEL_COUNT; i++) {
+						if (i != current_index) {
+							envelope[i].reset();
+						}
+					}
+				}
+				break;
+			case SHUFFLE:
+				if (index == shuffle_list[3]) {
+					end_cycle(loop);
+				}
+				else {
+					start_envelope(shuffle_list[index + 1]);
+				}
+				break;
+			case RANDOM:
+				end_cycle(loop);
+				break;
+		}
+	}
+
+	void end_cycle(bool loop) {
+		if (loop) {
+			start_cycle();
+		}
+		else {
+			// reset all envelopes
+			for (int i = 0; i < CHANNEL_COUNT; i++) {
+				envelope[i].reset();
+			}
+		}
+	}
 };
 
 
@@ -435,7 +539,7 @@ struct FuncgenWidget : ModuleWidget {
 		addParam(createParamCentered<NP::Button>(mm2px(Vec(81.478, 43.048)), module, Funcgen::TRIGGER_ALL_PARAM));
 		addParam(createParamCentered<NP::LoopSwitch>(mm2px(Vec(89.03, 59.95)), module, Funcgen::CASCADE_LOOP_PARAM));
 		addParam(createParamCentered<NP::SpeedSwitch>(mm2px(Vec(97.077, 65.028)), module, Funcgen::CASCADE_SPEED_PARAM));
-		addParam(createParamCentered<NP::Knob>(mm2px(Vec(55.767, 64.957)), module, Funcgen::MODE_PARAM));
+		addParam(createParamCentered<CKSSThree>(mm2px(Vec(55.767, 64.957)), module, Funcgen::MODE_PARAM));
 
 		addInput(createInputCentered<NP::InPort>(mm2px(Vec(11.812, 15.465)), module, Funcgen::TRIGGER_INPUT + 0));
 		addInput(createInputCentered<NP::InPort>(mm2px(Vec(11.812, 47.572)), module, Funcgen::RISE_CV_INPUT + 0));
