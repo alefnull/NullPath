@@ -366,19 +366,9 @@ struct Funcgen : Module {
 				start_envelope(current_index);
 				break;
 			case SHUFFLE:
-			 	// shuffle the shuffle_list array
-				for (int i = 0; i < CHANNEL_COUNT; i++) {
-					int j = random::u32() % CHANNEL_COUNT;
-					int temp = shuffle_list[i];
-					shuffle_list[i] = shuffle_list[j];
-					shuffle_list[j] = temp;
-				}
+				shuffle(shuffle_list, CHANNEL_COUNT);
 				current_index = shuffle_list[0];
-				// start the first envelope
-				cm_envelope[shuffle_list[0]].trigger();
-				for (int i = 1; i < CHANNEL_COUNT; i++) {
-					cm_envelope[shuffle_list[i]].reset();
-				}
+				start_envelope(current_index);
 				break;
 			case RANDOM:
 				// start a random envelope
