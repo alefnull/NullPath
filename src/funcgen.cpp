@@ -372,13 +372,7 @@ struct Funcgen : Module {
 				break;
 			case RANDOM:
 				// start a random envelope
-				current_index = random::u32() % CHANNEL_COUNT;
-				cm_envelope[current_index].trigger();
-				for (int i = 0; i < CHANNEL_COUNT; i++) {
-					if (i != current_index) {
-						cm_envelope[i].reset();
-					}
-				}
+				start_envelope(random::u32() % CHANNEL_COUNT);
 				break;
 		}
 	}
