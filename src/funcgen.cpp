@@ -345,14 +345,12 @@ struct Funcgen : Module {
 		DEBUG("start_cycle");
 		switch (mode) {
 			case EACH:
-			 	current_index = 0;
-				start_envelope(current_index);
+				start_envelope(0);
 				break;
 			case SHUFFLE:
 				shuffle(shuffle_list, CHANNEL_COUNT);
 				shuffle_index = 0;
-				current_index = shuffle_list[shuffle_index];
-				start_envelope(current_index);
+				start_envelope(shuffle_list[shuffle_index]);
 				break;
 			case RANDOM:
 				// start a random envelope
@@ -375,8 +373,7 @@ struct Funcgen : Module {
 					end_cycle();
 				}
 				else {
-					current_index = index + 1;
-					start_envelope(current_index);
+					start_envelope(index + 1);
 				}
 				break;
 			case SHUFFLE:
