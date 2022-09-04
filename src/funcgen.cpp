@@ -395,12 +395,6 @@ struct Funcgen : Module {
 				}
 				break;
 			case SHUFFLE:
-				if (index == shuffle_list[3]) {
-					end_cycle(loop);
-				}
-				else {
-					start_envelope(shuffle_list[index + 1]);
-				}
 				break;
 			case RANDOM:
 				end_cycle();
