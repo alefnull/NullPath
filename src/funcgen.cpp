@@ -99,6 +99,7 @@ struct Funcgen : Module {
 	dsp::BooleanTrigger eoc_trigger[CHANNEL_COUNT];
 	dsp::BooleanTrigger cm_eoc_trigger;
 	dsp::BooleanTrigger loop_trigger[CHANNEL_COUNT];
+	dsp::BooleanTrigger cm_loop_trigger;
 	dsp::PulseGenerator eoc_pulse[CHANNEL_COUNT];
 	//dsp::PulseGenerator cm_eoc_pulse;
 
@@ -223,6 +224,10 @@ struct Funcgen : Module {
 
 			bool eoc = eoc_pulse[i].process(st);
 			outputs[EOC_OUTPUT + i].setVoltage(eoc ? 10.f : 0.f);
+		}
+
+		if (cm_loop_trigger.process(params[CASCADE_LOOP_PARAM].getValue())) {
+			cm_envelope.retrigger();
 		}
 
 		if (cm_eoc_trigger.process(cm_envelope.eoc)) {
