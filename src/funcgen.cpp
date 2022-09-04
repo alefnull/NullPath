@@ -83,9 +83,10 @@ struct Funcgen : Module {
 		RANDOM
 	};
 
-	int chaos_index = 0;
 	int current_index = 0;
 	int shuffle_list[CHANNEL_COUNT] = {0,1,2,3};
+	int shuffle_index = 0; //when in shuffle mode, stores which shuffle index is being played next
+
 	Mode mode = EACH;
 	Envelope envelope[CHANNEL_COUNT];
 	Envelope cm_envelope;
@@ -228,7 +229,7 @@ struct Funcgen : Module {
 			//cm_eoc_pulse.trigger(1e-3f);
 			end_envelope(current_index);
 		}
-		
+
 		if (trigger_all.process(inputs[TRIGGER_ALL_INPUT].getVoltage()) || trigger_all_push.process(params[TRIGGER_ALL_PARAM].getValue())) {
 			for (int i = 0; i < CHANNEL_COUNT; i++) {
 				envelope[i].retrigger();
@@ -349,7 +350,8 @@ struct Funcgen : Module {
 				break;
 			case SHUFFLE:
 				shuffle(shuffle_list, CHANNEL_COUNT);
-				current_index = shuffle_list[0];
+				shuffle_index = 0;
+				current_index = shuffle_list[shuffle_index];
 				start_envelope(current_index);
 				break;
 			case RANDOM:
@@ -378,6 +380,13 @@ struct Funcgen : Module {
 				}
 				break;
 			case SHUFFLE:
+				if(shuffle_index == 3){
+					end_cycle();
+				}
+				else{
+					shuffle_index++;
+					start_envelope(shuffle_list[shuffle_index]);
+				}
 				break;
 			case RANDOM:
 				end_cycle();
