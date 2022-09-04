@@ -512,8 +512,8 @@ struct FuncgenWidget : ModuleWidget {
 		pos = mm2px(Vec(12.531, 7.897) * 0.5 + Vec(70.304, 65.287));
 		addChild(createLightCentered<LargeLight<RedLight>>(pos, module, Funcgen::CASCADE_LIGHT + 0));
 		addChild(createLightCentered<LargeLight<GreenLight>>(pos, module, Funcgen::CASCADE_LIGHT + 1));
-		addChild(createLightCentered<LargeLight<BlueLight>>(pos, module, Funcgen::CASCADE_LIGHT + 3));
-		addChild(createLightCentered<LargeLight<YellowLight>>(pos, module, Funcgen::CASCADE_LIGHT + 2));
+		addChild(createLightCentered<LargeLight<YellowLight>>(pos, module, Funcgen::CASCADE_LIGHT + 3));
+		addChild(createLightCentered<LargeLight<BlueLight>>(pos, module, Funcgen::CASCADE_LIGHT + 2));
 	}
 };
 
