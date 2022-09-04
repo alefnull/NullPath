@@ -239,25 +239,9 @@ struct Funcgen : Module {
 		}
 
 		float cascade_output = 0.f;
-		if (mode == EACH) {
-			cascade_output = std::max(cm_envelope[0].env, cm_envelope[1].env);
-			cascade_output = std::max(cascade_output, cm_envelope[2].env);
-			cascade_output = std::max(cascade_output, cm_envelope[3].env);
-		}
-		else if (mode == SHUFFLE) {
-			cascade_output = cm_envelope[chaos_index].env;
-			if (cm_eoc_pulse[chaos_index].process(st)) {
-				int last_index = chaos_index;
-				while (last_index == chaos_index) {
-					chaos_index = random::u32() % CHANNEL_COUNT;
-				}
-				for (int i = 0; i < CHANNEL_COUNT; i++) {
-					if (i != chaos_index) {
-						cm_envelope[i].reset();
-					}
-				}
-			}
-		}
+		
+		cascade_output = cm_envelope.env;
+
 		outputs[CASCADE_OUTPUT].setVoltage(cascade_output);
 		outputs[CASCADE_RISING_OUTPUT].setVoltage(cm_envelope.stage == Envelope::RISING ? 10.f : 0.f);
 		outputs[CASCADE_FALLING_OUTPUT].setVoltage(cm_envelope.stage == Envelope::FALLING ? 10.f : 0.f);
