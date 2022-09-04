@@ -77,10 +77,6 @@ struct Funcgen : Module {
 		ENUMS(CASCADE_LIGHT, CHANNEL_COUNT),
 		LIGHTS_LEN
 	};
-	// enum Mode {
-	// 	CASCADE,
-	// 	CHAOTIC_CASCADE,
-	// };
 	enum Mode {
 		EACH,
 		SHUFFLE,
@@ -90,7 +86,6 @@ struct Funcgen : Module {
 	int chaos_index = 0;
 	int current_index = 0;
 	int shuffle_list[CHANNEL_COUNT] = {0,1,2,3};
-	// Mode mode = CASCADE;
 	Mode mode = EACH;
 	Envelope envelope[CHANNEL_COUNT];
 	Envelope cm_envelope[CHANNEL_COUNT];
@@ -109,7 +104,7 @@ struct Funcgen : Module {
 
 	Funcgen() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
-		configSwitch(MODE_PARAM, 0.f, 2.f, 0.f, "Mode", {"Cascade", "Chaotic Cascade", "Third Mode"});
+		configSwitch(MODE_PARAM, 0.f, 2.f, 0.f, "Mode", {"Each", "Shuffle", "Random"});
 		configInput(TRIGGER_ALL_INPUT, "Trigger all");
 		configParam(TRIGGER_ALL_PARAM, 0.f, 1.f, 0.f, "Trigger all");
 		configOutput(CASCADE_OUTPUT, "Cascade");
@@ -169,12 +164,6 @@ struct Funcgen : Module {
 	void process(const ProcessArgs& args) override {
 		float st = args.sampleTime;
 
-		// if (params[MODE_PARAM].getValue() == 0.f) {
-		// 	mode = CASCADE;
-		// }
-		// else if (params[MODE_PARAM].getValue() == 1.f) {
-		// 	mode = CHAOTIC_CASCADE;
-		// }
 		mode = Funcgen::Mode(params[MODE_PARAM].getValue());
 
 		float cascade_speed = convert_param_to_multiplier(params[CASCADE_SPEED_PARAM].getValue());
@@ -277,13 +266,11 @@ struct Funcgen : Module {
 		}
 
 		float cascade_output = 0.f;
-		// if (mode == CASCADE) {
 		if (mode == EACH) {
 			cascade_output = std::max(cm_envelope[0].env, cm_envelope[1].env);
 			cascade_output = std::max(cascade_output, cm_envelope[2].env);
 			cascade_output = std::max(cascade_output, cm_envelope[3].env);
 		}
-		// else if (mode == CHAOTIC_CASCADE) {
 		else if (mode == SHUFFLE) {
 			cascade_output = cm_envelope[chaos_index].env;
 			if (cm_eoc_pulse[chaos_index].process(st)) {
