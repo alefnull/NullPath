@@ -99,7 +99,7 @@ struct Funcgen : Module {
 	dsp::BooleanTrigger cm_eoc_trigger;
 	dsp::BooleanTrigger loop_trigger[CHANNEL_COUNT];
 	dsp::PulseGenerator eoc_pulse[CHANNEL_COUNT];
-	dsp::PulseGenerator cm_eoc_pulse;
+	//dsp::PulseGenerator cm_eoc_pulse;
 
 
 	Funcgen() {
@@ -178,10 +178,12 @@ struct Funcgen : Module {
 			envelope[i].set_rise(rise_time * speed);
 			envelope[i].set_fall_shape(fall_shape);
 			envelope[i].set_fall(fall_time * speed);
-			cm_envelope.set_rise_shape(rise_shape);
-			cm_envelope.set_rise(rise_time * cascade_speed);
-			cm_envelope.set_fall_shape(fall_shape);
-			cm_envelope.set_fall(fall_time * cascade_speed);
+			if(i == current_index){
+				cm_envelope.set_rise_shape(rise_shape);
+				cm_envelope.set_rise(rise_time * cascade_speed);
+				cm_envelope.set_fall_shape(fall_shape);
+				cm_envelope.set_fall(fall_time * cascade_speed);
+			}
 
 			if (inputs[RISE_CV_INPUT + i].isConnected()) {
 				rise_time = clamp(rise_time * (inputs[RISE_CV_INPUT + i].getVoltage() / 10.f), MIN_TIME, MAX_TIME);
@@ -223,14 +225,10 @@ struct Funcgen : Module {
 		}
 
 		if (cm_eoc_trigger.process(cm_envelope.eoc)) {
-			cm_eoc_pulse.trigger(1e-3f);
-		}
-
-		bool cm_eoc = cm_eoc_pulse.process(st);
-		if (cm_eoc) {
+			//cm_eoc_pulse.trigger(1e-3f);
 			end_envelope(current_index);
 		}
-
+		
 		if (trigger_all.process(inputs[TRIGGER_ALL_INPUT].getVoltage()) || trigger_all_push.process(params[TRIGGER_ALL_PARAM].getValue())) {
 			for (int i = 0; i < CHANNEL_COUNT; i++) {
 				envelope[i].retrigger();
@@ -311,9 +309,8 @@ struct Funcgen : Module {
 		outputs[BOTAVG_OUTPUT].setVoltage((min_a + min_b) / 2.f);
 
 		for (int i = 0; i < CHANNEL_COUNT; i++) {
-			lights[i].setBrightness(envelope[i].env / 10.f);
-			// lights[CASCADE_LIGHT + i].setBrightness(cm_envelope[i].env / 10.f);
-			lights[CASCADE_LIGHT].setBrightness(cm_envelope.env / 10.f);
+			lights[OUTPUT_LIGHT + i].setBrightness(envelope[i].env / 10.f);
+			lights[CASCADE_LIGHT  + i].setBrightness(i == current_index ? (cm_envelope.env / 10.f) : 0.f);
 		}
 	}
 
@@ -344,6 +341,7 @@ struct Funcgen : Module {
 	}
 
 	void start_cycle() {
+		DEBUG("start_cycle");
 		switch (mode) {
 			case EACH:
 			 	current_index = 0;
@@ -362,12 +360,13 @@ struct Funcgen : Module {
 	}
 
 	void start_envelope(int index) {
+		DEBUG("start_envelope index=%i",index);
 		current_index = index;
-		DEBUG("start_envelope %d", index);
 		cm_envelope.trigger();
 	}
 
 	void end_envelope(int index) {
+		DEBUG("end_envelope");
 		switch (mode) {
 			case EACH:
 				if (index == 3) {
@@ -387,6 +386,7 @@ struct Funcgen : Module {
 	}
 
 	void end_cycle() {
+		DEBUG("end_cycle");
 		if (params[CASCADE_LOOP_PARAM].getValue() > 0.5f) {
 			start_cycle();
 		}
