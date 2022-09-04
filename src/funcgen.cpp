@@ -262,25 +262,8 @@ struct Funcgen : Module {
 		outputs[CASCADE_RISING_OUTPUT].setVoltage(cm_envelope.stage == Envelope::RISING ? 10.f : 0.f);
 		outputs[CASCADE_FALLING_OUTPUT].setVoltage(cm_envelope.stage == Envelope::FALLING ? 10.f : 0.f);
 
-		if (cascade_trigger.process(inputs[CASCADE_TRIGGER_INPUT].getVoltage()) || cascade_push.process(params[CASCADE_TRIGGER_PARAM].getValue())) {
-			// if (mode == CASCADE) {
-			if (mode == EACH) {
-				current_index = 0;
-				cm_envelope[0].retrigger();
-				cm_envelope[1].reset();
-				cm_envelope[2].reset();
-				cm_envelope[3].reset();
-			}
-			// else if (mode == CHAOTIC_CASCADE) {
-			else if (mode == SHUFFLE) {
-				current_index = chaos_index;
-				cm_envelope[chaos_index].retrigger();
-				for (int i = 0; i < CHANNEL_COUNT; i++) {
-					if (i != chaos_index) {
-						cm_envelope[i].reset();
-					}
-				}
-			}
+		if (cascade_trigger.process(inputs[CASCADE_TRIGGER_INPUT].getVoltage())) {
+			start_cycle();
 		}
 
 		float a = envelope[0].env;
