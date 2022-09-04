@@ -235,24 +235,7 @@ struct Funcgen : Module {
 			for (int i = 0; i < CHANNEL_COUNT; i++) {
 				envelope[i].retrigger();
 			}
-			// if (mode == CASCADE) {
-			if (mode == EACH) {
-				current_index = 0;
-				cm_envelope[0].retrigger();
-				cm_envelope[1].reset();
-				cm_envelope[2].reset();
-				cm_envelope[3].reset();
-			}
-			// else if (mode == CHAOTIC_CASCADE) {
-			else if (mode == SHUFFLE) {
-				current_index = chaos_index;
-				cm_envelope[chaos_index].retrigger();
-				for (int i = 0; i < CHANNEL_COUNT; i++) {
-					if (i != chaos_index) {
-						cm_envelope[i].reset();
-					}
-				}
-			}
+			start_cycle();
 		}
 
 		float cascade_output = 0.f;
