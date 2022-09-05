@@ -128,6 +128,7 @@ struct Envelope {
                 break;
         }
         _env = clamp(_env,MIN_VALUE,MAX_VALUE);
-        env = _env * ENV_MAX_VALUE;
+        // env = _env * ENV_MAX_VALUE;
+        env = _env;
     }
 };

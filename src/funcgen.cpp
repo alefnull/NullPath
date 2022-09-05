@@ -83,6 +83,9 @@ struct Funcgen : Module {
 		RANDOM
 	};
 
+	float range = 10.f;
+	bool unipolar = true;
+
 	int current_index = 0;
 	int shuffle_list[CHANNEL_COUNT] = {0,1,2,3};
 	int shuffle_index = 0; //when in shuffle mode, stores which shuffle index is being played next
@@ -217,7 +220,13 @@ struct Funcgen : Module {
 				eoc_pulse[i].trigger(1e-3f);
 			}
 
-			outputs[FUNCTION_OUTPUT + i].setVoltage(envelope[i].env);
+			// outputs[FUNCTION_OUTPUT + i].setVoltage(envelope[i].env);
+			if (unipolar) {
+				outputs[FUNCTION_OUTPUT + i].setVoltage(range * envelope[i].env);
+			}
+			else {
+				outputs[FUNCTION_OUTPUT + i].setVoltage(range * 2 * (envelope[i].env - 0.5f));
+			}
 
 			outputs[RISING_OUTPUT + i].setVoltage(envelope[i].stage == Envelope::RISING ? 10.f : 0.f);
 			outputs[FALLING_OUTPUT + i].setVoltage(envelope[i].stage == Envelope::FALLING ? 10.f : 0.f);
@@ -246,7 +255,13 @@ struct Funcgen : Module {
 		
 		cascade_output = cm_envelope.env;
 
-		outputs[CASCADE_OUTPUT].setVoltage(cascade_output);
+		// outputs[CASCADE_OUTPUT].setVoltage(cascade_output);
+		if (unipolar) {
+			outputs[CASCADE_OUTPUT].setVoltage(range * cascade_output);
+		}
+		else {
+			outputs[CASCADE_OUTPUT].setVoltage(range * 2 * (cascade_output - 0.5f));
+		}
 		outputs[CASCADE_RISING_OUTPUT].setVoltage(cm_envelope.stage == Envelope::RISING ? 10.f : 0.f);
 		outputs[CASCADE_FALLING_OUTPUT].setVoltage(cm_envelope.stage == Envelope::FALLING ? 10.f : 0.f);
 
@@ -315,8 +330,8 @@ struct Funcgen : Module {
 		outputs[BOTAVG_OUTPUT].setVoltage((min_a + min_b) / 2.f);
 
 		for (int i = 0; i < CHANNEL_COUNT; i++) {
-			lights[OUTPUT_LIGHT + i].setBrightness(envelope[i].env / 10.f);
-			lights[CASCADE_LIGHT  + i].setBrightness(i == current_index ? (cm_envelope.env / 10.f) : 0.f);
+			lights[OUTPUT_LIGHT + i].setBrightness(envelope[i].env);
+			lights[CASCADE_LIGHT  + i].setBrightness(i == current_index ? cm_envelope.env : 0.f);
 		}
 	}
 
@@ -543,6 +558,23 @@ struct FuncgenWidget : ModuleWidget {
 		addChild(createLightCentered<LargeLight<GreenLight>>(pos, module, Funcgen::CASCADE_LIGHT + 1));
 		addChild(createLightCentered<LargeLight<YellowLight>>(pos, module, Funcgen::CASCADE_LIGHT + 3));
 		addChild(createLightCentered<LargeLight<BlueLight>>(pos, module, Funcgen::CASCADE_LIGHT + 2));
+	}
+
+	// override context menu to add range options
+	void appendContextMenu(Menu *menu) override {
+		Funcgen *module = dynamic_cast<Funcgen*>(this->module);
+		assert(module);
+		menu->addChild(new MenuSeparator());
+		menu->addChild(createSubmenuItem("Range", "", [=](Menu* menu) {
+			Menu* rangeMenu = new Menu();
+			rangeMenu->addChild(createMenuItem("+/- 1v", CHECKMARK(module->range == 1), [module]() { module->range = 1; }));
+			rangeMenu->addChild(createMenuItem("+/- 2v", CHECKMARK(module->range == 2), [module]() { module->range = 2; }));
+			rangeMenu->addChild(createMenuItem("+/- 3v", CHECKMARK(module->range == 3), [module]() { module->range = 3; }));
+			rangeMenu->addChild(createMenuItem("+/- 5v", CHECKMARK(module->range == 5), [module]() { module->range = 5; }));
+			rangeMenu->addChild(createMenuItem("+/- 10v", CHECKMARK(module->range == 10), [module]() { module->range = 10; }));
+			menu->addChild(rangeMenu);
+		}));
+		menu->addChild(createMenuItem("Unipolar", CHECKMARK(module->unipolar), [module]() { module->unipolar = !module->unipolar; }));
 	}
 };
 
