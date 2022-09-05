@@ -82,7 +82,6 @@ struct Funcgen : Module {
 		RANDOM
 	};
 
-	// float range = 10.f;
 	float range[CHANNEL_COUNT] = {10.f, 10.f, 10.f, 10.f};
 	float range_cascade = 10.f;
 	bool unipolar[CHANNEL_COUNT] = {true, true, true, true};
@@ -106,7 +105,6 @@ struct Funcgen : Module {
 	dsp::BooleanTrigger loop_trigger[CHANNEL_COUNT];
 	dsp::BooleanTrigger cm_loop_trigger;
 	dsp::PulseGenerator eoc_pulse[CHANNEL_COUNT];
-	//dsp::PulseGenerator cm_eoc_pulse;
 
 
 	Funcgen() {
@@ -223,7 +221,6 @@ struct Funcgen : Module {
 				eoc_pulse[i].trigger(1e-3f);
 			}
 
-			// outputs[FUNCTION_OUTPUT + i].setVoltage(envelope[i].env);
 			if (unipolar[i]) {
 				outputs[FUNCTION_OUTPUT + i].setVoltage(range[i] * envelope[i].env);
 			}
@@ -240,7 +237,6 @@ struct Funcgen : Module {
 		}
 
 		if (cm_eoc_trigger.process(cm_envelope.eoc)) {
-			//cm_eoc_pulse.trigger(1e-3f);
 			end_envelope(current_index);
 		}
 
@@ -255,7 +251,6 @@ struct Funcgen : Module {
 		
 		cascade_output = cm_envelope.env;
 
-		// outputs[CASCADE_OUTPUT].setVoltage(cascade_output);
 		if (unipolar_cascade) {
 			outputs[CASCADE_OUTPUT].setVoltage(range_cascade * cascade_output);
 		}
@@ -273,9 +268,6 @@ struct Funcgen : Module {
 		float b = envelope[1].env;
 		float c = envelope[2].env;
 		float d = envelope[3].env;
-		// outputs[MIN_OUTPUT].setVoltage(std::min(a, std::min(b, std::min(c, d))));
-		// outputs[MAX_OUTPUT].setVoltage(std::max(a, std::max(b, std::max(c, d))));
-		// outputs[AVG_OUTPUT].setVoltage((a + b + c + d) / CHANNEL_COUNT);
 		outputs[MIN_OUTPUT].setVoltage(std::min(a * 10, std::min(b * 10, std::min(c * 10, d * 10))));
 		outputs[MAX_OUTPUT].setVoltage(std::max(a * 10, std::max(b * 10, std::max(c * 10, d * 10))));
 		outputs[AVG_OUTPUT].setVoltage((a * 10 + b * 10 + c * 10 + d * 10) / CHANNEL_COUNT);
@@ -291,18 +283,6 @@ struct Funcgen : Module {
 		outputs[DGTA_OUTPUT].setVoltage(d > a ? 10.f : 0.f);
 		outputs[DGTB_OUTPUT].setVoltage(d > b ? 10.f : 0.f);
 		outputs[DGTC_OUTPUT].setVoltage(d > c ? 10.f : 0.f);
-		// outputs[ABSAB_OUTPUT].setVoltage(10 - std::abs(a - b));
-		// outputs[ABSAC_OUTPUT].setVoltage(10 - std::abs(a - c));
-		// outputs[ABSAD_OUTPUT].setVoltage(10 - std::abs(a - d));
-		// outputs[ABSBC_OUTPUT].setVoltage(10 - std::abs(b - c));
-		// outputs[ABSBD_OUTPUT].setVoltage(10 - std::abs(b - d));
-		// outputs[ABSCD_OUTPUT].setVoltage(10 - std::abs(c - d));
-		// outputs[ABSBA_OUTPUT].setVoltage(std::abs(a - b));
-		// outputs[ABSCA_OUTPUT].setVoltage(std::abs(a - c));
-		// outputs[ABSCB_OUTPUT].setVoltage(std::abs(b - c));
-		// outputs[ABSDA_OUTPUT].setVoltage(std::abs(a - d));
-		// outputs[ABSDB_OUTPUT].setVoltage(std::abs(b - d));
-		// outputs[ABSDC_OUTPUT].setVoltage(std::abs(c - d));
 		outputs[ABSAB_OUTPUT].setVoltage(10- std::abs(a * 10 - b * 10));
 		outputs[ABSAC_OUTPUT].setVoltage(10 - std::abs(a * 10 - c * 10));
 		outputs[ABSAD_OUTPUT].setVoltage(10 - std::abs(a * 10 - d * 10));
