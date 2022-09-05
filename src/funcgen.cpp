@@ -412,6 +412,15 @@ struct Funcgen : Module {
 		}
 	}
 
+	void onReset() override {
+		for (int i = 0; i < CHANNEL_COUNT; i++) {
+			range[i] = 10;
+			unipolar[i] = true;
+		}
+		range_cascade = 10;
+		unipolar_cascade = true;
+	}
+
 	json_t *dataToJson() override {
 		json_t *rootJ = json_object();
 		json_object_set_new(rootJ, "range_a", json_integer(range[0]));
