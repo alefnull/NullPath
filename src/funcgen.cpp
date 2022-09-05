@@ -118,7 +118,7 @@ struct Funcgen : Module {
 		configParam(CASCADE_TRIGGER_PARAM, 0.f, 1.f, 0.f, "Cascade Re-Trigger");
 		configInput(CASCADE_TRIGGER_INPUT, "Cascade Re-Trigger");
 		configSwitch(CASCADE_LOOP_PARAM, 0.f, 1.f, 1.f, "Cascade Loop", {"Off", "On"});
-		configSwitch(CASCADE_SPEED_PARAM, 0.f, 2.f, 1.f, "Cascade Speed", {"Slow", "Normal", "Fast"});
+		configSwitch(CASCADE_SPEED_PARAM, 0.f, 2.f, 1.f, "Cascade Speed", {"Fast", "Normal", "Slow"});
 		configOutput(CASCADE_RISING_OUTPUT, "Cascade Rising");
 		configOutput(CASCADE_FALLING_OUTPUT, "Cascade Falling");
 		for (int i = 0; i < CHANNEL_COUNT; i++) {
@@ -127,7 +127,7 @@ struct Funcgen : Module {
 			configSwitch(LOOP_PARAM + i, 0.f, 1.f, 1.f, "Loop", {"Off", "On"});
 			configParam(RISE_SHAPE_PARAM + i, -1.f, 1.f, 0.f, "Rise shape");
 			configParam(FALL_SHAPE_PARAM + i, -1.f, 1.f, 0.f, "Fall shape");
-			configSwitch(SPEED_PARAM + i, 0.f, 2.f, 1.f, "Speed", {"Slow", "Normal", "Fast"});
+			configSwitch(SPEED_PARAM + i, 0.f, 2.f, 1.f, "Speed", {"Fast", "Normal", "Slow"});
 			configParam(PUSH_PARAM + i, 0.f, 1.f, 0.f, "Push");
 			configInput(TRIGGER_INPUT + i, "Trigger");
 			configInput(RISE_CV_INPUT + i, "Rise CV");
