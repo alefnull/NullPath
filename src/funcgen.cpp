@@ -215,7 +215,9 @@ struct Funcgen : Module {
 			}
 
 			envelope[i].process(st);
-			cm_envelope.process(st);
+			if (i == current_index) {
+				cm_envelope.process(st);
+			}
 
 			if (eoc_trigger[i].process(envelope[i].eoc)) {
 				eoc_pulse[i].trigger(1e-3f);
