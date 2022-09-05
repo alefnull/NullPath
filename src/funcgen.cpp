@@ -326,7 +326,7 @@ struct Funcgen : Module {
 				max_b = envelope[i].env;
 			}
 		}
-		outputs[TOPAVG_OUTPUT].setVoltage((max_a + max_b) / 2.f);
+		outputs[TOPAVG_OUTPUT].setVoltage((max_a * 10 + max_b * 10) / 2);
 
 		// find the two channels with the lowest amplitude
 		float min_a = 10.f;
@@ -340,7 +340,7 @@ struct Funcgen : Module {
 				min_b = envelope[i].env;
 			}
 		}
-		outputs[BOTAVG_OUTPUT].setVoltage((min_a + min_b) / 2.f);
+		outputs[BOTAVG_OUTPUT].setVoltage((min_a * 10 + min_b * 10) / 2);
 
 		for (int i = 0; i < CHANNEL_COUNT; i++) {
 			lights[OUTPUT_LIGHT + i].setBrightness(envelope[i].env);
