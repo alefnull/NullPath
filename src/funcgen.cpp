@@ -35,7 +35,6 @@ struct Funcgen : Module {
 	};
 	enum OutputId {
 		ENUMS(FUNCTION_OUTPUT, CHANNEL_COUNT),
-		ENUMS(EOC_OUTPUT, CHANNEL_COUNT),
 		CASCADE_OUTPUT,
 		MIN_OUTPUT,
 		MAX_OUTPUT,
@@ -136,7 +135,6 @@ struct Funcgen : Module {
 			configOutput(FUNCTION_OUTPUT + i, "Function");
 			configOutput(RISING_OUTPUT + i, "Rising");
 			configOutput(FALLING_OUTPUT + i, "Falling");
-			configOutput(EOC_OUTPUT + i, "EOC");
 		}
 		configOutput(MIN_OUTPUT, "Minimum");
 		configOutput(MAX_OUTPUT, "Maximum");
@@ -233,9 +231,6 @@ struct Funcgen : Module {
 
 			outputs[RISING_OUTPUT + i].setVoltage(envelope[i].stage == Envelope::RISING ? 10.f : 0.f);
 			outputs[FALLING_OUTPUT + i].setVoltage(envelope[i].stage == Envelope::FALLING ? 10.f : 0.f);
-
-			bool eoc = eoc_pulse[i].process(st);
-			outputs[EOC_OUTPUT + i].setVoltage(eoc ? 10.f : 0.f);
 		}
 
 		if (cm_loop_trigger.process(params[CASCADE_LOOP_PARAM].getValue())) {
@@ -365,7 +360,6 @@ struct Funcgen : Module {
 	}
 
 	void start_cycle() {
-		DEBUG("start_cycle");
 		switch (mode) {
 			case EACH:
 				start_envelope(0);
@@ -383,13 +377,11 @@ struct Funcgen : Module {
 	}
 
 	void start_envelope(int index) {
-		DEBUG("start_envelope index=%i",index);
 		current_index = index;
 		cm_envelope.trigger();
 	}
 
 	void end_envelope(int index) {
-		DEBUG("end_envelope");
 		switch (mode) {
 			case EACH:
 				if (index == 3) {
@@ -415,7 +407,6 @@ struct Funcgen : Module {
 	}
 
 	void end_cycle() {
-		DEBUG("end_cycle");
 		if (params[CASCADE_LOOP_PARAM].getValue() > 0.5f) {
 			start_cycle();
 		}
