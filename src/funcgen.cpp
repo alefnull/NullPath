@@ -83,8 +83,11 @@ struct Funcgen : Module {
 		RANDOM
 	};
 
-	float range = 10.f;
-	bool unipolar = true;
+	// float range = 10.f;
+	float range[CHANNEL_COUNT] = {10.f, 10.f, 10.f, 10.f};
+	float range_cascade = 10.f;
+	bool unipolar[CHANNEL_COUNT] = {true, true, true, true};
+	bool unipolar_cascade = true;
 
 	int current_index = 0;
 	int shuffle_list[CHANNEL_COUNT] = {0,1,2,3};
@@ -221,11 +224,11 @@ struct Funcgen : Module {
 			}
 
 			// outputs[FUNCTION_OUTPUT + i].setVoltage(envelope[i].env);
-			if (unipolar) {
-				outputs[FUNCTION_OUTPUT + i].setVoltage(range * envelope[i].env);
+			if (unipolar[i]) {
+				outputs[FUNCTION_OUTPUT + i].setVoltage(range[i] * envelope[i].env);
 			}
 			else {
-				outputs[FUNCTION_OUTPUT + i].setVoltage(range * 2 * (envelope[i].env - 0.5f));
+				outputs[FUNCTION_OUTPUT + i].setVoltage(range[i] * 2 * (envelope[i].env - 0.5f));
 			}
 
 			outputs[RISING_OUTPUT + i].setVoltage(envelope[i].stage == Envelope::RISING ? 10.f : 0.f);
@@ -256,11 +259,11 @@ struct Funcgen : Module {
 		cascade_output = cm_envelope.env;
 
 		// outputs[CASCADE_OUTPUT].setVoltage(cascade_output);
-		if (unipolar) {
-			outputs[CASCADE_OUTPUT].setVoltage(range * cascade_output);
+		if (unipolar_cascade) {
+			outputs[CASCADE_OUTPUT].setVoltage(range_cascade * cascade_output);
 		}
 		else {
-			outputs[CASCADE_OUTPUT].setVoltage(range * 2 * (cascade_output - 0.5f));
+			outputs[CASCADE_OUTPUT].setVoltage(range_cascade * 2 * (cascade_output - 0.5f));
 		}
 		outputs[CASCADE_RISING_OUTPUT].setVoltage(cm_envelope.stage == Envelope::RISING ? 10.f : 0.f);
 		outputs[CASCADE_FALLING_OUTPUT].setVoltage(cm_envelope.stage == Envelope::FALLING ? 10.f : 0.f);
@@ -418,8 +421,53 @@ struct Funcgen : Module {
 		}
 	}
 
+	json_t *dataToJson() override {
+		json_t *rootJ = json_object();
+		json_object_set_new(rootJ, "range_a", json_integer(range[0]));
+		json_object_set_new(rootJ, "unipolar_a", json_boolean(unipolar[0]));
+		json_object_set_new(rootJ, "range_b", json_integer(range[1]));
+		json_object_set_new(rootJ, "unipolar_b", json_boolean(unipolar[1]));
+		json_object_set_new(rootJ, "range_c", json_integer(range[2]));
+		json_object_set_new(rootJ, "unipolar_c", json_boolean(unipolar[2]));
+		json_object_set_new(rootJ, "range_d", json_integer(range[3]));
+		json_object_set_new(rootJ, "unipolar_d", json_boolean(unipolar[3]));
+		json_object_set_new(rootJ, "range_cascade", json_integer(range_cascade));
+		json_object_set_new(rootJ, "unipolar_cascade", json_boolean(unipolar_cascade));
+		return rootJ;
+	}
+
 	void dataFromJson(json_t *rootJ) override {
-		DEBUG("dataFromJson");
+		json_t *range_aJ = json_object_get(rootJ, "range_a");
+		if (range_aJ)
+			range[0] = json_integer_value(range_aJ);
+		json_t *unipolar_aJ = json_object_get(rootJ, "unipolar_a");
+		if (unipolar_aJ)
+			unipolar[0] = json_boolean_value(unipolar_aJ);
+		json_t *range_bJ = json_object_get(rootJ, "range_b");
+		if (range_bJ)
+			range[1] = json_integer_value(range_bJ);
+		json_t *unipolar_bJ = json_object_get(rootJ, "unipolar_b");
+		if (unipolar_bJ)
+			unipolar[1] = json_boolean_value(unipolar_bJ);
+		json_t *range_cJ = json_object_get(rootJ, "range_c");
+		if (range_cJ)
+			range[2] = json_integer_value(range_cJ);
+		json_t *unipolar_cJ = json_object_get(rootJ, "unipolar_c");
+		if (unipolar_cJ)
+			unipolar[2] = json_boolean_value(unipolar_cJ);
+		json_t *range_dJ = json_object_get(rootJ, "range_d");
+		if (range_dJ)
+			range[3] = json_integer_value(range_dJ);
+		json_t *unipolar_dJ = json_object_get(rootJ, "unipolar_d");
+		if (unipolar_dJ)
+			unipolar[3] = json_boolean_value(unipolar_dJ);
+		json_t *range_cascadeJ = json_object_get(rootJ, "range_cascade");
+		if (range_cascadeJ)
+			range_cascade = json_integer_value(range_cascadeJ);
+		json_t *unipolar_cascadeJ = json_object_get(rootJ, "unipolar_cascade");
+		if (unipolar_cascadeJ)
+			unipolar_cascade = json_boolean_value(unipolar_cascadeJ);
+
 		for (int i = 0; i < CHANNEL_COUNT; i++) {
 			if (params[LOOP_PARAM + i].getValue() > 0.5f) {
 				envelope[i].trigger();
@@ -428,12 +476,6 @@ struct Funcgen : Module {
 		if (params[CASCADE_LOOP_PARAM].getValue() > 0.5f) {
 			start_cycle();
 		}
-	}
-
-	json_t *dataToJson() override {
-		DEBUG("dataToJson");
-		json_t *rootJ = json_object();
-		return rootJ;
 	}
 };
 
@@ -565,16 +607,61 @@ struct FuncgenWidget : ModuleWidget {
 		Funcgen *module = dynamic_cast<Funcgen*>(this->module);
 		assert(module);
 		menu->addChild(new MenuSeparator());
-		menu->addChild(createSubmenuItem("Range", "", [=](Menu* menu) {
+		menu->addChild(createSubmenuItem("Channel A Range", "", [=](Menu* menu) {
 			Menu* rangeMenu = new Menu();
-			rangeMenu->addChild(createMenuItem("+/- 1v", CHECKMARK(module->range == 1), [module]() { module->range = 1; }));
-			rangeMenu->addChild(createMenuItem("+/- 2v", CHECKMARK(module->range == 2), [module]() { module->range = 2; }));
-			rangeMenu->addChild(createMenuItem("+/- 3v", CHECKMARK(module->range == 3), [module]() { module->range = 3; }));
-			rangeMenu->addChild(createMenuItem("+/- 5v", CHECKMARK(module->range == 5), [module]() { module->range = 5; }));
-			rangeMenu->addChild(createMenuItem("+/- 10v", CHECKMARK(module->range == 10), [module]() { module->range = 10; }));
+			rangeMenu->addChild(createMenuItem("+/- 1v", CHECKMARK(module->range[0] == 1), [module]() { module->range[0] = 1; }));
+			rangeMenu->addChild(createMenuItem("+/- 2v", CHECKMARK(module->range[0] == 2), [module]() { module->range[0] = 2; }));
+			rangeMenu->addChild(createMenuItem("+/- 3v", CHECKMARK(module->range[0] == 3), [module]() { module->range[0] = 3; }));
+			rangeMenu->addChild(createMenuItem("+/- 5v", CHECKMARK(module->range[0] == 5), [module]() { module->range[0] = 5; }));
+			rangeMenu->addChild(createMenuItem("+/- 10v", CHECKMARK(module->range[0] == 10), [module]() { module->range[0] = 10; }));
+			rangeMenu->addChild(new MenuSeparator());
+			rangeMenu->addChild(createMenuItem("Unipolar", CHECKMARK(module->unipolar[0]), [module]() { module->unipolar[0] = !module->unipolar[0]; }));
 			menu->addChild(rangeMenu);
 		}));
-		menu->addChild(createMenuItem("Unipolar", CHECKMARK(module->unipolar), [module]() { module->unipolar = !module->unipolar; }));
+		menu->addChild(createSubmenuItem("Channel B Range", "", [=](Menu* menu) {
+			Menu* rangeMenu = new Menu();
+			rangeMenu->addChild(createMenuItem("+/- 1v", CHECKMARK(module->range[1] == 1), [module]() { module->range[1] = 1; }));
+			rangeMenu->addChild(createMenuItem("+/- 2v", CHECKMARK(module->range[1] == 2), [module]() { module->range[1] = 2; }));
+			rangeMenu->addChild(createMenuItem("+/- 3v", CHECKMARK(module->range[1] == 3), [module]() { module->range[1] = 3; }));
+			rangeMenu->addChild(createMenuItem("+/- 5v", CHECKMARK(module->range[1] == 5), [module]() { module->range[1] = 5; }));
+			rangeMenu->addChild(createMenuItem("+/- 10v", CHECKMARK(module->range[1] == 10), [module]() { module->range[1] = 10; }));
+			rangeMenu->addChild(new MenuSeparator());
+			rangeMenu->addChild(createMenuItem("Unipolar", CHECKMARK(module->unipolar[1]), [module]() { module->unipolar[1] = !module->unipolar[1]; }));
+			menu->addChild(rangeMenu);
+		}));
+		menu->addChild(createSubmenuItem("Channel C Range", "", [=](Menu* menu) {
+			Menu* rangeMenu = new Menu();
+			rangeMenu->addChild(createMenuItem("+/- 1v", CHECKMARK(module->range[2] == 1), [module]() { module->range[2] = 1; }));
+			rangeMenu->addChild(createMenuItem("+/- 2v", CHECKMARK(module->range[2] == 2), [module]() { module->range[2] = 2; }));
+			rangeMenu->addChild(createMenuItem("+/- 3v", CHECKMARK(module->range[2] == 3), [module]() { module->range[2] = 3; }));
+			rangeMenu->addChild(createMenuItem("+/- 5v", CHECKMARK(module->range[2] == 5), [module]() { module->range[2] = 5; }));
+			rangeMenu->addChild(createMenuItem("+/- 10v", CHECKMARK(module->range[2] == 10), [module]() { module->range[2] = 10; }));
+			rangeMenu->addChild(new MenuSeparator());
+			rangeMenu->addChild(createMenuItem("Unipolar", CHECKMARK(module->unipolar[2]), [module]() { module->unipolar[2] = !module->unipolar[2]; }));
+			menu->addChild(rangeMenu);
+		}));
+		menu->addChild(createSubmenuItem("Channel D Range", "", [=](Menu* menu) {
+			Menu* rangeMenu = new Menu();
+			rangeMenu->addChild(createMenuItem("+/- 1v", CHECKMARK(module->range[3] == 1), [module]() { module->range[3] = 1; }));
+			rangeMenu->addChild(createMenuItem("+/- 2v", CHECKMARK(module->range[3] == 2), [module]() { module->range[3] = 2; }));
+			rangeMenu->addChild(createMenuItem("+/- 3v", CHECKMARK(module->range[3] == 3), [module]() { module->range[3] = 3; }));
+			rangeMenu->addChild(createMenuItem("+/- 5v", CHECKMARK(module->range[3] == 5), [module]() { module->range[3] = 5; }));
+			rangeMenu->addChild(createMenuItem("+/- 10v", CHECKMARK(module->range[3] == 10), [module]() { module->range[3] = 10; }));
+			rangeMenu->addChild(new MenuSeparator());
+			rangeMenu->addChild(createMenuItem("Unipolar", CHECKMARK(module->unipolar[3]), [module]() { module->unipolar[3] = !module->unipolar[3]; }));
+			menu->addChild(rangeMenu);
+		}));
+		menu->addChild(createSubmenuItem("Cascade Range", "", [=](Menu* menu) {
+			Menu* rangeMenu = new Menu();
+			rangeMenu->addChild(createMenuItem("+/- 1v", CHECKMARK(module->range_cascade == 1), [module]() { module->range_cascade = 1; }));
+			rangeMenu->addChild(createMenuItem("+/- 2v", CHECKMARK(module->range_cascade == 2), [module]() { module->range_cascade = 2; }));
+			rangeMenu->addChild(createMenuItem("+/- 3v", CHECKMARK(module->range_cascade == 3), [module]() { module->range_cascade = 3; }));
+			rangeMenu->addChild(createMenuItem("+/- 5v", CHECKMARK(module->range_cascade == 5), [module]() { module->range_cascade = 5; }));
+			rangeMenu->addChild(createMenuItem("+/- 10v", CHECKMARK(module->range_cascade == 10), [module]() { module->range_cascade = 10; }));
+			rangeMenu->addChild(new MenuSeparator());
+			rangeMenu->addChild(createMenuItem("Unipolar", CHECKMARK(module->unipolar_cascade), [module]() { module->unipolar_cascade = !module->unipolar_cascade; }));
+			menu->addChild(rangeMenu);
+		}));
 	}
 };
 
