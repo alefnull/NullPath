@@ -36,6 +36,14 @@
       "tags": [
         "Envelope generator"
       ]
+    },
+    {
+      "slug": "supersaw",
+      "name": "supersaw",
+      "description": "",
+      "tags": [
+        "Oscillator"
+      ]
     }
   ]
 }
