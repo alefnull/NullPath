@@ -6,6 +6,7 @@ struct Supersaw : Module {
 	enum ParamId {
 		OCTAVE_PARAM,
 		PITCH_PARAM,
+		WAVE_PARAM,
 		FINE_1_PARAM,
 		FINE_2_PARAM,
 		FINE_3_PARAM,
@@ -38,6 +39,7 @@ struct Supersaw : Module {
 		configParam(OCTAVE_PARAM, -2.0, 2.0, 0.0, "Octave");
 		getParamQuantity(OCTAVE_PARAM)->snapEnabled = true;
 		configParam(PITCH_PARAM, -1.0, 1.0, 0.0, "Pitch");
+		configSwitch(WAVE_PARAM, 0.0, 1.0, 0.0, "Wave", {"Saw", "Pulse"});
 		configParam(FINE_1_PARAM, -0.1, 0.1, 0.0, "Fine 1");
 		configParam(FINE_2_PARAM, -0.1, 0.1, 0.0, "Fine 2");
 		configParam(FINE_3_PARAM, -0.1, 0.1, 0.0, "Fine 3");
@@ -51,6 +53,7 @@ struct Supersaw : Module {
 
 	void process(const ProcessArgs& args) override {
 		float pitch = params[PITCH_PARAM].getValue();
+		int wave = params[WAVE_PARAM].getValue();
 		float octave = params[OCTAVE_PARAM].getValue();
 		float fine1 = params[FINE_1_PARAM].getValue();
 		float fine2 = params[FINE_2_PARAM].getValue();
@@ -76,7 +79,14 @@ struct Supersaw : Module {
 
 		width += width_cv;
 		out += osc[0].saw(osc[0].freq, args.sampleTime) * 0.33f;
-		out += osc[1].pulse(osc[1].freq, args.sampleTime, width) * 0.33f;
+		switch (wave) {
+			case 0:
+				out += osc[1].saw(osc[1].freq, args.sampleTime) * 0.33f;
+				break;
+			case 1:
+				out += osc[2].pulse(osc[2].freq, args.sampleTime, width) * 0.33f;
+				break;
+		}
 		out += osc[2].saw(osc[2].freq, args.sampleTime) * 0.33f;
 
 		out += noise;
@@ -110,7 +120,7 @@ struct SupersawWidget : ModuleWidget {
 		y += dy * 1.5f;
 		addParam(createParam<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::FINE_1_PARAM));
 		x += dx;
-		addParam(createParam<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::FINE_2_PARAM));
+		addParam(createParamCentered<CKSS>(Vec(x, y), module, Supersaw::WAVE_PARAM));
 		x += dx;
 		addParam(createParam<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::FINE_3_PARAM));
 		x -= dx * 2;
