@@ -47,4 +47,13 @@ struct Oscillator {
         // return phase * 2.f - 1.f;
         return clamp(phase * 2.f - 1.f, -1.f, 1.f);
     }
+
+    float triangle(float freq, float sample_time) {
+        phase += freq * sample_time;
+        if (phase >= 1.f) {
+            phase -= 1.f;
+        }
+        // return phase < 0.5f ? phase * 4.f - 1.f : 3.f - phase * 4.f;
+        return clamp(phase < 0.5f ? phase * 4.f - 1.f : 3.f - phase * 4.f, -1.f, 1.f);
+    }
 };
