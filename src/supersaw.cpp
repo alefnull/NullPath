@@ -105,39 +105,41 @@ struct SupersawWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		float x_start = RACK_GRID_WIDTH / 2.f;
-		float y_start = RACK_GRID_WIDTH;
+		float x_start = RACK_GRID_WIDTH * 2;
+		float y_start = RACK_GRID_WIDTH * 3;
 		float dx = RACK_GRID_WIDTH * 2;
 		float dy = RACK_GRID_WIDTH * 2;
 
 		float x = x_start;
 		float y = y_start;
 
-		addParam(createParam<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::OCTAVE_PARAM));
+		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::OCTAVE_PARAM));
 		x += dx;
-		addParam(createParam<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::PITCH_PARAM));
-		x -= dx;
-		y += dy * 1.5f;
-		addParam(createParam<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::FINE_1_PARAM));
+		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::PITCH_PARAM));
 		x += dx;
 		addParam(createParamCentered<CKSS>(Vec(x, y), module, Supersaw::WAVE_PARAM));
-		x += dx;
-		addParam(createParam<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::FINE_3_PARAM));
 		x -= dx * 2;
-		y += dy * 1.5f;
-		addParam(createParam<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::NOISE_DUR_PARAM));
+		y += dy;
+		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::FINE_1_PARAM));
 		x += dx;
-		addParam(createParam<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::NOISE_MIX_PARAM));
+		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::FINE_2_PARAM));
+		x += dx;
+		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::FINE_3_PARAM));
+		x -= dx * 2;
+		y += dy;
+		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::NOISE_DUR_PARAM));
+		x += dx;
+		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::NOISE_MIX_PARAM));
 		x -= dx;
-		y += dy * 1.5f;
-		addInput(createInput<PJ301MPort>(Vec(x, y), module, Supersaw::VOCT_INPUT));
+		y += dy;
+		addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::VOCT_INPUT));
 		x += dx;
-		addInput(createInput<PJ301MPort>(Vec(x, y), module, Supersaw::WIDTH_INPUT));
+		addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::WIDTH_INPUT));
 		x += dx;
-		addParam(createParam<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::WIDTH_PARAM));
+		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::WIDTH_PARAM));
 		x -= dx;
-		y += dy * 1.5f;
-		addOutput(createOutput<PJ301MPort>(Vec(x, y), module, Supersaw::SIGNAL_OUTPUT));
+		y += dy;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::SIGNAL_OUTPUT));
 	}
 };
 
