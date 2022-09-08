@@ -12,12 +12,10 @@ struct Supersaw : Module {
 		FINE_3_PARAM,
 		NOISE_DUR_PARAM,
 		NOISE_MIX_PARAM,
-		WIDTH_PARAM,
 		PARAMS_LEN
 	};
 	enum InputId {
 		VOCT_INPUT,
-		WIDTH_INPUT,
 		INPUTS_LEN
 	};
 	enum OutputId {
@@ -45,9 +43,7 @@ struct Supersaw : Module {
 		configParam(FINE_3_PARAM, -0.02, 0.02, 0.0, "Fine 3");
 		configParam(NOISE_DUR_PARAM, 0.0, 0.001, 0.0, "Noise duration");
 		configParam(NOISE_MIX_PARAM, 0.0, 0.5, 0.0, "Noise mix");
-		configParam(WIDTH_PARAM, 0.0, 1.0, 0.5, "Pulse width");
 		configInput(VOCT_INPUT, "1 V/Oct");
-		configInput(WIDTH_INPUT, "Pulse width CV");
 		configOutput(SIGNAL_OUTPUT, "Signal");
 	}
 
@@ -58,11 +54,9 @@ struct Supersaw : Module {
 		float fine1 = params[FINE_1_PARAM].getValue();
 		float fine2 = params[FINE_2_PARAM].getValue();
 		float fine3 = params[FINE_3_PARAM].getValue();
-		float width = params[WIDTH_PARAM].getValue();
 		float noise_dur = params[NOISE_DUR_PARAM].getValue();
 		float noise_mix = params[NOISE_MIX_PARAM].getValue();
 		float voct = inputs[VOCT_INPUT].getVoltage();
-		float width_cv = inputs[WIDTH_INPUT].getVoltage() / 10.f;
 
 		if (noise_time > noise_dur) {
 			last_noise = osc[4].noise();
@@ -77,7 +71,6 @@ struct Supersaw : Module {
 		osc[1].set_pitch(pitch + octave + fine2 + voct);
 		osc[2].set_pitch(pitch + octave + fine3 + voct);
 
-		width += width_cv;
 		out += osc[0].saw(osc[0].freq, args.sampleTime) * 0.33f;
 		switch (wave) {
 			case 0:
@@ -133,12 +126,7 @@ struct SupersawWidget : ModuleWidget {
 		x -= dx;
 		y += dy;
 		addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::VOCT_INPUT));
-		x += dx;
-		addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::WIDTH_INPUT));
-		x += dx;
-		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::WIDTH_PARAM));
-		x -= dx;
-		y += dy;
+		x += dx * 2;
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::SIGNAL_OUTPUT));
 	}
 };
