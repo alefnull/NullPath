@@ -26,7 +26,6 @@ struct Oscillator {
         if (phase >= 1.f) {
             phase -= 1.f;
         }
-        // return std::sin(2.f * M_PI * phase);
         return clamp(std::sin(2.f * M_PI * phase), -1.f, 1.f);
     }
 
@@ -35,7 +34,6 @@ struct Oscillator {
         if (phase >= 1.f) {
             phase -= 1.f;
         }
-        // return phase < width ? 1.f : -1.f;
         return clamp(phase < width ? 1.f : -1.f, -1.f, 1.f);
     }
 
@@ -44,7 +42,6 @@ struct Oscillator {
         if (phase >= 1.f) {
             phase -= 1.f;
         }
-        // return phase * 2.f - 1.f;
         return clamp(phase * 2.f - 1.f, -1.f, 1.f);
     }
 
@@ -53,7 +50,10 @@ struct Oscillator {
         if (phase >= 1.f) {
             phase -= 1.f;
         }
-        // return phase < 0.5f ? phase * 4.f - 1.f : 3.f - phase * 4.f;
         return clamp(phase < 0.5f ? phase * 4.f - 1.f : 3.f - phase * 4.f, -1.f, 1.f);
+    }
+
+    float noise() {
+        return clamp(random::uniform() * 2.f - 1.f, -1.f, 1.f);
     }
 };
