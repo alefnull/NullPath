@@ -28,7 +28,7 @@ struct Supersaw : Module {
 		LIGHTS_LEN
 	};
 
-	Oscillator osc[3];
+	Oscillator osc[4];
 	float noise_dur = 0.f;
 	float noise_mix = 0.f;
 	float last_noise = 0.f;
@@ -65,7 +65,7 @@ struct Supersaw : Module {
 		float width_cv = inputs[WIDTH_INPUT].getVoltage() / 10.f;
 
 		if (noise_time > noise_dur) {
-			last_noise = random::uniform() * 2.f - 1.f;
+			last_noise = osc[4].noise();
 			noise_time = 0.f;
 		}
 		noise_time += args.sampleTime;
