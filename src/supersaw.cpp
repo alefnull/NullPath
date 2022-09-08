@@ -77,7 +77,7 @@ struct Supersaw : Module {
 				out += osc[1].saw(osc[1].freq, args.sampleTime) * 0.33f;
 				break;
 			case 1:
-				out += osc[2].pulse(osc[2].freq, args.sampleTime, width) * 0.33f;
+				out += osc[2].triangle(osc[2].freq, args.sampleTime) * 0.33f;
 				break;
 		}
 		out += osc[2].saw(osc[2].freq, args.sampleTime) * 0.33f;
