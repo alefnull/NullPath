@@ -1,6 +1,7 @@
 #include "plugin.hpp"
 #include "oscillator.hpp"
 
+#define MAX_POLY 16
 
 struct Supersaw : Module {
 	enum ParamId {
@@ -26,7 +27,10 @@ struct Supersaw : Module {
 		LIGHTS_LEN
 	};
 
-	Oscillator osc[4];
+	Oscillator osc1[MAX_POLY];
+	Oscillator osc2[MAX_POLY];
+	Oscillator osc3[MAX_POLY];
+	Oscillator osc4[MAX_POLY];
 	float noise_dur = 0.f;
 	float noise_mix = 0.f;
 	float last_noise = 0.f;
@@ -48,6 +52,9 @@ struct Supersaw : Module {
 	}
 
 	void process(const ProcessArgs& args) override {
+		int channels = std::max(1, inputs[VOCT_INPUT].getChannels());
+		outputs[SIGNAL_OUTPUT].setChannels(channels);
+
 		float pitch = params[PITCH_PARAM].getValue();
 		int wave = params[WAVE_PARAM].getValue();
 		float octave = params[OCTAVE_PARAM].getValue();
@@ -56,34 +63,37 @@ struct Supersaw : Module {
 		float fine3 = params[FINE_3_PARAM].getValue();
 		float noise_dur = params[NOISE_DUR_PARAM].getValue();
 		float noise_mix = params[NOISE_MIX_PARAM].getValue();
-		float voct = inputs[VOCT_INPUT].getVoltage();
 
-		if (noise_time > noise_dur) {
-			last_noise = osc[4].noise();
-			noise_time = 0.f;
+		for (int c = 0; c < channels; c++) {
+			float voct = inputs[VOCT_INPUT].getVoltage(c);
+
+			if (noise_time > noise_dur) {
+				last_noise = osc4[c].noise();
+				noise_time = 0.f;
+			}
+			noise_time += args.sampleTime;
+			float noise = last_noise * noise_mix;
+
+			float out = 0.f;
+
+			osc1[c].set_pitch(pitch + octave + fine1 + voct);
+			osc2[c].set_pitch(pitch + octave + fine2 + voct);
+			osc3[c].set_pitch(pitch + octave + fine3 + voct);
+
+			out += osc1[c].saw(osc1[c].freq, args.sampleTime) * 0.33f;
+			switch (wave) {
+				case 0:
+					out += osc2[c].saw(osc2[c].freq, args.sampleTime) * 0.33f;
+					break;
+				case 1:
+					out += osc2[c].triangle(osc2[c].freq, args.sampleTime) * 0.33f;
+					break;
+			}
+			out += osc3[c].saw(osc3[c].freq, args.sampleTime) * 0.33f;
+
+			out += noise;
+			outputs[SIGNAL_OUTPUT].setVoltage(clamp(out * 5.f, -10.f, 10.f), c);
 		}
-		noise_time += args.sampleTime;
-		float noise = last_noise * noise_mix;
-
-		float out = 0.f;
-
-		osc[0].set_pitch(pitch + octave + fine1 + voct);
-		osc[1].set_pitch(pitch + octave + fine2 + voct);
-		osc[2].set_pitch(pitch + octave + fine3 + voct);
-
-		out += osc[0].saw(osc[0].freq, args.sampleTime) * 0.33f;
-		switch (wave) {
-			case 0:
-				out += osc[1].saw(osc[1].freq, args.sampleTime) * 0.33f;
-				break;
-			case 1:
-				out += osc[2].triangle(osc[2].freq, args.sampleTime) * 0.33f;
-				break;
-		}
-		out += osc[2].saw(osc[2].freq, args.sampleTime) * 0.33f;
-
-		out += noise;
-		outputs[SIGNAL_OUTPUT].setVoltage(clamp(out * 5.f, -10.f, 10.f));
 	}
 };
 
