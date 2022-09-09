@@ -18,7 +18,7 @@
       "name": "Expand",
       "description": "",
       "tags": [
-        "Utility"
+        "Switch, Utility, Polyphonic"
       ]
     },
     {
@@ -26,7 +26,7 @@
       "name": "Collapse",
       "description": "",
       "tags": [
-        "Utility"
+        "Switch, Utility, Polyphonic"
       ]
     },
     {
@@ -42,7 +42,7 @@
       "name": "supersaw",
       "description": "",
       "tags": [
-        "Oscillator"
+        "Oscillator, Polyphonic"
       ]
     }
   ]
