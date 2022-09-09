@@ -37,12 +37,12 @@ struct Supersaw : Module {
 		configParam(OCTAVE_PARAM, -2.0, 2.0, 0.0, "Octave");
 		getParamQuantity(OCTAVE_PARAM)->snapEnabled = true;
 		configParam(PITCH_PARAM, -1.0, 1.0, 0.0, "Pitch");
-		configSwitch(WAVE_PARAM, 0.0, 1.0, 0.0, "Wave", {"Saw", "Pulse"});
+		configSwitch(WAVE_PARAM, 0.0, 1.0, 0.0, "Wave", {"Saw", "Triangle"});
 		configParam(FINE_1_PARAM, -0.02, 0.02, 0.0, "Fine 1");
 		configParam(FINE_2_PARAM, -0.02, 0.02, 0.0, "Fine 2");
 		configParam(FINE_3_PARAM, -0.02, 0.02, 0.0, "Fine 3");
 		configParam(NOISE_DUR_PARAM, 0.0, 0.001, 0.0, "Noise duration");
-		configParam(NOISE_MIX_PARAM, 0.0, 0.5, 0.0, "Noise mix");
+		configParam(NOISE_MIX_PARAM, 0.0, 0.5, 0.0, "Noise mix", "%", 0.0, 100.0);
 		configInput(VOCT_INPUT, "1 V/Oct");
 		configOutput(SIGNAL_OUTPUT, "Signal");
 	}
