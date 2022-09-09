@@ -17,10 +17,12 @@ struct Supersaw : Module {
 	};
 	enum InputId {
 		VOCT_INPUT,
+		NOISE_DUR_CV_INPUT,
 		INPUTS_LEN
 	};
 	enum OutputId {
 		SIGNAL_OUTPUT,
+		NOISE_OUTPUT,
 		OUTPUTS_LEN
 	};
 	enum LightId {
@@ -46,9 +48,11 @@ struct Supersaw : Module {
 		configParam(FINE_2_PARAM, -0.02, 0.02, 0.0, "Fine 2");
 		configParam(FINE_3_PARAM, -0.02, 0.02, 0.0, "Fine 3");
 		configParam(NOISE_DUR_PARAM, 0.0, 0.001, 0.0, "Noise duration");
+		configInput(NOISE_DUR_CV_INPUT, "Noise duration CV");
 		configParam(NOISE_MIX_PARAM, 0.0, 0.5, 0.0, "Noise mix", "%", 0.0, 100.0);
 		configInput(VOCT_INPUT, "1 V/Oct");
 		configOutput(SIGNAL_OUTPUT, "Signal");
+		configOutput(NOISE_OUTPUT, "Noise");
 	}
 
 	void process(const ProcessArgs& args) override {
@@ -62,6 +66,8 @@ struct Supersaw : Module {
 		float fine2 = params[FINE_2_PARAM].getValue();
 		float fine3 = params[FINE_3_PARAM].getValue();
 		float noise_dur = params[NOISE_DUR_PARAM].getValue();
+		float noise_dur_cv = inputs[NOISE_DUR_CV_INPUT].getVoltage() / 10000.f;
+		noise_dur = clamp(noise_dur + noise_dur_cv, 0.f, 0.001f);
 		float noise_mix = params[NOISE_MIX_PARAM].getValue();
 
 		for (int c = 0; c < channels; c++) {
@@ -94,6 +100,7 @@ struct Supersaw : Module {
 			out += noise;
 			outputs[SIGNAL_OUTPUT].setVoltage(clamp(out * 5.f, -10.f, 10.f), c);
 		}
+		outputs[NOISE_OUTPUT].setVoltage(last_noise * 5.f);
 	}
 };
 
@@ -133,11 +140,15 @@ struct SupersawWidget : ModuleWidget {
 		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::NOISE_DUR_PARAM));
 		x += dx;
 		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::NOISE_MIX_PARAM));
-		x -= dx;
+		x += dx;
+		addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::NOISE_DUR_CV_INPUT));
+		x -= dx * 2;
 		y += dy;
 		addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::VOCT_INPUT));
-		x += dx * 2;
+		x += dx;
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::SIGNAL_OUTPUT));
+		x += dx;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::NOISE_OUTPUT));
 	}
 };
 
