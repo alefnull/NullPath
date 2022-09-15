@@ -30,6 +30,7 @@ struct Supersaw : Module {
 		SIGNAL_OUTPUT,
 		ENUMS(WAVE_OUTPUT, 3),
 		NOISE_OUTPUT,
+		ENV_OUTPUT,
 		VCA_OUTPUT,
 		OUTPUTS_LEN
 	};
@@ -71,6 +72,7 @@ struct Supersaw : Module {
 		}
 		configOutput(NOISE_OUTPUT, "Noise");
 		configInput(TRIGGER_INPUT, "Trigger");
+		configOutput(ENV_OUTPUT, "Envelope");
 		configOutput(VCA_OUTPUT, "VCA");
 	}
 
@@ -152,6 +154,7 @@ struct Supersaw : Module {
 			outputs[VCA_OUTPUT].setVoltage(clamp(outputs[SIGNAL_OUTPUT].getVoltage(c) * envelope.env, -10.f, 10.f), c);
 		}
 
+		outputs[ENV_OUTPUT].setVoltage(clamp(envelope.env * 10.f, -10.f, 10.f));
 		outputs[NOISE_OUTPUT].setVoltage(last_noise * 5.f);
 	}
 };
@@ -222,6 +225,8 @@ struct SupersawWidget : ModuleWidget {
 		addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::TRIGGER_INPUT));
 		x += dx;
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::VCA_OUTPUT));
+		x += dx;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::ENV_OUTPUT));
 	}
 };
 
