@@ -120,6 +120,8 @@ struct Supersaw : Module {
 
 		envelope.set_rise(rise_time);
 		envelope.set_fall(fall_time);
+		envelope.set_rise_shape(-0.5);
+		envelope.set_fall_shape(-0.5);
 
 		if (env_to_dur) {
 			noise_dur += envelope.env * env_dur_att * 0.001;
