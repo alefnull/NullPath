@@ -17,6 +17,12 @@ struct Supersaw : Module {
 		PULSE_WIDTH_PARAM,
 		RISE_PARAM,
 		FALL_PARAM,
+		ENV_TO_DUR_PARAM,
+		ENV_TO_MIX_PARAM,
+		ENV_TO_PW_PARAM,
+		ENV_DUR_ATT_PARAM,
+		ENV_MIX_ATT_PARAM,
+		ENV_PW_ATT_PARAM,
 		PARAMS_LEN
 	};
 	enum InputId {
@@ -65,6 +71,12 @@ struct Supersaw : Module {
 		configInput(PULSE_WIDTH_CV_INPUT, "Pulse width CV");
 		configParam(RISE_PARAM, 0.01, 5.0, 1.0, "Rise time", " s");
 		configParam(FALL_PARAM, 0.01, 5.0, 1.0, "Fall time", " s");
+		configParam(ENV_TO_DUR_PARAM, 0.0, 1.0, 0.0, "Envelope to noise duration");
+		configParam(ENV_TO_MIX_PARAM, 0.0, 1.0, 0.0, "Envelope to noise mix");
+		configParam(ENV_TO_PW_PARAM, 0.0, 1.0, 0.0, "Envelope to pulse width");
+		configParam(ENV_DUR_ATT_PARAM, 0.0, 1.0, 0.0, "Envelope duration attenuation");
+		configParam(ENV_MIX_ATT_PARAM, 0.0, 1.0, 0.0, "Envelope mix attenuation");
+		configParam(ENV_PW_ATT_PARAM, 0.0, 1.0, 0.0, "Envelope pulse width attenuation");
 		configInput(VOCT_INPUT, "1 V/Oct");
 		configOutput(SIGNAL_OUTPUT, "Signal");
 		for (int i = 0; i < 3; i++) {
@@ -99,9 +111,32 @@ struct Supersaw : Module {
 		float noise_mix = params[NOISE_MIX_PARAM].getValue();
 		float rise_time = params[RISE_PARAM].getValue();
 		float fall_time = params[FALL_PARAM].getValue();
+		bool env_to_dur = params[ENV_TO_DUR_PARAM].getValue() > 0.5;
+		bool env_to_mix = params[ENV_TO_MIX_PARAM].getValue() > 0.5;
+		bool env_to_pw = params[ENV_TO_PW_PARAM].getValue() > 0.5;
+		float env_dur_att = params[ENV_DUR_ATT_PARAM].getValue();
+		float env_mix_att = params[ENV_MIX_ATT_PARAM].getValue();
+		float env_pw_att = params[ENV_PW_ATT_PARAM].getValue();
 
 		envelope.set_rise(rise_time);
 		envelope.set_fall(fall_time);
+
+		if (env_to_dur) {
+			noise_dur += envelope.env * env_dur_att * 0.001;
+			noise_dur = clamp(noise_dur, 0.f, 0.001f);
+		}
+
+		if (env_to_mix) {
+			noise_mix += envelope.env * env_mix_att * 0.5;
+			noise_mix = clamp(noise_mix, 0.f, 0.5f);
+		}
+
+		if (env_to_pw) {
+			float pw_min = 0.1;
+			float pw_max = 0.9;
+			pulse_width += envelope.env * env_pw_att * (pw_max - pw_min);
+			pulse_width = clamp(pulse_width, pw_min, pw_max);
+		}
 
 		for (int c = 0; c < channels; c++) {
 			float voct = inputs[VOCT_INPUT].getVoltage(c);
@@ -227,6 +262,21 @@ struct SupersawWidget : ModuleWidget {
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::VCA_OUTPUT));
 		x += dx;
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::ENV_OUTPUT));
+		x -= dx * 2;
+		y += dy;
+		addParam(createParamCentered<CKSS>(Vec(x, y), module, Supersaw::ENV_TO_DUR_PARAM));
+		x += dx;
+		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::ENV_DUR_ATT_PARAM));
+		x -= dx;
+		y += dy;
+		addParam(createParamCentered<CKSS>(Vec(x, y), module, Supersaw::ENV_TO_MIX_PARAM));
+		x += dx;
+		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::ENV_MIX_ATT_PARAM));
+		x -= dx;
+		y += dy;
+		addParam(createParamCentered<CKSS>(Vec(x, y), module, Supersaw::ENV_TO_PW_PARAM));
+		x += dx;
+		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::ENV_PW_ATT_PARAM));
 	}
 };
 
