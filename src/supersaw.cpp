@@ -13,11 +13,13 @@ struct Supersaw : Module {
 		FINE_3_PARAM,
 		NOISE_DUR_PARAM,
 		NOISE_MIX_PARAM,
+		PULSE_WIDTH_PARAM,
 		PARAMS_LEN
 	};
 	enum InputId {
 		VOCT_INPUT,
 		NOISE_DUR_CV_INPUT,
+		PULSE_WIDTH_CV_INPUT,
 		INPUTS_LEN
 	};
 	enum OutputId {
@@ -50,6 +52,8 @@ struct Supersaw : Module {
 		configParam(NOISE_DUR_PARAM, 0.0, 0.001, 0.0, "Noise duration");
 		configInput(NOISE_DUR_CV_INPUT, "Noise duration CV");
 		configParam(NOISE_MIX_PARAM, 0.0, 0.5, 0.0, "Noise mix", "%", 0.0, 100.0);
+		configParam(PULSE_WIDTH_PARAM, 0.0, 1.0, 0.5, "Pulse width");
+		configInput(PULSE_WIDTH_CV_INPUT, "Pulse width CV");
 		configInput(VOCT_INPUT, "1 V/Oct");
 		configOutput(SIGNAL_OUTPUT, "Signal");
 		configOutput(NOISE_OUTPUT, "Noise");
@@ -67,6 +71,9 @@ struct Supersaw : Module {
 		float fine3 = params[FINE_3_PARAM].getValue();
 		float noise_dur = params[NOISE_DUR_PARAM].getValue();
 		float noise_dur_cv = inputs[NOISE_DUR_CV_INPUT].getVoltage() / 10000.f;
+		float pulse_width = params[PULSE_WIDTH_PARAM].getValue();
+		float pulse_width_cv = inputs[PULSE_WIDTH_CV_INPUT].getVoltage() / 10.f;
+		pulse_width = clamp(pulse_width + pulse_width_cv, 0.1f, 0.9f);
 		noise_dur = clamp(noise_dur + noise_dur_cv, 0.f, 0.001f);
 		float noise_mix = params[NOISE_MIX_PARAM].getValue();
 
@@ -94,11 +101,16 @@ struct Supersaw : Module {
 				case 1:
 					out += osc2[c].triangle(osc2[c].freq, args.sampleTime) * 0.33f;
 					break;
+				case 2:
+					out += osc2[c].pulse(osc2[c].freq, args.sampleTime, pulse_width) * 0.33f;
+					break;
 			}
 			out += osc3[c].saw(osc3[c].freq, args.sampleTime) * 0.33f;
 
 			out += noise;
+
 			outputs[SIGNAL_OUTPUT].setVoltage(clamp(out * 5.f, -10.f, 10.f), c);
+			
 		}
 		outputs[NOISE_OUTPUT].setVoltage(last_noise * 5.f);
 	}
@@ -127,7 +139,7 @@ struct SupersawWidget : ModuleWidget {
 		x += dx;
 		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::PITCH_PARAM));
 		x += dx;
-		addParam(createParamCentered<CKSS>(Vec(x, y), module, Supersaw::WAVE_PARAM));
+		addParam(createParamCentered<CKSSThree>(Vec(x, y), module, Supersaw::WAVE_PARAM));
 		x -= dx * 2;
 		y += dy;
 		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::FINE_1_PARAM));
@@ -146,6 +158,11 @@ struct SupersawWidget : ModuleWidget {
 		y += dy;
 		addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::VOCT_INPUT));
 		x += dx;
+		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::PULSE_WIDTH_PARAM));
+		x += dx;
+		addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::PULSE_WIDTH_CV_INPUT));
+		x -= dx * 2;
+		y += dy;
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::SIGNAL_OUTPUT));
 		x += dx;
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::NOISE_OUTPUT));
