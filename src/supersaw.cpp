@@ -1,5 +1,6 @@
 #include "plugin.hpp"
 #include "oscillator.hpp"
+#include "Envelope.hpp"
 
 #define MAX_POLY 16
 
@@ -14,18 +15,22 @@ struct Supersaw : Module {
 		NOISE_DUR_PARAM,
 		NOISE_MIX_PARAM,
 		PULSE_WIDTH_PARAM,
+		RISE_PARAM,
+		FALL_PARAM,
 		PARAMS_LEN
 	};
 	enum InputId {
 		VOCT_INPUT,
 		NOISE_DUR_CV_INPUT,
 		PULSE_WIDTH_CV_INPUT,
+		TRIGGER_INPUT,
 		INPUTS_LEN
 	};
 	enum OutputId {
 		SIGNAL_OUTPUT,
 		ENUMS(WAVE_OUTPUT, 3),
 		NOISE_OUTPUT,
+		VCA_OUTPUT,
 		OUTPUTS_LEN
 	};
 	enum LightId {
@@ -36,6 +41,8 @@ struct Supersaw : Module {
 	Oscillator osc2[MAX_POLY];
 	Oscillator osc3[MAX_POLY];
 	Oscillator osc4[MAX_POLY];
+	Envelope envelope;
+	dsp::SchmittTrigger trigger;
 	float noise_dur = 0.f;
 	float noise_mix = 0.f;
 	float last_noise = 0.f;
@@ -55,12 +62,16 @@ struct Supersaw : Module {
 		configParam(NOISE_MIX_PARAM, 0.0, 0.5, 0.0, "Noise mix", "%", 0.0, 100.0);
 		configParam(PULSE_WIDTH_PARAM, 0.0, 1.0, 0.5, "Pulse width");
 		configInput(PULSE_WIDTH_CV_INPUT, "Pulse width CV");
+		configParam(RISE_PARAM, 0.01, 5.0, 1.0, "Rise time", " s");
+		configParam(FALL_PARAM, 0.01, 5.0, 1.0, "Fall time", " s");
 		configInput(VOCT_INPUT, "1 V/Oct");
 		configOutput(SIGNAL_OUTPUT, "Signal");
 		for (int i = 0; i < 3; i++) {
 			configOutput(WAVE_OUTPUT + i, "Wave " + std::to_string(i + 1));
 		}
 		configOutput(NOISE_OUTPUT, "Noise");
+		configInput(TRIGGER_INPUT, "Trigger");
+		configOutput(VCA_OUTPUT, "VCA");
 	}
 
 	void process(const ProcessArgs& args) override {
@@ -69,6 +80,7 @@ struct Supersaw : Module {
 		for (int i = 0; i < 3; i++) {
 			outputs[WAVE_OUTPUT + i].setChannels(channels);
 		}
+		outputs[VCA_OUTPUT].setChannels(channels);
 
 		float pitch = params[PITCH_PARAM].getValue();
 		int wave = params[WAVE_PARAM].getValue();
@@ -83,6 +95,11 @@ struct Supersaw : Module {
 		pulse_width = clamp(pulse_width + pulse_width_cv, 0.1f, 0.9f);
 		noise_dur = clamp(noise_dur + noise_dur_cv, 0.f, 0.001f);
 		float noise_mix = params[NOISE_MIX_PARAM].getValue();
+		float rise_time = params[RISE_PARAM].getValue();
+		float fall_time = params[FALL_PARAM].getValue();
+
+		envelope.set_rise(rise_time);
+		envelope.set_fall(fall_time);
 
 		for (int c = 0; c < channels; c++) {
 			float voct = inputs[VOCT_INPUT].getVoltage(c);
@@ -124,6 +141,17 @@ struct Supersaw : Module {
 			outputs[SIGNAL_OUTPUT].setVoltage(clamp(out * 5.f, -10.f, 10.f), c);
 			
 		}
+
+		if (trigger.process(inputs[TRIGGER_INPUT].getVoltage())) {
+			envelope.trigger();
+		}
+
+		envelope.process(args.sampleTime);
+
+		for (int c = 0; c < channels; c++) {
+			outputs[VCA_OUTPUT].setVoltage(clamp(outputs[SIGNAL_OUTPUT].getVoltage(c) * envelope.env, -10.f, 10.f), c);
+		}
+
 		outputs[NOISE_OUTPUT].setVoltage(last_noise * 5.f);
 	}
 };
@@ -184,6 +212,16 @@ struct SupersawWidget : ModuleWidget {
 			addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::WAVE_OUTPUT + i));
 			x += dx;
 		}
+		x -= dx * 3;
+		y += dy;
+		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::RISE_PARAM));
+		x += dx;
+		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::FALL_PARAM));
+		x -= dx;
+		y += dy;
+		addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::TRIGGER_INPUT));
+		x += dx;
+		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::VCA_OUTPUT));
 	}
 };
 
