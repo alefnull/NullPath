@@ -24,6 +24,7 @@ struct Supersaw : Module {
 	};
 	enum OutputId {
 		SIGNAL_OUTPUT,
+		ENUMS(WAVE_OUTPUT, 3),
 		NOISE_OUTPUT,
 		OUTPUTS_LEN
 	};
@@ -45,7 +46,7 @@ struct Supersaw : Module {
 		configParam(OCTAVE_PARAM, -2.0, 2.0, 0.0, "Octave");
 		getParamQuantity(OCTAVE_PARAM)->snapEnabled = true;
 		configParam(PITCH_PARAM, -1.0, 1.0, 0.0, "Pitch");
-		configSwitch(WAVE_PARAM, 0.0, 1.0, 0.0, "Middle Wave", {"Saw", "Triangle"});
+		configSwitch(WAVE_PARAM, 0.0, 2.0, 0.0, "Middle Wave", {"Saw", "Triangle", "Pulse"});
 		configParam(FINE_1_PARAM, -0.02, 0.02, 0.0, "Fine 1");
 		configParam(FINE_2_PARAM, -0.02, 0.02, 0.0, "Fine 2");
 		configParam(FINE_3_PARAM, -0.02, 0.02, 0.0, "Fine 3");
@@ -56,12 +57,18 @@ struct Supersaw : Module {
 		configInput(PULSE_WIDTH_CV_INPUT, "Pulse width CV");
 		configInput(VOCT_INPUT, "1 V/Oct");
 		configOutput(SIGNAL_OUTPUT, "Signal");
+		for (int i = 0; i < 3; i++) {
+			configOutput(WAVE_OUTPUT + i, "Wave " + std::to_string(i + 1));
+		}
 		configOutput(NOISE_OUTPUT, "Noise");
 	}
 
 	void process(const ProcessArgs& args) override {
 		int channels = std::max(1, inputs[VOCT_INPUT].getChannels());
 		outputs[SIGNAL_OUTPUT].setChannels(channels);
+		for (int i = 0; i < 3; i++) {
+			outputs[WAVE_OUTPUT + i].setChannels(channels);
+		}
 
 		float pitch = params[PITCH_PARAM].getValue();
 		int wave = params[WAVE_PARAM].getValue();
@@ -94,18 +101,23 @@ struct Supersaw : Module {
 			osc3[c].set_pitch(pitch + octave + fine3 + voct);
 
 			out += osc1[c].saw(osc1[c].freq, args.sampleTime) * 0.33f;
+			outputs[WAVE_OUTPUT].setVoltage(clamp(osc1[c].saw(osc1[c].freq, args.sampleTime) * 5.f, -10.f, 10.f), c);
 			switch (wave) {
 				case 0:
 					out += osc2[c].saw(osc2[c].freq, args.sampleTime) * 0.33f;
+					outputs[WAVE_OUTPUT + 1].setVoltage(clamp(osc2[c].saw(osc2[c].freq, args.sampleTime) * 5.f, -10.f, 10.f), c);
 					break;
 				case 1:
 					out += osc2[c].triangle(osc2[c].freq, args.sampleTime) * 0.33f;
+					outputs[WAVE_OUTPUT + 1].setVoltage(clamp(osc2[c].triangle(osc2[c].freq, args.sampleTime) * 5.f, -10.f, 10.f), c);
 					break;
 				case 2:
 					out += osc2[c].pulse(osc2[c].freq, args.sampleTime, pulse_width) * 0.33f;
+					outputs[WAVE_OUTPUT + 1].setVoltage(clamp(osc2[c].pulse(osc2[c].freq, args.sampleTime, pulse_width) * 5.f, -10.f, 10.f), c);
 					break;
 			}
 			out += osc3[c].saw(osc3[c].freq, args.sampleTime) * 0.33f;
+			outputs[WAVE_OUTPUT + 2].setVoltage(clamp(osc3[c].saw(osc3[c].freq, args.sampleTime) * 5.f, -10.f, 10.f), c);
 
 			out += noise;
 
@@ -166,6 +178,12 @@ struct SupersawWidget : ModuleWidget {
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::SIGNAL_OUTPUT));
 		x += dx;
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::NOISE_OUTPUT));
+		x -= dx;
+		y += dy;
+		for (int i = 0; i < 3; i++) {
+			addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::WAVE_OUTPUT + i));
+			x += dx;
+		}
 	}
 };
 
