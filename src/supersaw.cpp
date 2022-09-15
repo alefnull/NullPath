@@ -43,7 +43,7 @@ struct Supersaw : Module {
 		configParam(OCTAVE_PARAM, -2.0, 2.0, 0.0, "Octave");
 		getParamQuantity(OCTAVE_PARAM)->snapEnabled = true;
 		configParam(PITCH_PARAM, -1.0, 1.0, 0.0, "Pitch");
-		configSwitch(WAVE_PARAM, 0.0, 1.0, 0.0, "Wave", {"Saw", "Triangle"});
+		configSwitch(WAVE_PARAM, 0.0, 1.0, 0.0, "Middle Wave", {"Saw", "Triangle"});
 		configParam(FINE_1_PARAM, -0.02, 0.02, 0.0, "Fine 1");
 		configParam(FINE_2_PARAM, -0.02, 0.02, 0.0, "Fine 2");
 		configParam(FINE_3_PARAM, -0.02, 0.02, 0.0, "Fine 3");
