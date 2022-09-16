@@ -141,7 +141,7 @@ struct Supersaw : Module {
 		}
 
 		for (int c = 0; c < channels; c++) {
-			float voct = inputs[VOCT_INPUT].getVoltage(c);
+			float voct = inputs[VOCT_INPUT].isConnected() ? inputs[VOCT_INPUT].getVoltage(c) : 0.f;
 
 			if (noise_time > noise_dur) {
 				last_noise = osc4[c].noise();
