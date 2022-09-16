@@ -74,9 +74,9 @@ struct Supersaw : Module {
 		configSwitch(ENV_TO_DUR_PARAM, 0.0, 1.0, 0.0, "Env -> Noise duration", {"Off", "On"});
 		configSwitch(ENV_TO_MIX_PARAM, 0.0, 1.0, 0.0, "Env -> Noise mix", {"Off", "On"});
 		configSwitch(ENV_TO_PW_PARAM, 0.0, 1.0, 0.0, "Env -> Pulse width", {"Off", "On"});
-		configParam(ENV_DUR_ATT_PARAM, 0.0, 1.0, 0.0, "Env -> Noise duration amount", "%", 0.0, 100.0);
+		configParam(ENV_DUR_ATT_PARAM, -1.0, 1.0, 0.0, "Env -> Noise duration amount", "%", 0.0, 100.0);
 		configParam(ENV_MIX_ATT_PARAM, 0.0, 1.0, 0.0, "Env -> Noise mix amount", "%", 0.0, 100.0);
-		configParam(ENV_PW_ATT_PARAM, 0.0, 1.0, 0.0, "Env -> Pulse width amount", "%", 0.0, 100.0);
+		configParam(ENV_PW_ATT_PARAM, -1.0, 1.0, 0.0, "Env -> Pulse width amount", "%", 0.0, 100.0);
 		configInput(VOCT_INPUT, "1 V/Oct");
 		configOutput(SIGNAL_OUTPUT, "Signal");
 		for (int i = 0; i < 3; i++) {
