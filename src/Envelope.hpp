@@ -6,47 +6,61 @@
 #define MIN_VALUE 0.001f
 
 
-struct ADEnvelope {
+struct Envelope {
     enum Stage {
         IDLE,
         ATTACK,
-        DECAY
+        DECAY,
+        SUSTAIN,
+        RELEASE
     };
     enum Func {
-    	EASE_OUT,
-    	LINEAR,
-    	EASE_IN,
+        EASE_OUT,
+        LINEAR,
+        EASE_IN
     };
 
     Stage stage = IDLE;
     int current_index = 0;
-    float _env = MIN_VALUE;
-    float env = 0;
+    float _env = 0.f;
+    float env = 0.f;
     float attack_time = 0.01f;
-    float decay_time = 0.01f;
     float attack_shape = 0.f;
+    float decay_time = 0.1f;
     float decay_shape = 0.f;
+    float sustain_level = 0.5f;
+    float release_time = 0.01f;
+    float release_shape = 0.f;
     bool loop = false;
     bool eoc = false;
-    float sampleTime = 0;
+    float sampleTime = 0.f;
     int processCount = 0;
-    
-    ADEnvelope() {}
+
+    Envelope() {}
 
     void set_attack(float attack_time) {
         this->attack_time = clamp(attack_time, 0.01f, 10.f);
     }
-    void set_decay(float decay_time) {
-        this->decay_time = clamp(decay_time, 0.01f, 10.f);
-    }
-    void set_loop(bool loop) {
-        this->loop = loop;
-    }
     void set_attack_shape(float shape){
     	this->attack_shape = shape;
     }
+    void set_decay(float decay_time) {
+        this->decay_time = clamp(decay_time, 0.01f, 10.f);
+    }
     void set_decay_shape(float shape){
     	this->decay_shape = shape;
+    }
+    void set_sustain(float sustain_level) {
+        this->sustain_level = clamp(sustain_level, 0.f, 1.f);
+    }
+    void set_release(float release_time) {
+        this->release_time = clamp(release_time, 0.01f, 10.f);
+    }
+    void set_release_shape(float shape){
+    	this->release_shape = shape;
+    }
+    void set_loop(bool loop) {
+        this->loop = loop;
     }
     void set_index(int index) {
         this->current_index = index;
@@ -62,6 +76,12 @@ struct ADEnvelope {
         stage = IDLE;
         _env = MIN_VALUE;
     }
+};
+
+struct ADEnvelope : Envelope {
+    
+    ADEnvelope() {}
+
     void process(float st) {
     	processCount++;
     	sampleTime += st;
@@ -127,6 +147,10 @@ struct ADEnvelope {
                     }
                 }
                 break;
+            case SUSTAIN:
+                break;
+            case RELEASE:
+                break;
         }
         _env = clamp(_env, MIN_VALUE, MAX_VALUE);
         env = _env;
@@ -134,76 +158,10 @@ struct ADEnvelope {
 };
 
 
-struct ADSREnvelope {
-    enum Stage {
-        IDLE,
-        ATTACK,
-        DECAY,
-        SUSTAIN,
-        RELEASE
-    };
-    enum Func {
-    	EASE_OUT,
-    	LINEAR,
-    	EASE_IN,
-    };
-
-    Stage stage = IDLE;
-    int current_index = 0;
-    float _env = MIN_VALUE;
-    float env = 0;
-    float attack_time = 0.01f;
-    float decay_time = 0.01f;
-    float release_time = 0.01f;
-    float sustain_level = 0.5f;
-    float attack_shape = 0.f;
-    float decay_shape = 0.f;
-    float release_shape = 0.f;
-    bool loop = false;
-    bool eoc = false;
-    float sampleTime = 0;
-    int processCount = 0;
+struct ADSREnvelope : Envelope {
 
     ADSREnvelope() {}
 
-    void set_attack(float attack_time) {
-        this->attack_time = clamp(attack_time, 0.01f, 10.f);
-    }
-    void set_decay(float decay_time) {
-        this->decay_time = clamp(decay_time, 0.01f, 10.f);
-    }
-    void set_release(float release_time) {
-        this->release_time = clamp(release_time, 0.01f, 10.f);
-    }
-    void set_sustain(float sustain_level) {
-        this->sustain_level = clamp(sustain_level, 0.f, 1.f);
-    }
-    void set_loop(bool loop) {
-        this->loop = loop;
-    }
-    void set_attack_shape(float shape){
-    	this->attack_shape = shape;
-    }
-    void set_decay_shape(float shape){
-    	this->decay_shape = shape;
-    }
-    void set_release_shape(float shape){
-    	this->release_shape = shape;
-    }
-    void set_index(int index) {
-        this->current_index = index;
-    }
-    void trigger() {
-        stage = ATTACK;
-        _env = MIN_VALUE;
-    }
-    void retrigger() {
-        stage = ATTACK;
-    }
-    void reset() {
-        stage = IDLE;
-        _env = MIN_VALUE;
-    }
     void process(float st) {
         processCount++;
         sampleTime += st;
