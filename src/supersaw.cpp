@@ -48,7 +48,7 @@ struct Supersaw : Module {
 	Oscillator osc2[MAX_POLY];
 	Oscillator osc3[MAX_POLY];
 	Oscillator osc4[MAX_POLY];
-	Envelope envelope;
+	ADEnvelope envelope;
 	dsp::SchmittTrigger trigger;
 	float noise_dur = 0.f;
 	float noise_mix = 0.f;

@@ -92,8 +92,8 @@ struct Funcgen : Module {
 	int shuffle_index = 0; //when in shuffle mode, stores which shuffle index is being played next
 
 	Mode mode = EACH;
-	Envelope envelope[CHANNEL_COUNT];
-	Envelope cm_envelope;
+	ADEnvelope envelope[CHANNEL_COUNT];
+	ADEnvelope cm_envelope;
 	dsp::SchmittTrigger trigger[CHANNEL_COUNT];
 	dsp::SchmittTrigger push[CHANNEL_COUNT];
 	dsp::SchmittTrigger cascade_trigger;
@@ -232,8 +232,8 @@ struct Funcgen : Module {
 				outputs[FUNCTION_OUTPUT + i].setVoltage(range[i] * 2 * (envelope[i].env - 0.5f));
 			}
 
-			outputs[RISING_OUTPUT + i].setVoltage(envelope[i].stage == Envelope::RISING ? 10.f : 0.f);
-			outputs[FALLING_OUTPUT + i].setVoltage(envelope[i].stage == Envelope::FALLING ? 10.f : 0.f);
+			outputs[RISING_OUTPUT + i].setVoltage(envelope[i].stage == ADEnvelope::RISING ? 10.f : 0.f);
+			outputs[FALLING_OUTPUT + i].setVoltage(envelope[i].stage == ADEnvelope::FALLING ? 10.f : 0.f);
 		}
 
 		if (cm_loop_trigger.process(params[CASCADE_LOOP_PARAM].getValue())) {
@@ -261,8 +261,8 @@ struct Funcgen : Module {
 		else {
 			outputs[CASCADE_OUTPUT].setVoltage(range_cascade * 2 * (cascade_output - 0.5f));
 		}
-		outputs[CASCADE_RISING_OUTPUT].setVoltage(cm_envelope.stage == Envelope::RISING ? 10.f : 0.f);
-		outputs[CASCADE_FALLING_OUTPUT].setVoltage(cm_envelope.stage == Envelope::FALLING ? 10.f : 0.f);
+		outputs[CASCADE_RISING_OUTPUT].setVoltage(cm_envelope.stage == ADEnvelope::RISING ? 10.f : 0.f);
+		outputs[CASCADE_FALLING_OUTPUT].setVoltage(cm_envelope.stage == ADEnvelope::FALLING ? 10.f : 0.f);
 
 		if (cascade_trigger.process(inputs[CASCADE_TRIGGER_INPUT].getVoltage())) {
 			start_cycle();

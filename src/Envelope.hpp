@@ -6,7 +6,7 @@
 #define MIN_VALUE 0.001f
 
 
-struct Envelope {
+struct ADEnvelope {
     enum Stage {
         IDLE,
         RISING,
@@ -31,7 +31,7 @@ struct Envelope {
     float sampleTime = 0;
     int processCount = 0;
     
-    Envelope() {}
+    ADEnvelope() {}
 
     void set_rise(float rise_time) {
         this->rise_time = clamp(rise_time, 0.01f, 10.f);
@@ -64,10 +64,11 @@ struct Envelope {
     }
     void process(float st) {
     	processCount++;
-    	sampleTime+=st;
-    	if(processCount < 64){
+    	sampleTime += st;
+    	if (processCount < 64) {
     		return;
-    	}else{
+    	}
+        else {
     		processCount = 0;
     		st = sampleTime;
     		sampleTime = 0;
@@ -127,8 +128,10 @@ struct Envelope {
                 }
                 break;
         }
-        _env = clamp(_env,MIN_VALUE,MAX_VALUE);
-        // env = _env * ENV_MAX_VALUE;
+        _env = clamp(_env, MIN_VALUE, MAX_VALUE);
+        env = _env;
+    }
+};
         env = _env;
     }
 };
