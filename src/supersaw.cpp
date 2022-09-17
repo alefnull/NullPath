@@ -15,8 +15,10 @@ struct Supersaw : Module {
 		NOISE_DUR_PARAM,
 		NOISE_MIX_PARAM,
 		PULSE_WIDTH_PARAM,
-		RISE_PARAM,
-		FALL_PARAM,
+		ATTACK_PARAM,
+		DECAY_PARAM,
+		SUSTAIN_PARAM,
+		RELEASE_PARAM,
 		ENV_TO_DUR_PARAM,
 		ENV_TO_MIX_PARAM,
 		ENV_TO_PW_PARAM,
@@ -29,7 +31,7 @@ struct Supersaw : Module {
 		VOCT_INPUT,
 		NOISE_DUR_CV_INPUT,
 		PULSE_WIDTH_CV_INPUT,
-		TRIGGER_INPUT,
+		GATE_INPUT,
 		INPUTS_LEN
 	};
 	enum OutputId {
@@ -48,12 +50,13 @@ struct Supersaw : Module {
 	Oscillator osc2[MAX_POLY];
 	Oscillator osc3[MAX_POLY];
 	Oscillator osc4[MAX_POLY];
-	ADEnvelope envelope;
+	ADSREnvelope envelope;
 	dsp::SchmittTrigger trigger;
 	float noise_dur = 0.f;
 	float noise_mix = 0.f;
 	float last_noise = 0.f;
 	float noise_time = 0.f;
+	bool last_gate = false;
 
 	Supersaw() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
@@ -69,8 +72,10 @@ struct Supersaw : Module {
 		configParam(NOISE_MIX_PARAM, 0.0, 0.5, 0.0, "Noise mix", "%", 0.0, 100.0);
 		configParam(PULSE_WIDTH_PARAM, 0.0, 1.0, 0.5, "Pulse width");
 		configInput(PULSE_WIDTH_CV_INPUT, "Pulse width CV");
-		configParam(RISE_PARAM, 0.01, 5.0, 1.0, "Rise time", " s");
-		configParam(FALL_PARAM, 0.01, 5.0, 1.0, "Fall time", " s");
+		configParam(ATTACK_PARAM, 0.01, 5.0, 0.01, "Attack time", " s");
+		configParam(DECAY_PARAM, 0.1, 5.0, 0.1, "Decay time", " s");
+		configParam(SUSTAIN_PARAM, 0.0, 1.0, 1.0, "Sustain level");
+		configParam(RELEASE_PARAM, 0.01, 5.0, 0.01, "Release time", " s");
 		configSwitch(ENV_TO_DUR_PARAM, 0.0, 1.0, 0.0, "Env -> Noise duration", {"Off", "On"});
 		configSwitch(ENV_TO_MIX_PARAM, 0.0, 1.0, 0.0, "Env -> Noise mix", {"Off", "On"});
 		configSwitch(ENV_TO_PW_PARAM, 0.0, 1.0, 0.0, "Env -> Pulse width", {"Off", "On"});
@@ -83,7 +88,7 @@ struct Supersaw : Module {
 			configOutput(WAVE_OUTPUT + i, "Wave " + std::to_string(i + 1));
 		}
 		configOutput(NOISE_OUTPUT, "Noise");
-		configInput(TRIGGER_INPUT, "Trigger");
+		configInput(GATE_INPUT, "Trigger");
 		configOutput(ENV_OUTPUT, "Envelope");
 		configOutput(VCA_OUTPUT, "VCA");
 	}
@@ -109,8 +114,10 @@ struct Supersaw : Module {
 		pulse_width = clamp(pulse_width + pulse_width_cv, 0.1f, 0.9f);
 		noise_dur = clamp(noise_dur + noise_dur_cv, 0.f, 0.001f);
 		float noise_mix = params[NOISE_MIX_PARAM].getValue();
-		float rise_time = params[RISE_PARAM].getValue();
-		float fall_time = params[FALL_PARAM].getValue();
+		float attack_time = params[ATTACK_PARAM].getValue();
+		float decay_time = params[DECAY_PARAM].getValue();
+		float sustain_level = params[SUSTAIN_PARAM].getValue();
+		float release_time = params[RELEASE_PARAM].getValue();
 		bool env_to_dur = params[ENV_TO_DUR_PARAM].getValue() > 0.5;
 		bool env_to_mix = params[ENV_TO_MIX_PARAM].getValue() > 0.5;
 		bool env_to_pw = params[ENV_TO_PW_PARAM].getValue() > 0.5;
@@ -118,10 +125,13 @@ struct Supersaw : Module {
 		float env_mix_att = params[ENV_MIX_ATT_PARAM].getValue();
 		float env_pw_att = params[ENV_PW_ATT_PARAM].getValue();
 
-		envelope.set_rise(rise_time);
-		envelope.set_fall(fall_time);
-		envelope.set_rise_shape(-0.5);
-		envelope.set_fall_shape(-0.5);
+		envelope.set_attack(attack_time);
+		envelope.set_attack_shape(-0.5);
+		envelope.set_decay(decay_time);
+		envelope.set_decay_shape(-0.5);
+		envelope.set_sustain(sustain_level);
+		envelope.set_release(release_time);
+		envelope.set_release_shape(-0.5);
 
 		if (env_to_dur) {
 			noise_dur += envelope.env * env_dur_att * 0.001;
@@ -181,11 +191,17 @@ struct Supersaw : Module {
 			
 		}
 
-		if (trigger.process(inputs[TRIGGER_INPUT].getVoltage())) {
-			envelope.trigger();
+		if (trigger.process(inputs[GATE_INPUT].getVoltage())) {
+			envelope.retrigger();
+		}
+
+		if (last_gate && !(inputs[GATE_INPUT].getVoltage() > 0.5)) {
+			envelope.stage = envelope.RELEASE;
 		}
 
 		envelope.process(args.sampleTime);
+
+		last_gate = inputs[GATE_INPUT].getVoltage();
 
 		for (int c = 0; c < channels; c++) {
 			outputs[VCA_OUTPUT].setVoltage(clamp(outputs[SIGNAL_OUTPUT].getVoltage(c) * envelope.env, -10.f, 10.f), c);
@@ -207,7 +223,7 @@ struct SupersawWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		float x_start = RACK_GRID_WIDTH * 2;
+		float x_start = RACK_GRID_WIDTH;
 		float y_start = RACK_GRID_WIDTH * 3;
 		float dx = RACK_GRID_WIDTH * 2;
 		float dy = RACK_GRID_WIDTH * 2;
@@ -254,12 +270,16 @@ struct SupersawWidget : ModuleWidget {
 		}
 		x -= dx * 3;
 		y += dy;
-		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::RISE_PARAM));
+		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::ATTACK_PARAM));
 		x += dx;
-		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::FALL_PARAM));
-		x -= dx;
+		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::DECAY_PARAM));
+		x += dx;
+		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::SUSTAIN_PARAM));
+		x += dx;
+		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::RELEASE_PARAM));
+		x -= dx * 3;
 		y += dy;
-		addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::TRIGGER_INPUT));
+		addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::GATE_INPUT));
 		x += dx;
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::VCA_OUTPUT));
 		x += dx;
