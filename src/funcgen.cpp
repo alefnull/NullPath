@@ -177,32 +177,32 @@ struct Funcgen : Module {
 		float cascade_speed = convert_param_to_multiplier(params[CASCADE_SPEED_PARAM].getValue());
 
 		for (int i = 0; i < CHANNEL_COUNT; i++) {
-			float rise_time = params[RISE_PARAM + i].getValue();
-			float fall_time = params[FALL_PARAM + i].getValue();
+			float attack_time = params[RISE_PARAM + i].getValue();
+			float decay_time = params[FALL_PARAM + i].getValue();
 			float speed = convert_param_to_multiplier(params[SPEED_PARAM + i].getValue());
-			float rise_shape = params[RISE_SHAPE_PARAM + i].getValue();
-			float fall_shape = params[FALL_SHAPE_PARAM + i].getValue();
-			envelope[i].set_rise_shape(rise_shape);
-			envelope[i].set_rise(rise_time * speed);
-			envelope[i].set_fall_shape(fall_shape);
-			envelope[i].set_fall(fall_time * speed);
+			float attack_shape = params[RISE_SHAPE_PARAM + i].getValue();
+			float decay_shape = params[FALL_SHAPE_PARAM + i].getValue();
+			envelope[i].set_attack_shape(attack_shape);
+			envelope[i].set_attack(attack_time * speed);
+			envelope[i].set_decay_shape(decay_shape);
+			envelope[i].set_decay(decay_time * speed);
 			if(i == current_index){
-				cm_envelope.set_rise_shape(rise_shape);
-				cm_envelope.set_rise(rise_time * cascade_speed);
-				cm_envelope.set_fall_shape(fall_shape);
-				cm_envelope.set_fall(fall_time * cascade_speed);
+				cm_envelope.set_attack_shape(attack_shape);
+				cm_envelope.set_attack(attack_time * cascade_speed);
+				cm_envelope.set_decay_shape(decay_shape);
+				cm_envelope.set_decay(decay_time * cascade_speed);
 			}
 
 			if (inputs[RISE_CV_INPUT + i].isConnected()) {
-				rise_time = clamp(rise_time * (inputs[RISE_CV_INPUT + i].getVoltage() / 10.f), MIN_TIME, MAX_TIME);
-				envelope[i].set_rise(rise_time);
-				cm_envelope.set_rise(rise_time);
+				attack_time = clamp(attack_time * (inputs[RISE_CV_INPUT + i].getVoltage() / 10.f), MIN_TIME, MAX_TIME);
+				envelope[i].set_attack(attack_time);
+				cm_envelope.set_attack(attack_time);
 			}
 
 			if (inputs[FALL_CV_INPUT + i].isConnected()) {
-				fall_time = clamp(fall_time * (inputs[FALL_CV_INPUT + i].getVoltage() / 10.f), MIN_TIME, MAX_TIME);
-				envelope[i].set_fall(fall_time);
-				cm_envelope.set_fall(fall_time);
+				decay_time = clamp(decay_time * (inputs[FALL_CV_INPUT + i].getVoltage() / 10.f), MIN_TIME, MAX_TIME);
+				envelope[i].set_decay(decay_time);
+				cm_envelope.set_decay(decay_time);
 			}
 
 			bool loop = params[LOOP_PARAM + i].getValue() > 0.5f;
@@ -232,8 +232,8 @@ struct Funcgen : Module {
 				outputs[FUNCTION_OUTPUT + i].setVoltage(range[i] * 2 * (envelope[i].env - 0.5f));
 			}
 
-			outputs[RISING_OUTPUT + i].setVoltage(envelope[i].stage == ADEnvelope::RISING ? 10.f : 0.f);
-			outputs[FALLING_OUTPUT + i].setVoltage(envelope[i].stage == ADEnvelope::FALLING ? 10.f : 0.f);
+			outputs[RISING_OUTPUT + i].setVoltage(envelope[i].stage == ADEnvelope::ATTACK ? 10.f : 0.f);
+			outputs[FALLING_OUTPUT + i].setVoltage(envelope[i].stage == ADEnvelope::DECAY ? 10.f : 0.f);
 		}
 
 		if (cm_loop_trigger.process(params[CASCADE_LOOP_PARAM].getValue())) {
@@ -261,8 +261,8 @@ struct Funcgen : Module {
 		else {
 			outputs[CASCADE_OUTPUT].setVoltage(range_cascade * 2 * (cascade_output - 0.5f));
 		}
-		outputs[CASCADE_RISING_OUTPUT].setVoltage(cm_envelope.stage == ADEnvelope::RISING ? 10.f : 0.f);
-		outputs[CASCADE_FALLING_OUTPUT].setVoltage(cm_envelope.stage == ADEnvelope::FALLING ? 10.f : 0.f);
+		outputs[CASCADE_RISING_OUTPUT].setVoltage(cm_envelope.stage == ADEnvelope::ATTACK ? 10.f : 0.f);
+		outputs[CASCADE_FALLING_OUTPUT].setVoltage(cm_envelope.stage == ADEnvelope::DECAY ? 10.f : 0.f);
 
 		if (cascade_trigger.process(inputs[CASCADE_TRIGGER_INPUT].getVoltage())) {
 			start_cycle();
