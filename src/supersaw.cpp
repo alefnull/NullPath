@@ -88,7 +88,7 @@ struct Supersaw : Module {
 			configOutput(WAVE_OUTPUT + i, "Wave " + std::to_string(i + 1));
 		}
 		configOutput(NOISE_OUTPUT, "Noise");
-		configInput(GATE_INPUT, "Trigger");
+		configInput(GATE_INPUT, "Gate");
 		configOutput(ENV_OUTPUT, "Envelope");
 		configOutput(VCA_OUTPUT, "VCA");
 	}
