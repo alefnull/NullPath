@@ -39,7 +39,6 @@ struct Supersaw : Module {
 		ENUMS(WAVE_OUTPUT, 3),
 		NOISE_OUTPUT,
 		ENV_OUTPUT,
-		VCA_OUTPUT,
 		OUTPUTS_LEN
 	};
 	enum LightId {
@@ -90,7 +89,6 @@ struct Supersaw : Module {
 		configOutput(NOISE_OUTPUT, "Noise");
 		configInput(GATE_INPUT, "Gate");
 		configOutput(ENV_OUTPUT, "Envelope");
-		configOutput(VCA_OUTPUT, "VCA");
 	}
 
 	void process(const ProcessArgs& args) override {
@@ -99,7 +97,6 @@ struct Supersaw : Module {
 		for (int i = 0; i < 3; i++) {
 			outputs[WAVE_OUTPUT + i].setChannels(channels);
 		}
-		outputs[VCA_OUTPUT].setChannels(channels);
 
 		float pitch = params[PITCH_PARAM].getValue();
 		int wave = params[WAVE_PARAM].getValue();
@@ -187,7 +184,13 @@ struct Supersaw : Module {
 
 			out += noise;
 
-			outputs[SIGNAL_OUTPUT].setVoltage(clamp(out * 5.f, -10.f, 10.f), c);
+			if (inputs[GATE_INPUT].isConnected()) {
+				outputs[SIGNAL_OUTPUT].setVoltage(clamp(out * 5.f * envelope.env, -10.f, 10.f), c);
+			}
+			else {
+				outputs[SIGNAL_OUTPUT].setVoltage(clamp(out * 5.f, -10.f, 10.f), c);
+			}
+
 			
 		}
 
@@ -202,10 +205,6 @@ struct Supersaw : Module {
 		envelope.process(args.sampleTime);
 
 		last_gate = inputs[GATE_INPUT].getVoltage();
-
-		for (int c = 0; c < channels; c++) {
-			outputs[VCA_OUTPUT].setVoltage(clamp(outputs[SIGNAL_OUTPUT].getVoltage(c) * envelope.env, -10.f, 10.f), c);
-		}
 
 		outputs[ENV_OUTPUT].setVoltage(clamp(envelope.env * 10.f, -10.f, 10.f));
 		outputs[NOISE_OUTPUT].setVoltage(last_noise * 5.f);
@@ -281,10 +280,8 @@ struct SupersawWidget : ModuleWidget {
 		y += dy;
 		addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::GATE_INPUT));
 		x += dx;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::VCA_OUTPUT));
-		x += dx;
 		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::ENV_OUTPUT));
-		x -= dx * 2;
+		x -= dx;
 		y += dy;
 		addParam(createParamCentered<CKSS>(Vec(x, y), module, Supersaw::ENV_TO_DUR_PARAM));
 		x += dx;
