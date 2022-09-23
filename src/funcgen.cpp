@@ -131,15 +131,38 @@ struct Funcgen : Module {
 			configSwitch(SPEED_PARAM + i, 0.f, 2.f, 1.f, "Speed", {"Slow", "Normal", "Fast"});
 			getParamQuantity(SPEED_PARAM + i)->randomizeEnabled = false;
 			configParam(PUSH_PARAM + i, 0.f, 1.f, 0.f, "Push");
-			configInput(TRIGGER_INPUT + i, "Trigger");
-			configInput(RISE_CV_INPUT + i, "Rise CV");
-			configInput(FALL_CV_INPUT + i, "Fall CV");
-			if (i == 0) configOutput(FUNCTION_OUTPUT + i, "Function A");
-			else if (i == 1) configOutput(FUNCTION_OUTPUT + i, "Function B");
-			else if (i == 2) configOutput(FUNCTION_OUTPUT + i, "Function C");
-			else if (i == 3) configOutput(FUNCTION_OUTPUT + i, "Function D");
-			configOutput(RISING_OUTPUT + i, "Rising");
-			configOutput(FALLING_OUTPUT + i, "Falling");
+			if (i == 0) {
+				configInput(TRIGGER_INPUT + i, "Trigger A");
+				configOutput(FUNCTION_OUTPUT + i, "Function A");
+				configInput(RISE_CV_INPUT + i, "A Rise CV");
+				configInput(FALL_CV_INPUT + i, "A Fall CV");
+				configOutput(RISING_OUTPUT + i, "A Rising");
+				configOutput(FALLING_OUTPUT + i, "A Falling");
+			}
+			else if (i == 1) {
+				configInput(TRIGGER_INPUT + i, "Trigger B");
+				configOutput(FUNCTION_OUTPUT + i, "Function B");
+				configInput(RISE_CV_INPUT + i, "B Rise CV");
+				configInput(FALL_CV_INPUT + i, "B Fall CV");
+				configOutput(RISING_OUTPUT + i, "B Rising");
+				configOutput(FALLING_OUTPUT + i, "B Falling");
+			}
+			else if (i == 2) {
+				configInput(TRIGGER_INPUT + i, "Trigger C");
+				configOutput(FUNCTION_OUTPUT + i, "Function C");
+				configInput(RISE_CV_INPUT + i, "C Rise CV");
+				configInput(FALL_CV_INPUT + i, "C Fall CV");
+				configOutput(RISING_OUTPUT + i, "C Rising");
+				configOutput(FALLING_OUTPUT + i, "C Falling");
+			}
+			else if (i == 3) {
+				configInput(TRIGGER_INPUT + i, "Trigger D");
+				configOutput(FUNCTION_OUTPUT + i, "Function D");
+				configInput(RISE_CV_INPUT + i, "D Rise CV");
+				configInput(FALL_CV_INPUT + i, "D Fall CV");
+				configOutput(RISING_OUTPUT + i, "D Rising");
+				configOutput(FALLING_OUTPUT + i, "D Falling");
+			}
 		}
 		configOutput(MIN_OUTPUT, "Minimum");
 		configOutput(MAX_OUTPUT, "Maximum");
