@@ -16,6 +16,7 @@ struct Switch18 : Module, SwitchBase {
 		STEP_6_PARAM,
 		STEP_7_PARAM,
 		STEP_8_PARAM,
+		STEP_9_PARAM,
 		PARAMS_LEN
 	};
 	enum InputId {
@@ -32,6 +33,7 @@ struct Switch18 : Module, SwitchBase {
 		STEP_6_CV_INPUT,
 		STEP_7_CV_INPUT,
 		STEP_8_CV_INPUT,
+		STEP_9_CV_INPUT,
 		INPUTS_LEN
 	};
 	enum OutputId {
@@ -43,6 +45,7 @@ struct Switch18 : Module, SwitchBase {
 		STEP_6_OUTPUT,
 		STEP_7_OUTPUT,
 		STEP_8_OUTPUT,
+		STEP_9_OUTPUT,
 		OUTPUTS_LEN
 	};
 	enum LightId {
@@ -54,6 +57,7 @@ struct Switch18 : Module, SwitchBase {
 		STEP_6_LIGHT,
 		STEP_7_LIGHT,
 		STEP_8_LIGHT,
+		STEP_9_LIGHT,
 		LIGHTS_LEN
 	};
 
@@ -72,6 +76,7 @@ struct Switch18 : Module, SwitchBase {
 		configParam(STEP_6_PARAM, 0.f, 1.f, 1.f, "step 6 probability");
 		configParam(STEP_7_PARAM, 0.f, 1.f, 1.f, "step 7 probability");
 		configParam(STEP_8_PARAM, 0.f, 1.f, 1.f, "step 8 probability");
+		configParam(STEP_9_PARAM, 0.f, 1.f, 1.f, "step 9 probability");
 		configInput(SIGNAL_INPUT, "signal");
 		configInput(TRIGGER_INPUT, "trigger");
 		configInput(RESET_INPUT, "reset");
@@ -85,6 +90,7 @@ struct Switch18 : Module, SwitchBase {
 		configInput(STEP_6_CV_INPUT, "step 6 cv");
 		configInput(STEP_7_CV_INPUT, "step 7 cv");
 		configInput(STEP_8_CV_INPUT, "step 8 cv");
+		configInput(STEP_9_CV_INPUT, "step 9 cv");
 		configOutput(STEP_1_OUTPUT, "step 1");
 		configOutput(STEP_2_OUTPUT, "step 2");
 		configOutput(STEP_3_OUTPUT, "step 3");
@@ -93,6 +99,7 @@ struct Switch18 : Module, SwitchBase {
 		configOutput(STEP_6_OUTPUT, "step 6");
 		configOutput(STEP_7_OUTPUT, "step 7");
 		configOutput(STEP_8_OUTPUT, "step 8");
+		configOutput(STEP_9_OUTPUT, "step 9");
 	}
 
 	void onReset() override {
@@ -100,7 +107,7 @@ struct Switch18 : Module, SwitchBase {
 	}
 
 	void randomize_steps() {
-		for (int i = 0; i < 8; i++) {
+		for (int i = 0; i < STEP_COUNT; i++) {
 			params[STEP_1_PARAM + i].setValue(random::uniform());
 		}
 	}
@@ -110,7 +117,7 @@ struct Switch18 : Module, SwitchBase {
 	}
 
 	void compute_weights() {
-		for (int i = 0; i < 8; i++) {
+		for (int i = 0; i < STEP_COUNT; i++) {
 			if (outputs[STEP_1_OUTPUT + i].isConnected()) {
 				if (!inputs[STEP_1_CV_INPUT + i].isConnected()) {
 					weights[i] = params[STEP_1_PARAM + i].getValue();
@@ -215,6 +222,7 @@ struct Switch18Widget : ModuleWidget {
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(32.341, 78.928)), module, Switch18::STEP_6_PARAM));
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(32.341, 89.708)), module, Switch18::STEP_7_PARAM));
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(32.341, 100.104)), module, Switch18::STEP_8_PARAM));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(32.341, 110.499)), module, Switch18::STEP_9_PARAM));
 
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.085, 25.796)), module, Switch18::SIGNAL_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.085, 36.769)), module, Switch18::TRIGGER_INPUT));
@@ -229,6 +237,7 @@ struct Switch18Widget : ModuleWidget {
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 78.928)), module, Switch18::STEP_6_CV_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 89.708)), module, Switch18::STEP_7_CV_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 100.104)), module, Switch18::STEP_8_CV_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 110.499)), module, Switch18::STEP_9_CV_INPUT));
 
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(43.892, 25.796)), module, Switch18::STEP_1_OUTPUT));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(43.892, 35.806)), module, Switch18::STEP_2_OUTPUT));
@@ -238,6 +247,7 @@ struct Switch18Widget : ModuleWidget {
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(43.892, 78.928)), module, Switch18::STEP_6_OUTPUT));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(43.892, 89.708)), module, Switch18::STEP_7_OUTPUT));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(43.892, 100.104)), module, Switch18::STEP_8_OUTPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(43.892, 110.499)), module, Switch18::STEP_9_OUTPUT));
 
 		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(52.169, 25.796)), module, Switch18::STEP_1_LIGHT));
 		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(52.169, 35.806)), module, Switch18::STEP_2_LIGHT));
@@ -247,6 +257,7 @@ struct Switch18Widget : ModuleWidget {
 		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(52.169, 78.928)), module, Switch18::STEP_6_LIGHT));
 		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(52.169, 89.708)), module, Switch18::STEP_7_LIGHT));
 		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(52.169, 100.104)), module, Switch18::STEP_8_LIGHT));
+		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(52.169, 110.499)), module, Switch18::STEP_9_LIGHT));
 	}
 
 	struct FadeDurationQuantity : Quantity {
