@@ -101,7 +101,7 @@ struct Switch81 : Module, SwitchBase {
 		configInput(STEP_7_INPUT, "step 7");
 		configInput(STEP_8_INPUT, "step 8");
 		configInput(STEP_9_INPUT, "step 9");
-		configInput(INVERT_TRIGGER_INPUT);
+		configInput(INVERT_TRIGGER_INPUT, "invert trigger");
 		configOutput(SIGNAL_OUTPUT, "signal");
 	}
 
