@@ -17,6 +17,7 @@ struct Switch18 : Module, SwitchBase {
 		STEP_7_PARAM,
 		STEP_8_PARAM,
 		STEP_9_PARAM,
+		INVERT_WEIGHTS,
 		PARAMS_LEN
 	};
 	enum InputId {
@@ -34,6 +35,7 @@ struct Switch18 : Module, SwitchBase {
 		STEP_7_CV_INPUT,
 		STEP_8_CV_INPUT,
 		STEP_9_CV_INPUT,
+		INVERT_TRIGGER_INPUT,
 		INPUTS_LEN
 	};
 	enum OutputId {
@@ -77,6 +79,7 @@ struct Switch18 : Module, SwitchBase {
 		configParam(STEP_7_PARAM, 0.f, 1.f, 1.f, "step 7 probability");
 		configParam(STEP_8_PARAM, 0.f, 1.f, 1.f, "step 8 probability");
 		configParam(STEP_9_PARAM, 0.f, 1.f, 1.f, "step 9 probability");
+		configSwitch(INVERT_WEIGHTS, 0.f, 1.f, 0.f, "invert weights", {"invert on low","invert on high"});
 		configInput(SIGNAL_INPUT, "signal");
 		configInput(TRIGGER_INPUT, "trigger");
 		configInput(RESET_INPUT, "reset");
@@ -91,6 +94,7 @@ struct Switch18 : Module, SwitchBase {
 		configInput(STEP_7_CV_INPUT, "step 7 cv");
 		configInput(STEP_8_CV_INPUT, "step 8 cv");
 		configInput(STEP_9_CV_INPUT, "step 9 cv");
+		configInput(INVERT_TRIGGER_INPUT, "invert trigger");
 		configOutput(STEP_1_OUTPUT, "step 1");
 		configOutput(STEP_2_OUTPUT, "step 2");
 		configOutput(STEP_3_OUTPUT, "step 3");
@@ -126,6 +130,9 @@ struct Switch18 : Module, SwitchBase {
 					weights[i] = inputs[STEP_1_CV_INPUT + i].getVoltage() / 5.f;
 					weights[i] = clamp(weights[i] + params[STEP_1_PARAM].getValue(), 0.f, 1.f);
 				}
+				if(invert_weights){
+					weights[i] = 1 - weights[i];
+				}
 			}
 			else {
 				weights[i] = 0.f;
@@ -136,6 +143,10 @@ struct Switch18 : Module, SwitchBase {
 	void process(const ProcessArgs& args) override {
 		int channels = inputs[SIGNAL_INPUT].getChannels();
 		mode = (int)params[MODE_PARAM].getValue();
+
+		invert_trigger.process(inputs[INVERT_TRIGGER_INPUT].getVoltage());
+		invert_button.process(params[INVERT_WEIGHTS].getValue() > 0.f);
+		invert_weights = invert_trigger.isHigh() != invert_button.state;
 
 		compute_weights();
 
@@ -223,6 +234,7 @@ struct Switch18Widget : ModuleWidget {
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(32.341, 89.708)), module, Switch18::STEP_7_PARAM));
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(32.341, 100.104)), module, Switch18::STEP_8_PARAM));
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(32.341, 110.499)), module, Switch18::STEP_9_PARAM));
+		addParam(createParamCentered<CKSS>(mm2px(Vec(11.396, 10.000)), module, Switch18::INVERT_WEIGHTS));
 
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.085, 25.796)), module, Switch18::SIGNAL_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.085, 36.769)), module, Switch18::TRIGGER_INPUT));
@@ -238,6 +250,7 @@ struct Switch18Widget : ModuleWidget {
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 89.708)), module, Switch18::STEP_7_CV_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 100.104)), module, Switch18::STEP_8_CV_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 110.499)), module, Switch18::STEP_9_CV_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(5, 10)), module, Switch18::INVERT_TRIGGER_INPUT));
 
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(43.892, 25.796)), module, Switch18::STEP_1_OUTPUT));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(43.892, 35.806)), module, Switch18::STEP_2_OUTPUT));
