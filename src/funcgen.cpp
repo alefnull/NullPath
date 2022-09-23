@@ -134,7 +134,10 @@ struct Funcgen : Module {
 			configInput(TRIGGER_INPUT + i, "Trigger");
 			configInput(RISE_CV_INPUT + i, "Rise CV");
 			configInput(FALL_CV_INPUT + i, "Fall CV");
-			configOutput(FUNCTION_OUTPUT + i, "Function");
+			if (i == 0) configOutput(FUNCTION_OUTPUT + i, "Function A");
+			else if (i == 1) configOutput(FUNCTION_OUTPUT + i, "Function B");
+			else if (i == 2) configOutput(FUNCTION_OUTPUT + i, "Function C");
+			else if (i == 3) configOutput(FUNCTION_OUTPUT + i, "Function D");
 			configOutput(RISING_OUTPUT + i, "Rising");
 			configOutput(FALLING_OUTPUT + i, "Falling");
 		}
