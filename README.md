@@ -15,7 +15,7 @@ MODES:
 
 ## Cascade
 
-**Cascade** is a 4 channel envelope/function generator, capable of generating exponential, linear, and logarithmic curves. The center "Cascade" section has 3 modes, which will determine the output of the Cascade section.
+**Cascade** is a 4 channel envelope/function generator, capable of generating exponential, linear, and logarithmic curves. The center "Cascade" section has 3 modes, which will determine the section's output.
 
 MODES:
 
