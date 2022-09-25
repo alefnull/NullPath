@@ -62,7 +62,7 @@ struct Supersaw : Module {
 		configParam(OCTAVE_PARAM, -2.0, 2.0, 0.0, "Octave");
 		getParamQuantity(OCTAVE_PARAM)->snapEnabled = true;
 		configParam(PITCH_PARAM, -1.0, 1.0, 0.0, "Pitch");
-		configSwitch(WAVE_PARAM, 0.0, 2.0, 0.0, "Middle Wave", {"Saw", "Triangle", "Pulse"});
+		configSwitch(WAVE_PARAM, 0.0, 1.0, 0.0, "Middle Wave", {"Saw / Triangle", "Pulse"});
 		configParam(FINE_1_PARAM, -0.02, 0.02, 0.0, "Fine 1");
 		configParam(FINE_2_PARAM, -0.02, 0.02, 0.0, "Fine 2");
 		configParam(FINE_3_PARAM, -0.02, 0.02, 0.0, "Fine 3");
@@ -167,14 +167,12 @@ struct Supersaw : Module {
 			outputs[WAVE_OUTPUT].setVoltage(clamp(osc1[c].saw(osc1[c].freq, args.sampleTime) * 5.f, -10.f, 10.f), c);
 			switch (wave) {
 				case 0:
-					out += osc2[c].saw(osc2[c].freq, args.sampleTime) * 0.33f;
-					outputs[WAVE_OUTPUT + 1].setVoltage(clamp(osc2[c].saw(osc2[c].freq, args.sampleTime) * 5.f, -10.f, 10.f), c);
+				  {
+				 	out += osc2[c].triangle(osc2[c].freq, args.sampleTime, pulse_width) * 0.33f;
+					outputs[WAVE_OUTPUT + 1].setVoltage(clamp(osc2[c].triangle(osc2[c].freq, args.sampleTime, pulse_width * 0.5) * 5.f, -10.f, 10.f), c);
 					break;
+				  }
 				case 1:
-					out += osc2[c].triangle(osc2[c].freq, args.sampleTime) * 0.33f;
-					outputs[WAVE_OUTPUT + 1].setVoltage(clamp(osc2[c].triangle(osc2[c].freq, args.sampleTime) * 5.f, -10.f, 10.f), c);
-					break;
-				case 2:
 					out += osc2[c].pulse(osc2[c].freq, args.sampleTime, pulse_width) * 0.33f;
 					outputs[WAVE_OUTPUT + 1].setVoltage(clamp(osc2[c].pulse(osc2[c].freq, args.sampleTime, pulse_width) * 5.f, -10.f, 10.f), c);
 					break;
@@ -234,7 +232,7 @@ struct SupersawWidget : ModuleWidget {
 		x += dx;
 		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::PITCH_PARAM));
 		x += dx;
-		addParam(createParamCentered<CKSSThree>(Vec(x, y), module, Supersaw::WAVE_PARAM));
+		addParam(createParamCentered<CKSS>(Vec(x, y), module, Supersaw::WAVE_PARAM));
 		x -= dx * 2;
 		y += dy;
 		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::FINE_1_PARAM));
