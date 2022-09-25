@@ -43,6 +43,16 @@ struct OutPort : SvgPort {
 	}
 };
 
+//Lights
+
+struct TealLight : GrayModuleLightWidget {
+	TealLight() {
+		addBaseColor(TEAL_COLOR);
+	}
+};
+
+//Params
+
 struct Button : app::SvgSwitch {
 	Button(){
 		momentary = true;
@@ -52,13 +62,15 @@ struct Button : app::SvgSwitch {
 	}
 };
 
-struct TealLight : GrayModuleLightWidget {
-	TealLight() {
-		addBaseColor(TEAL_COLOR);
+
+struct Switch : app::SvgSwitch {
+	Switch(){
+		addFrame(Svg::load(asset::plugin(pluginInstance,"res/switch_0.svg")));
+		addFrame(Svg::load(asset::plugin(pluginInstance,"res/switch_1.svg")));
+		shadow->blurRadius = 0.0;
 	}
 };
 
-//Switches
 struct LoopSwitch : app::SvgSwitch {
 	LoopSwitch(){
 		addFrame(Svg::load(asset::plugin(pluginInstance,"res/loop_switch_0.svg")));

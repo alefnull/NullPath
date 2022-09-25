@@ -17,7 +17,7 @@ struct Switch18 : Module, SwitchBase {
 		STEP_7_PARAM,
 		STEP_8_PARAM,
 		STEP_9_PARAM,
-		INVERT_WEIGHTS,
+		INVERT_WEIGHTS_PARAM,
 		PARAMS_LEN
 	};
 	enum InputId {
@@ -26,15 +26,15 @@ struct Switch18 : Module, SwitchBase {
 		RESET_INPUT,
 		RANDOMIZE_STEPS_INPUT,
 		RANDOMIZE_MODE_INPUT,
-		STEP_1_CV_INPUT,
-		STEP_2_CV_INPUT,
-		STEP_3_CV_INPUT,
-		STEP_4_CV_INPUT,
-		STEP_5_CV_INPUT,
-		STEP_6_CV_INPUT,
-		STEP_7_CV_INPUT,
-		STEP_8_CV_INPUT,
-		STEP_9_CV_INPUT,
+		STEP_CV_1_INPUT,
+		STEP_CV_2_INPUT,
+		STEP_CV_3_INPUT,
+		STEP_CV_4_INPUT,
+		STEP_CV_5_INPUT,
+		STEP_CV_6_INPUT,
+		STEP_CV_7_INPUT,
+		STEP_CV_8_INPUT,
+		STEP_CV_9_INPUT,
 		INVERT_TRIGGER_INPUT,
 		INPUTS_LEN
 	};
@@ -79,21 +79,21 @@ struct Switch18 : Module, SwitchBase {
 		configParam(STEP_7_PARAM, 0.f, 1.f, 1.f, "step 7 probability");
 		configParam(STEP_8_PARAM, 0.f, 1.f, 1.f, "step 8 probability");
 		configParam(STEP_9_PARAM, 0.f, 1.f, 1.f, "step 9 probability");
-		configSwitch(INVERT_WEIGHTS, 0.f, 1.f, 0.f, "invert weights", {"invert on low","invert on high"});
+		configSwitch(INVERT_WEIGHTS_PARAM, 0.f, 1.f, 0.f, "invert weights", {"invert on low","invert on high"});
 		configInput(SIGNAL_INPUT, "signal");
 		configInput(TRIGGER_INPUT, "trigger");
 		configInput(RESET_INPUT, "reset");
 		configInput(RANDOMIZE_STEPS_INPUT, "randomize steps");
 		configInput(RANDOMIZE_MODE_INPUT, "randomize mode");
-		configInput(STEP_1_CV_INPUT, "step 1 cv");
-		configInput(STEP_2_CV_INPUT, "step 2 cv");
-		configInput(STEP_3_CV_INPUT, "step 3 cv");
-		configInput(STEP_4_CV_INPUT, "step 4 cv");
-		configInput(STEP_5_CV_INPUT, "step 5 cv");
-		configInput(STEP_6_CV_INPUT, "step 6 cv");
-		configInput(STEP_7_CV_INPUT, "step 7 cv");
-		configInput(STEP_8_CV_INPUT, "step 8 cv");
-		configInput(STEP_9_CV_INPUT, "step 9 cv");
+		configInput(STEP_CV_1_INPUT, "step 1 cv");
+		configInput(STEP_CV_2_INPUT, "step 2 cv");
+		configInput(STEP_CV_3_INPUT, "step 3 cv");
+		configInput(STEP_CV_4_INPUT, "step 4 cv");
+		configInput(STEP_CV_5_INPUT, "step 5 cv");
+		configInput(STEP_CV_6_INPUT, "step 6 cv");
+		configInput(STEP_CV_7_INPUT, "step 7 cv");
+		configInput(STEP_CV_8_INPUT, "step 8 cv");
+		configInput(STEP_CV_9_INPUT, "step 9 cv");
 		configInput(INVERT_TRIGGER_INPUT, "invert trigger");
 		configOutput(STEP_1_OUTPUT, "step 1");
 		configOutput(STEP_2_OUTPUT, "step 2");
@@ -123,11 +123,11 @@ struct Switch18 : Module, SwitchBase {
 	void compute_weights() {
 		for (int i = 0; i < STEP_COUNT; i++) {
 			if (outputs[STEP_1_OUTPUT + i].isConnected()) {
-				if (!inputs[STEP_1_CV_INPUT + i].isConnected()) {
+				if (!inputs[STEP_CV_1_INPUT + i].isConnected()) {
 					weights[i] = params[STEP_1_PARAM + i].getValue();
 				}
 				else {
-					weights[i] = inputs[STEP_1_CV_INPUT + i].getVoltage() / 5.f;
+					weights[i] = inputs[STEP_CV_1_INPUT + i].getVoltage() / 5.f;
 					weights[i] = clamp(weights[i] + params[STEP_1_PARAM].getValue(), 0.f, 1.f);
 				}
 				if(invert_weights){
@@ -145,7 +145,7 @@ struct Switch18 : Module, SwitchBase {
 		mode = (int)params[MODE_PARAM].getValue();
 
 		invert_trigger.process(inputs[INVERT_TRIGGER_INPUT].getVoltage());
-		invert_button.process(params[INVERT_WEIGHTS].getValue() > 0.f);
+		invert_button.process(params[INVERT_WEIGHTS_PARAM].getValue() > 0.f);
 		invert_weights = invert_trigger.isHigh() != invert_button.state;
 
 		compute_weights();
@@ -215,62 +215,62 @@ struct Switch18 : Module, SwitchBase {
 struct Switch18Widget : ModuleWidget {
 	Switch18Widget(Switch18* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/switch18.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/Expand.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(8.085, 59.362)), module, Switch18::MODE_PARAM));
-		addParam(createParamCentered<TL1105>(mm2px(Vec(8.085, 70.362)), module, Switch18::RANDOMIZE_STEPS_PARAM));
-		addParam(createParamCentered<TL1105>(mm2px(Vec(8.085, 92.362)), module, Switch18::RANDOMIZE_MODE_PARAM));
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(32.341, 25.796)), module, Switch18::STEP_1_PARAM));
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(32.341, 35.806)), module, Switch18::STEP_2_PARAM));
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(32.341, 46.202)), module, Switch18::STEP_3_PARAM));
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(32.341, 56.597)), module, Switch18::STEP_4_PARAM));
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(32.341, 67.955)), module, Switch18::STEP_5_PARAM));
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(32.341, 78.928)), module, Switch18::STEP_6_PARAM));
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(32.341, 89.708)), module, Switch18::STEP_7_PARAM));
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(32.341, 100.104)), module, Switch18::STEP_8_PARAM));
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(32.341, 110.499)), module, Switch18::STEP_9_PARAM));
-		addParam(createParamCentered<CKSS>(mm2px(Vec(11.396, 10.000)), module, Switch18::INVERT_WEIGHTS));
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(39.646, 17.345)), module, Switch18::STEP_1_PARAM));
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(39.646, 28.92)), module, Switch18::STEP_2_PARAM));
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(39.646, 40.496)), module, Switch18::STEP_3_PARAM));
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(39.646, 52.071)), module, Switch18::STEP_4_PARAM));
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(39.646, 63.647)), module, Switch18::STEP_5_PARAM));
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(39.646, 75.222)), module, Switch18::STEP_6_PARAM));
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(39.646, 86.798)), module, Switch18::STEP_7_PARAM));
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(39.646, 98.373)), module, Switch18::STEP_8_PARAM));
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(39.646, 109.949)), module, Switch18::STEP_9_PARAM));
+		addParam(createParamCentered<NP::Button>(mm2px(Vec(14.637, 68.285)), module, Switch18::RANDOMIZE_MODE_PARAM));
+		addParam(createParamCentered<SwitchModeSwitch>(mm2px(Vec(10.554, 81.643)), module, Switch18::MODE_PARAM));
+		addParam(createParamCentered<NP::Button>(mm2px(Vec(14.801, 100.753)), module, Switch18::RANDOMIZE_STEPS_PARAM));
+		addParam(createParamCentered<NP::Switch>(mm2px(Vec(14.801, 115.804)), module, Switch18::INVERT_WEIGHTS_PARAM));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.085, 25.796)), module, Switch18::SIGNAL_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.085, 36.769)), module, Switch18::TRIGGER_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.085, 47.769)), module, Switch18::RESET_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.085, 81.362)), module, Switch18::RANDOMIZE_STEPS_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.085, 103.362)), module, Switch18::RANDOMIZE_MODE_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 25.796)), module, Switch18::STEP_1_CV_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 35.806)), module, Switch18::STEP_2_CV_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 46.202)), module, Switch18::STEP_3_CV_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 56.597)), module, Switch18::STEP_4_CV_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 67.955)), module, Switch18::STEP_5_CV_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 78.928)), module, Switch18::STEP_6_CV_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 89.708)), module, Switch18::STEP_7_CV_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 100.104)), module, Switch18::STEP_8_CV_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.561, 110.499)), module, Switch18::STEP_9_CV_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(5, 10)), module, Switch18::INVERT_TRIGGER_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(8.854, 50.053)), module, Switch18::SIGNAL_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(29.098, 17.142)), module, Switch18::STEP_CV_1_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(29.098, 28.718)), module, Switch18::STEP_CV_2_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(29.098, 40.293)), module, Switch18::STEP_CV_3_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(29.098, 51.869)), module, Switch18::STEP_CV_4_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(29.098, 63.444)), module, Switch18::STEP_CV_5_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(29.098, 75.02)), module, Switch18::STEP_CV_6_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(29.098, 86.595)), module, Switch18::STEP_CV_7_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(29.098, 98.171)), module, Switch18::STEP_CV_8_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(29.098, 109.746)), module, Switch18::STEP_CV_9_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(6.303, 100.681)), module, Switch18::RANDOMIZE_STEPS_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(11.721, 19.628)), module, Switch18::TRIGGER_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(11.699, 32.671)), module, Switch18::RESET_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(6.152, 68.221)), module, Switch18::RANDOMIZE_MODE_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(6.303, 115.657)), module, Switch18::INVERT_TRIGGER_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(43.892, 25.796)), module, Switch18::STEP_1_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(43.892, 35.806)), module, Switch18::STEP_2_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(43.892, 46.202)), module, Switch18::STEP_3_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(43.892, 56.597)), module, Switch18::STEP_4_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(43.892, 67.955)), module, Switch18::STEP_5_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(43.892, 78.928)), module, Switch18::STEP_6_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(43.892, 89.708)), module, Switch18::STEP_7_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(43.892, 100.104)), module, Switch18::STEP_8_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(43.892, 110.499)), module, Switch18::STEP_9_OUTPUT));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(54.988, 17.294)), module, Switch18::STEP_1_OUTPUT));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(54.988, 28.87)), module, Switch18::STEP_2_OUTPUT));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(54.988, 40.445)), module, Switch18::STEP_3_OUTPUT));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(54.988, 52.021)), module, Switch18::STEP_4_OUTPUT));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(54.988, 63.596)), module, Switch18::STEP_5_OUTPUT));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(54.988, 75.172)), module, Switch18::STEP_6_OUTPUT));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(54.988, 86.747)), module, Switch18::STEP_7_OUTPUT));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(54.988, 98.323)), module, Switch18::STEP_8_OUTPUT));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(54.988, 109.898)), module, Switch18::STEP_9_OUTPUT));
 
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(52.169, 25.796)), module, Switch18::STEP_1_LIGHT));
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(52.169, 35.806)), module, Switch18::STEP_2_LIGHT));
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(52.169, 46.202)), module, Switch18::STEP_3_LIGHT));
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(52.169, 56.597)), module, Switch18::STEP_4_LIGHT));
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(52.169, 67.955)), module, Switch18::STEP_5_LIGHT));
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(52.169, 78.928)), module, Switch18::STEP_6_LIGHT));
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(52.169, 89.708)), module, Switch18::STEP_7_LIGHT));
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(52.169, 100.104)), module, Switch18::STEP_8_LIGHT));
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(52.169, 110.499)), module, Switch18::STEP_9_LIGHT));
+		addChild(createLightCentered<MediumLight<NP::TealLight>>(mm2px(Vec(47.799, 17.218)), module, Switch18::STEP_1_LIGHT));
+		addChild(createLightCentered<MediumLight<NP::TealLight>>(mm2px(Vec(47.799, 28.794)), module, Switch18::STEP_2_LIGHT));
+		addChild(createLightCentered<MediumLight<NP::TealLight>>(mm2px(Vec(47.799, 40.369)), module, Switch18::STEP_3_LIGHT));
+		addChild(createLightCentered<MediumLight<NP::TealLight>>(mm2px(Vec(47.799, 51.945)), module, Switch18::STEP_4_LIGHT));
+		addChild(createLightCentered<MediumLight<NP::TealLight>>(mm2px(Vec(47.799, 63.52)), module, Switch18::STEP_5_LIGHT));
+		addChild(createLightCentered<MediumLight<NP::TealLight>>(mm2px(Vec(47.799, 75.096)), module, Switch18::STEP_6_LIGHT));
+		addChild(createLightCentered<MediumLight<NP::TealLight>>(mm2px(Vec(47.799, 86.671)), module, Switch18::STEP_7_LIGHT));
+		addChild(createLightCentered<MediumLight<NP::TealLight>>(mm2px(Vec(47.799, 98.247)), module, Switch18::STEP_8_LIGHT));
+		addChild(createLightCentered<MediumLight<NP::TealLight>>(mm2px(Vec(47.799, 109.822)), module, Switch18::STEP_9_LIGHT));
 	}
 
 	struct FadeDurationQuantity : Quantity {
