@@ -164,32 +164,30 @@ struct Supersaw : Module {
 			osc3[c].set_pitch(pitch + octave + fine3 + voct);
 
 			out += osc1[c].saw(osc1[c].freq, args.sampleTime) * 0.33f;
-			outputs[WAVE_OUTPUT].setVoltage(clamp(osc1[c].saw(osc1[c].freq, args.sampleTime) * 5.f, -10.f, 10.f), c);
+			outputs[WAVE_OUTPUT].setVoltage(osc1[c].saw(osc1[c].freq, args.sampleTime) * 5.f, c);
 			switch (wave) {
 				case 0:
 				  {
 				 	out += osc2[c].triangle(osc2[c].freq, args.sampleTime, pulse_width) * 0.33f;
-					outputs[WAVE_OUTPUT + 1].setVoltage(clamp(osc2[c].triangle(osc2[c].freq, args.sampleTime, pulse_width * 0.5) * 5.f, -10.f, 10.f), c);
+					outputs[WAVE_OUTPUT + 1].setVoltage(osc2[c].triangle(osc2[c].freq, args.sampleTime, pulse_width * 0.5) * 5.f, c);
 					break;
 				  }
 				case 1:
 					out += osc2[c].pulse(osc2[c].freq, args.sampleTime, pulse_width) * 0.33f;
-					outputs[WAVE_OUTPUT + 1].setVoltage(clamp(osc2[c].pulse(osc2[c].freq, args.sampleTime, pulse_width) * 5.f, -10.f, 10.f), c);
+					outputs[WAVE_OUTPUT + 1].setVoltage(osc2[c].pulse(osc2[c].freq, args.sampleTime, pulse_width) * 5.f, c);
 					break;
 			}
 			out += osc3[c].saw(osc3[c].freq, args.sampleTime) * 0.33f;
-			outputs[WAVE_OUTPUT + 2].setVoltage(clamp(osc3[c].saw(osc3[c].freq, args.sampleTime) * 5.f, -10.f, 10.f), c);
+			outputs[WAVE_OUTPUT + 2].setVoltage(osc3[c].saw(osc3[c].freq, args.sampleTime) * 5.f, c);
 
 			out += noise;
 
 			if (inputs[GATE_INPUT].isConnected()) {
-				outputs[SIGNAL_OUTPUT].setVoltage(clamp(out * 5.f * envelope.env, -10.f, 10.f), c);
+				outputs[SIGNAL_OUTPUT].setVoltage(out * 5.f * envelope.env, c);
 			}
 			else {
-				outputs[SIGNAL_OUTPUT].setVoltage(clamp(out * 5.f, -10.f, 10.f), c);
+				outputs[SIGNAL_OUTPUT].setVoltage(out * 5.f, c);
 			}
-
-			
 		}
 
 		if (trigger.process(inputs[GATE_INPUT].getVoltage())) {
@@ -204,7 +202,7 @@ struct Supersaw : Module {
 
 		last_gate = inputs[GATE_INPUT].getVoltage();
 
-		outputs[ENV_OUTPUT].setVoltage(clamp(envelope.env * 10.f, -10.f, 10.f));
+		outputs[ENV_OUTPUT].setVoltage(envelope.env * 10.f);
 		outputs[NOISE_OUTPUT].setVoltage(last_noise * 5.f);
 	}
 };

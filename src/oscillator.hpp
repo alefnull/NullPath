@@ -29,25 +29,25 @@ struct Oscillator {
 
     float sine(float freq, float sample_time) {
         update_phase(sample_time);
-        return clamp(std::sin(2.f * M_PI * phase), -1.f, 1.f);
+        return std::sin(2.f * M_PI * phase);
     }
 
     float pulse(float freq, float sample_time, float width) {
         update_phase(sample_time);
-        return clamp(phase < width ? 1.f : -1.f, -1.f, 1.f);
+        return phase < width ? 1.f : -1.f;
     }
 
     float saw(float freq, float sample_time) {
         update_phase(sample_time);
-        return clamp(phase * 2.f - 1.f, -1.f, 1.f);
+        return phase * 2.f - 1.f;
     }
 
     float triangle(float freq, float sample_time, float width) {
         update_phase(sample_time);
-        return clamp(phase < width ? phase * 2.f / width - 1.f : 1.f - (phase - width) * 2.f / (1.f - width), -1.f, 1.f);
+        return phase < width ? phase * 2.f / width - 1.f : 1.f - (phase - width) * 2.f / (1.f - width);
     }
 
     float noise() {
-        return clamp(random::uniform() * 2.f - 1.f, -1.f, 1.f);
+        return random::uniform() * 2.f - 1.f;
     }
 };
