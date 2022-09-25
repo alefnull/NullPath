@@ -544,6 +544,15 @@ struct CCColors : GrayModuleLightWidget {
 	}
 };
 
+struct CascadeModeSwitch : app::SvgSwitch {
+	CascadeModeSwitch(){
+		addFrame(Svg::load(asset::plugin(pluginInstance,"res/cascade_mode_switch_0.svg")));
+		addFrame(Svg::load(asset::plugin(pluginInstance,"res/cascade_mode_switch_1.svg")));
+		addFrame(Svg::load(asset::plugin(pluginInstance,"res/cascade_mode_switch_2.svg")));
+		shadow->blurRadius = 0;
+	}
+};
+
 
 struct FuncgenWidget : ModuleWidget {
 	FuncgenWidget(Funcgen* module) {
@@ -586,7 +595,7 @@ struct FuncgenWidget : ModuleWidget {
 		addParam(createParamCentered<NP::Button>(mm2px(Vec(81.478, 43.048)), module, Funcgen::TRIGGER_ALL_PARAM));
 		addParam(createParamCentered<NP::LoopSwitch>(mm2px(Vec(89.03, 59.95)), module, Funcgen::CASCADE_LOOP_PARAM));
 		addParam(createParamCentered<NP::SpeedSwitch>(mm2px(Vec(97.077, 65.028)), module, Funcgen::CASCADE_SPEED_PARAM));
-		addParam(createParamCentered<CKSSThree>(mm2px(Vec(55.767, 64.957)), module, Funcgen::MODE_PARAM));
+		addParam(createParamCentered<CascadeModeSwitch>(mm2px(Vec(55.767, 64.957)), module, Funcgen::MODE_PARAM));
 
 		addInput(createInputCentered<NP::InPort>(mm2px(Vec(11.812, 15.465)), module, Funcgen::TRIGGER_INPUT + 0));
 		addInput(createInputCentered<NP::InPort>(mm2px(Vec(11.812, 47.572)), module, Funcgen::RISE_CV_INPUT + 0));
