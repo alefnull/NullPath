@@ -18,7 +18,9 @@
       "name": "Expand",
       "description": "",
       "tags": [
-        "Switch","Utility","Polyphonic"
+        "Switch",
+        "Utility",
+        "Polyphonic"
       ]
     },
     {
@@ -26,7 +28,9 @@
       "name": "Collapse",
       "description": "",
       "tags": [
-        "Switch","Utility","Polyphonic"
+        "Switch",
+        "Utility",
+        "Polyphonic"
       ]
     },
     {
@@ -42,7 +46,8 @@
       "name": "Turbulence",
       "description": "",
       "tags": [
-        "Oscillator","Polyphonic"
+        "Oscillator",
+        "Polyphonic"
       ]
     }
   ]

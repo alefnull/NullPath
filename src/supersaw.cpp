@@ -1,4 +1,5 @@
 #include "plugin.hpp"
+#include "widgets.hpp"
 #include "oscillator.hpp"
 #include "Envelope.hpp"
 
@@ -32,6 +33,7 @@ struct Supersaw : Module {
 		NOISE_DUR_CV_INPUT,
 		PULSE_WIDTH_CV_INPUT,
 		GATE_INPUT,
+		NOISE_MIX_CV_INPUT, //TODO Implement
 		INPUTS_LEN
 	};
 	enum OutputId {
@@ -207,91 +209,57 @@ struct Supersaw : Module {
 	}
 };
 
+struct WaveSwitch : app::SvgSwitch {
+	WaveSwitch(){
+		addFrame(Svg::load(asset::plugin(pluginInstance,"res/wave_switch_0.svg")));
+		addFrame(Svg::load(asset::plugin(pluginInstance,"res/wave_switch_1.svg")));
+		shadow->blurRadius = 0;
+	}
+};
+
 
 struct SupersawWidget : ModuleWidget {
 	SupersawWidget(Supersaw* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/supersaw.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/Turbulence.svg")));
 
-		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		addChild(createWidget<ScrewBlack>(Vec(RACK_GRID_WIDTH, 0)));
+		addChild(createWidget<ScrewBlack>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
+		addChild(createWidget<ScrewBlack>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		addChild(createWidget<ScrewBlack>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		float x_start = RACK_GRID_WIDTH;
-		float y_start = RACK_GRID_WIDTH * 3;
-		float dx = RACK_GRID_WIDTH * 2;
-		float dy = RACK_GRID_WIDTH * 2;
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(9.998, 34.556)), module, Supersaw::OCTAVE_PARAM));
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(10.0, 53.707)), module, Supersaw::PITCH_PARAM));
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(9.875, 92.03)), module, Supersaw::PULSE_WIDTH_PARAM));
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(28.759, 35.811)), module, Supersaw::NOISE_DUR_PARAM));
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(62.679, 35.802)), module, Supersaw::NOISE_MIX_PARAM));
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(80.722, 34.556)), module, Supersaw::ATTACK_PARAM));
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(80.72, 53.718)), module, Supersaw::DECAY_PARAM));
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(80.72, 72.878)), module, Supersaw::SUSTAIN_PARAM));
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(80.718, 92.04)), module, Supersaw::RELEASE_PARAM));
+		addParam(createParamCentered<WaveSwitch>(mm2px(Vec(9.621, 72.742)), module, Supersaw::WAVE_PARAM));
+		addParam(createParamCentered<NP::SmallKnob>(mm2px(Vec(30.475, 81.47)), module, Supersaw::FINE_1_PARAM));
+		addParam(createParamCentered<NP::SmallKnob>(mm2px(Vec(45.719, 81.476)), module, Supersaw::FINE_2_PARAM));
+		addParam(createParamCentered<NP::SmallKnob>(mm2px(Vec(60.962, 81.476)), module, Supersaw::FINE_3_PARAM));
+		addParam(createParamCentered<NP::SmallKnob>(mm2px(Vec(31.447, 47.241)), module, Supersaw::ENV_DUR_ATT_PARAM));
+		addParam(createParamCentered<NP::SmallKnob>(mm2px(Vec(55.326, 47.034)), module, Supersaw::ENV_MIX_ATT_PARAM));
+		addParam(createParamCentered<NP::SmallKnob>(mm2px(Vec(19.722, 113.839)), module, Supersaw::ENV_PW_ATT_PARAM));
+		addParam(createParamCentered<NP::OrangeSwitch>(mm2px(Vec(26.365, 114.069)), module, Supersaw::ENV_TO_PW_PARAM));
+		addParam(createParamCentered<NP::OrangeSwitch>(mm2px(Vec(38.619, 47.471)), module, Supersaw::ENV_TO_DUR_PARAM));
+		addParam(createParamCentered<NP::OrangeSwitch>(mm2px(Vec(48.067, 47.269)), module, Supersaw::ENV_TO_MIX_PARAM));
 
-		float x = x_start;
-		float y = y_start;
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(10.0, 15.997)), module, Supersaw::VOCT_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(80.607, 15.711)), module, Supersaw::GATE_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(39.692, 35.599)), module, Supersaw::NOISE_DUR_CV_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(51.748, 35.599)), module, Supersaw::NOISE_MIX_CV_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(9.964, 103.205)), module, Supersaw::PULSE_WIDTH_CV_INPUT));
 
-		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::OCTAVE_PARAM));
-		x += dx;
-		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::PITCH_PARAM));
-		x += dx;
-		addParam(createParamCentered<CKSS>(Vec(x, y), module, Supersaw::WAVE_PARAM));
-		x -= dx * 2;
-		y += dy;
-		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::FINE_1_PARAM));
-		x += dx;
-		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::FINE_2_PARAM));
-		x += dx;
-		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::FINE_3_PARAM));
-		x -= dx * 2;
-		y += dy;
-		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::NOISE_DUR_PARAM));
-		x += dx;
-		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::NOISE_MIX_PARAM));
-		x += dx;
-		addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::NOISE_DUR_CV_INPUT));
-		x -= dx * 2;
-		y += dy;
-		addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::VOCT_INPUT));
-		x += dx;
-		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::PULSE_WIDTH_PARAM));
-		x += dx;
-		addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::PULSE_WIDTH_CV_INPUT));
-		x -= dx * 2;
-		y += dy;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::SIGNAL_OUTPUT));
-		x += dx;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::NOISE_OUTPUT));
-		x -= dx;
-		y += dy;
-		for (int i = 0; i < 3; i++) {
-			addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::WAVE_OUTPUT + i));
-			x += dx;
-		}
-		x -= dx * 3;
-		y += dy;
-		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::ATTACK_PARAM));
-		x += dx;
-		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::DECAY_PARAM));
-		x += dx;
-		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::SUSTAIN_PARAM));
-		x += dx;
-		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::RELEASE_PARAM));
-		x -= dx * 3;
-		y += dy;
-		addInput(createInputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::GATE_INPUT));
-		x += dx;
-		addOutput(createOutputCentered<PJ301MPort>(Vec(x, y), module, Supersaw::ENV_OUTPUT));
-		x -= dx;
-		y += dy;
-		addParam(createParamCentered<CKSS>(Vec(x, y), module, Supersaw::ENV_TO_DUR_PARAM));
-		x += dx;
-		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::ENV_DUR_ATT_PARAM));
-		x -= dx;
-		y += dy;
-		addParam(createParamCentered<CKSS>(Vec(x, y), module, Supersaw::ENV_TO_MIX_PARAM));
-		x += dx;
-		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::ENV_MIX_ATT_PARAM));
-		x -= dx;
-		y += dy;
-		addParam(createParamCentered<CKSS>(Vec(x, y), module, Supersaw::ENV_TO_PW_PARAM));
-		x += dx;
-		addParam(createParamCentered<RoundSmallBlackKnob>(Vec(x, y), module, Supersaw::ENV_PW_ATT_PARAM));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(45.72, 19.046)), module, Supersaw::NOISE_OUTPUT));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(30.48, 73.399)), module, Supersaw::WAVE_OUTPUT + 0));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(45.72, 73.408)), module, Supersaw::WAVE_OUTPUT + 1));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(60.967, 73.399)), module, Supersaw::WAVE_OUTPUT + 2));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(45.008, 113.949)), module, Supersaw::SIGNAL_OUTPUT));
+		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(80.331, 110.899)), module, Supersaw::ENV_OUTPUT));
 	}
 };
 

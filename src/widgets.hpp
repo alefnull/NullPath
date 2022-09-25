@@ -71,6 +71,14 @@ struct Switch : app::SvgSwitch {
 	}
 };
 
+struct OrangeSwitch : app::SvgSwitch {
+	OrangeSwitch(){
+		addFrame(Svg::load(asset::plugin(pluginInstance,"res/orange_switch_0.svg")));
+		addFrame(Svg::load(asset::plugin(pluginInstance,"res/orange_switch_1.svg")));
+		shadow->blurRadius = 0.0;
+	}
+};
+
 struct LoopSwitch : app::SvgSwitch {
 	LoopSwitch(){
 		addFrame(Svg::load(asset::plugin(pluginInstance,"res/loop_switch_0.svg")));
