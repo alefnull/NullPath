@@ -506,6 +506,44 @@ struct Funcgen : Module {
 	}
 };
 
+static const NVGcolor CC_COLOR_1 = nvgRGB(0xa0, 0xf9, 0xce);
+static const NVGcolor CC_COLOR_2 = nvgRGB(0xf7, 0xf9, 0xa0);
+static const NVGcolor CC_COLOR_3 = nvgRGB(0xf9, 0xce, 0xa0);
+static const NVGcolor CC_COLOR_4 = nvgRGB(0xa0, 0xf9, 0xf9);
+
+struct CCColor1 : GrayModuleLightWidget {
+	CCColor1() {
+		addBaseColor(CC_COLOR_1);
+	}
+};
+
+struct CCColor2 : GrayModuleLightWidget {
+	CCColor2() {
+		addBaseColor(CC_COLOR_2);
+	}
+};
+
+struct CCColor3 : GrayModuleLightWidget {
+	CCColor3() {
+		addBaseColor(CC_COLOR_3);
+	}
+};
+
+struct CCColor4 : GrayModuleLightWidget {
+	CCColor4() {
+		addBaseColor(CC_COLOR_4);
+	}
+};
+
+struct CCColors : GrayModuleLightWidget {
+	CCColors() {
+		addBaseColor(CC_COLOR_1);
+		addBaseColor(CC_COLOR_2);
+		addBaseColor(CC_COLOR_3);
+		addBaseColor(CC_COLOR_4);
+	}
+};
+
 
 struct FuncgenWidget : ModuleWidget {
 	FuncgenWidget(Funcgen* module) {
@@ -607,26 +645,23 @@ struct FuncgenWidget : ModuleWidget {
 		// mm2px(Vec(12.531, 7.897))
 		//addChild(createWidget<Widget>(mm2px(Vec(17.846, 21.056))));		
 		pos = mm2px(Vec(12.531, 7.897) * 0.5 + Vec(17.846, 21.056));
-		addChild(createLightCentered<LargeLight<RedLight>>(pos, module, Funcgen::OUTPUT_LIGHT + 0));
+		addChild(createLightCentered<LargeLight<CCColor1>>(pos, module, Funcgen::OUTPUT_LIGHT + 0));
 		// mm2px(Vec(12.531, 7.897))
 		//addChild(createWidget<Widget>(mm2px(Vec(122.741, 21.056))));
 		pos = mm2px(Vec(12.531, 7.897) * 0.5 + Vec(122.741, 21.056));
-		addChild(createLightCentered<LargeLight<GreenLight>>(pos, module, Funcgen::OUTPUT_LIGHT + 1));
+		addChild(createLightCentered<LargeLight<CCColor2>>(pos, module, Funcgen::OUTPUT_LIGHT + 1));
 		// mm2px(Vec(12.531, 7.897))
 		//addChild(createWidget<Widget>(mm2px(Vec(17.846, 87.74))));
 		pos = mm2px(Vec(12.531, 7.897) * 0.5 + Vec(17.846, 87.74));
-		addChild(createLightCentered<LargeLight<YellowLight>>(pos, module, Funcgen::OUTPUT_LIGHT + 3));
+		addChild(createLightCentered<LargeLight<CCColor3>>(pos, module, Funcgen::OUTPUT_LIGHT + 3));
 		// mm2px(Vec(12.531, 7.897))
 		//addChild(createWidget<Widget>(mm2px(Vec(122.739, 87.74))));
 		pos = mm2px(Vec(12.531, 7.897) * 0.5 + Vec(122.739, 87.74));
-		addChild(createLightCentered<LargeLight<BlueLight>>(pos, module, Funcgen::OUTPUT_LIGHT + 2));
+		addChild(createLightCentered<LargeLight<CCColor4>>(pos, module, Funcgen::OUTPUT_LIGHT + 2));
 		// mm2px(Vec(12.531, 7.897))
 		//addChild(createWidget<Widget>(mm2px(Vec(70.304, 65.287))));
 		pos = mm2px(Vec(12.531, 7.897) * 0.5 + Vec(70.304, 65.287));
-		addChild(createLightCentered<LargeLight<RedLight>>(pos, module, Funcgen::CASCADE_LIGHT + 0));
-		addChild(createLightCentered<LargeLight<GreenLight>>(pos, module, Funcgen::CASCADE_LIGHT + 1));
-		addChild(createLightCentered<LargeLight<YellowLight>>(pos, module, Funcgen::CASCADE_LIGHT + 3));
-		addChild(createLightCentered<LargeLight<BlueLight>>(pos, module, Funcgen::CASCADE_LIGHT + 2));
+		addChild(createLightCentered<LargeLight<CCColors>>(pos, module, Funcgen::CASCADE_LIGHT));
 	}
 
 	// override context menu to add range options
