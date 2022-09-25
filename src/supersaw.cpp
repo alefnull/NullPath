@@ -72,7 +72,7 @@ struct Supersaw : Module {
 		configInput(NOISE_DUR_CV_INPUT, "Noise duration CV");
 		configParam(NOISE_MIX_PARAM, 0.0, 0.5, 0.0, "Noise mix", "%", 0.0, 100.0);
 		configInput(NOISE_MIX_CV_INPUT, "Noise mix CV");
-		configParam(PULSE_WIDTH_PARAM, 0.0, 1.0, 0.5, "Pulse width");
+		configParam(PULSE_WIDTH_PARAM, 0.0, 1.0, 0.5, "B width");
 		configInput(PULSE_WIDTH_CV_INPUT, "Pulse width CV");
 		configParam(ATTACK_PARAM, 0.01, 5.0, 0.01, "Attack time", " s");
 		configParam(DECAY_PARAM, 0.1, 5.0, 0.1, "Decay time", " s");
