@@ -20,37 +20,31 @@ struct Oscillator {
     void set_pitch(float pitch) {
         this->freq = dsp::FREQ_C4 * std::pow(2.f, pitch);
     }
-
-    float sine(float freq, float sample_time) {
-        phase += freq * sample_time;
+    void update_phase(float delta) {
+        phase += freq * delta;
         if (phase >= 1.f) {
             phase -= 1.f;
         }
+    }
+
+    float sine(float freq, float sample_time) {
+        update_phase(sample_time);
         return clamp(std::sin(2.f * M_PI * phase), -1.f, 1.f);
     }
 
     float pulse(float freq, float sample_time, float width) {
-        phase += freq * sample_time;
-        if (phase >= 1.f) {
-            phase -= 1.f;
-        }
+        update_phase(sample_time);
         return clamp(phase < width ? 1.f : -1.f, -1.f, 1.f);
     }
 
     float saw(float freq, float sample_time) {
-        phase += freq * sample_time;
-        if (phase >= 1.f) {
-            phase -= 1.f;
-        }
+        update_phase(sample_time);
         return clamp(phase * 2.f - 1.f, -1.f, 1.f);
     }
 
-    float triangle(float freq, float sample_time) {
-        phase += freq * sample_time;
-        if (phase >= 1.f) {
-            phase -= 1.f;
-        }
-        return clamp(phase < 0.5f ? phase * 4.f - 1.f : 3.f - phase * 4.f, -1.f, 1.f);
+    float triangle(float freq, float sample_time, float width) {
+        update_phase(sample_time);
+        return clamp(phase < width ? phase * 2.f / width - 1.f : 1.f - (phase - width) * 2.f / (1.f - width), -1.f, 1.f);
     }
 
     float noise() {
