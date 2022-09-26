@@ -544,8 +544,8 @@ struct CCColors : GrayModuleLightWidget {
 	CCColors() {
 		addBaseColor(CC_COLOR_1);
 		addBaseColor(CC_COLOR_2);
-		addBaseColor(CC_COLOR_3);
 		addBaseColor(CC_COLOR_4);
+		addBaseColor(CC_COLOR_3);
 	}
 };
 
