@@ -272,7 +272,7 @@ struct Funcgen : Module {
 
 		if (trigger_all.process(inputs[TRIGGER_ALL_INPUT].getVoltage()) || trigger_all_push.process(params[TRIGGER_ALL_PARAM].getValue())) {
 			for (int i = 0; i < CHANNEL_COUNT; i++) {
-				envelope[i].retrigger();
+				envelope[i].trigger();
 			}
 			start_cycle();
 		}
