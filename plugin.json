@@ -47,7 +47,8 @@
       "description": "",
       "tags": [
         "Oscillator",
-        "Polyphonic"
+        "Polyphonic",
+        "Synth voice"
       ]
     }
   ]
