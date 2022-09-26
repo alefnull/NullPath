@@ -446,6 +446,11 @@ struct Funcgen : Module {
 		}
 		range_cascade = 10;
 		unipolar_cascade = true;
+		
+		for (int i = 0; i < CHANNEL_COUNT; i++) {
+			envelope[i].reset();
+		}
+		cm_envelope.reset();
 	}
 
 	json_t *dataToJson() override {
