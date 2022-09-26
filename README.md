@@ -11,7 +11,7 @@ MODES:
 - **Select Chance** - The weight is the chance that the step will be selected. Higher weights are more likely to be selected.
 - **Skip Chance** - The weight is the chance that the step will be skipped. Lower weights are more likely to be skipped.
 - **Repeat Weight** - The weight is the number of times the step will be repeated. Higher weights are repeated more times.
-- **Fixed Pattern** - ??? (TODO)
+- **Fixed Pattern** - Generates a repeated pattern where the weight controls how frequent a step will be selected.
 
 ## Cascade
 
