@@ -2,9 +2,9 @@
 
 ## Expand & Collapse
 
-**Expand** is a 1 to 9 not-so-sequential switch. Each step has a corresponding "weight" parameter, which has different uses depending on the "Mode" switch. Each subsequent "Clock" pulse will advance the steps, choosing the next output step. The "Reset" trigger input will reset the output step to 1.
+**Expand** is a 1 to 9 not-so-sequential switch. Each step has a corresponding "weight" parameter, which has different uses depending on the "Mode" switch. Each subsequent "Clock" pulse will advance the steps, choosing the next output step. Steps are only considered for choosing if their output port is connected. The "Reset" trigger input will reset the output step to 1.
 
-**Collapse** is a 9 to 1 not-so-sequential switch. Each step has a corresponding "weight" parameter, which has different uses depending on the "Mode" switch. Each subsequent "Clock" pulse will advance the steps, choosing the next input step. The "Reset" trigger input will reset the input step to 1.
+**Collapse** is a 9 to 1 not-so-sequential switch. Each step has a corresponding "weight" parameter, which has different uses depending on the "Mode" switch. Each subsequent "Clock" pulse will advance the steps, choosing the next input step. Steps are only considered for choosing if their input port is connected. The "Reset" trigger input will reset the input step to 1.
 
 Both **Expand** and **Collapse** also have a "Randomize Mode" trigger input and button, a "Randomize Steps" trigger input and button, and an "Invert Weights" gate input with a switch to toggle between "invert on low" or "invert on high". They both also have an optional "Fade" toggle and "Fade Time" slider in the right click menu. When "Fade" is enabled, the modules will smoothly crossfade between steps. The "Fade Time" slider controls the duration of the fade.
 
