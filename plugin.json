@@ -16,7 +16,7 @@
     {
       "slug": "switch18",
       "name": "Expand",
-      "description": "",
+      "description": "A 1-9 not-so-sequential switch",
       "tags": [
         "Switch",
         "Utility",
@@ -26,7 +26,7 @@
     {
       "slug": "switch81",
       "name": "Collapse",
-      "description": "",
+      "description": "A 9-1 not-so-sequential switch",
       "tags": [
         "Switch",
         "Utility",
@@ -36,7 +36,7 @@
     {
       "slug": "funcgen",
       "name": "Cascade",
-      "description": "",
+      "description": "A 4 channel envelope/function generator",
       "tags": [
         "Envelope generator"
       ]
@@ -44,7 +44,7 @@
     {
       "slug": "supersaw",
       "name": "Turbulence",
-      "description": "",
+      "description": "A supersaw oscillator/synth voice, with noise and a built-in ADSR envelope",
       "tags": [
         "Oscillator",
         "Polyphonic",
