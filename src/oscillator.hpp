@@ -1,6 +1,7 @@
 #include "plugin.hpp"
 
 #define M_PI 3.14159265358979323846
+#define FREQ_C3 130.81
 
 struct Oscillator {
     double phase = 0.f;
@@ -8,7 +9,7 @@ struct Oscillator {
 
     Oscillator() {
         phase = 0.f;
-        freq = dsp::FREQ_C4;
+        freq = FREQ_C3;
     }
 
     void set_freq(float freq) {
@@ -18,7 +19,7 @@ struct Oscillator {
         this->phase = phase;
     }
     void set_pitch(float pitch) {
-        this->freq = dsp::FREQ_C4 * std::pow(2.f, pitch);
+        this->freq = FREQ_C3 * std::pow(2.f, pitch);
     }
     void update_phase(float delta) {
         phase += freq * delta;
