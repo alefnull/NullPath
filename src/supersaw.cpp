@@ -107,15 +107,29 @@ struct Supersaw : Module {
 		float fine1 = params[FINE_1_PARAM].getValue();
 		float fine2 = params[FINE_2_PARAM].getValue();
 		float fine3 = params[FINE_3_PARAM].getValue();
-		float noise_dur = params[NOISE_DUR_PARAM].getValue();
-		float noise_dur_cv = inputs[NOISE_DUR_CV_INPUT].getVoltage() / 10000.f;
-		noise_dur = clamp(noise_dur + noise_dur_cv, 0.f, 0.001f);
+
+		float noise_dur = 0.f;
+		// if cv input is connected, use param as attenuator
+		if (inputs[NOISE_DUR_CV_INPUT].isConnected()) {
+			noise_dur = params[NOISE_DUR_PARAM].getValue() * inputs[NOISE_DUR_CV_INPUT].getVoltage() / 10.f;
+		}
+		else {
+			noise_dur = params[NOISE_DUR_PARAM].getValue();
+		}
+
 		float pulse_width = params[PULSE_WIDTH_PARAM].getValue();
 		float pulse_width_cv = inputs[PULSE_WIDTH_CV_INPUT].getVoltage() / 10.f;
 		pulse_width = clamp(pulse_width + pulse_width_cv, 0.1f, 0.9f);
-		float noise_mix = params[NOISE_MIX_PARAM].getValue();
-		float noise_mix_cv = inputs[NOISE_MIX_CV_INPUT].getVoltage() / 10.f;
-		noise_mix = clamp(noise_mix + noise_mix_cv, 0.f, 0.5f);
+
+		float noise_mix = 0.f;
+		// if cv input is connected, use param as attenuator
+		if (inputs[NOISE_MIX_CV_INPUT].isConnected()) {
+			noise_mix = params[NOISE_MIX_PARAM].getValue() * inputs[NOISE_MIX_CV_INPUT].getVoltage() / 10.f;
+		}
+		else {
+			noise_mix = params[NOISE_MIX_PARAM].getValue();
+		}
+
 		float attack_time = params[ATTACK_PARAM].getValue();
 		float decay_time = params[DECAY_PARAM].getValue();
 		float sustain_level = params[SUSTAIN_PARAM].getValue();
