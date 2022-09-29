@@ -58,6 +58,7 @@ struct Supersaw : Module {
 	float last_noise = 0.f;
 	float noise_time = 0.f;
 	bool last_gate = false;
+	bool linear = false;
 
 	Supersaw() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
@@ -142,12 +143,20 @@ struct Supersaw : Module {
 		float env_pw_att = params[ENV_PW_ATT_PARAM].getValue();
 
 		envelope.set_attack(attack_time);
-		envelope.set_attack_shape(-0.5);
 		envelope.set_decay(decay_time);
-		envelope.set_decay_shape(-0.5);
 		envelope.set_sustain(sustain_level);
 		envelope.set_release(release_time);
-		envelope.set_release_shape(-0.5);
+
+		if (!linear) {
+			envelope.set_attack_shape(-0.5f);
+			envelope.set_decay_shape(-0.5f);
+			envelope.set_release_shape(-0.5f);
+		}
+		else {
+			envelope.set_attack_shape(0.f);
+			envelope.set_decay_shape(0.f);
+			envelope.set_release_shape(0.f);
+		}
 
 		if (env_to_dur) {
 			noise_dur += envelope.env * env_dur_att * 0.001;
@@ -277,6 +286,18 @@ struct SupersawWidget : ModuleWidget {
 		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(60.967, 73.399)), module, Supersaw::WAVE_OUTPUT + 2));
 		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(45.008, 113.949)), module, Supersaw::SIGNAL_OUTPUT));
 		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(80.331, 110.899)), module, Supersaw::ENV_OUTPUT));
+	}
+
+	void appendContextMenu(Menu *menu) override {
+		Supersaw *module = dynamic_cast<Supersaw*>(this->module);
+		assert(module);
+
+		menu->addChild(new MenuSeparator());
+
+		// add context menu item to toggle linear variable
+		menu->addChild(createMenuItem("Linear envelope", CHECKMARK(module->linear), [module]() {
+			module->linear = !module->linear;
+		}));
 	}
 };
 
