@@ -35,7 +35,6 @@ struct Oscillator {
 
     float pulse(float freq, float sample_time, float width) {
         update_phase(sample_time);
-        DEBUG("phase: %f", phase);
         return phase < width ? 1.f : -1.f;
     }
 
