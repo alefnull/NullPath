@@ -83,9 +83,35 @@ struct Funcgen : Module {
 	};
 
 	float range[CHANNEL_COUNT] = {10.f, 10.f, 10.f, 10.f};
+	float last_range[CHANNEL_COUNT] = {10.f, 10.f, 10.f, 10.f};
 	float range_cascade = 10.f;
+	float last_range_cascade = 10.f;
+	float range_ab = 10.f;
+	float last_range_ab = 10.f;
+	float range_bc = 10.f;
+	float last_range_bc = 10.f;
+	float range_cd = 10.f;
+	float last_range_cd = 10.f;
+	float range_da = 10.f;
+	float last_range_da = 10.f;
+	float range_all = 10.f;
+	float last_range_all = 10.f;
+	bool range_override = false;
+	bool not_range_override = true;
 	bool unipolar[CHANNEL_COUNT] = {true, true, true, true};
+	bool last_unipolar[CHANNEL_COUNT] = {true, true, true, true};
 	bool unipolar_cascade = true;
+	bool last_unipolar_cascade = true;
+	bool unipolar_ab = true;
+	bool last_unipolar_ab = true;
+	bool unipolar_bc = true;
+	bool last_unipolar_bc = true;
+	bool unipolar_cd = true;
+	bool last_unipolar_cd = true;
+	bool unipolar_da = true;
+	bool last_unipolar_da = true;
+	bool unipolar_all = true;
+	bool last_unipolar_all = true;
 
 	int current_index = 0;
 	int shuffle_list[CHANNEL_COUNT] = {0,1,2,3};
@@ -104,6 +130,8 @@ struct Funcgen : Module {
 	dsp::BooleanTrigger cm_eoc_trigger;
 	dsp::BooleanTrigger loop_trigger[CHANNEL_COUNT];
 	dsp::BooleanTrigger cm_loop_trigger;
+	dsp::BooleanTrigger range_override_trigger;
+	dsp::BooleanTrigger not_range_override_trigger;
 	dsp::PulseGenerator eoc_pulse[CHANNEL_COUNT];
 
 
@@ -202,6 +230,52 @@ struct Funcgen : Module {
 
 		float cascade_speed = convert_param_to_multiplier(params[CASCADE_SPEED_PARAM].getValue());
 
+		if (range_override_trigger.process(range_override)) {
+			for (int i = 0; i < CHANNEL_COUNT; i++) {
+				last_range[i] = range[i];
+				range[i] = range_all;
+				last_unipolar[i] = unipolar[i];
+				unipolar[i] = unipolar_all;
+			}
+			last_range_cascade = range_cascade;
+			range_cascade = range_all;
+			last_unipolar_cascade = unipolar_cascade;
+			unipolar_cascade = unipolar_all;
+			last_range_ab = range_ab;
+			range_ab = range_all;
+			last_unipolar_ab = unipolar_ab;
+			unipolar_ab = unipolar_all;
+			last_range_bc = range_bc;
+			range_bc = range_all;
+			last_unipolar_bc = unipolar_bc;
+			unipolar_bc = unipolar_all;
+			last_range_cd = range_cd;
+			range_cd = range_all;
+			last_unipolar_cd = unipolar_cd;
+			unipolar_cd = unipolar_all;
+			last_range_da = range_da;
+			range_da = range_all;
+			last_unipolar_da = unipolar_da;
+			unipolar_da = unipolar_all;
+		}
+
+		if (not_range_override_trigger.process(not_range_override)) {
+			for (int i = 0; i < CHANNEL_COUNT; i++) {
+				range[i] = last_range[i];
+				unipolar[i] = last_unipolar[i];
+			}
+			range_cascade = last_range_cascade;
+			unipolar_cascade = last_unipolar_cascade;
+			range_ab = last_range_ab;
+			unipolar_ab = last_unipolar_ab;
+			range_bc = last_range_bc;
+			unipolar_bc = last_unipolar_bc;
+			range_cd = last_range_cd;
+			unipolar_cd = last_unipolar_cd;
+			range_da = last_range_da;
+			unipolar_da = last_unipolar_da;
+		}
+
 		for (int i = 0; i < CHANNEL_COUNT; i++) {
 			float attack_time = params[RISE_PARAM + i].getValue();
 			float decay_time = params[FALL_PARAM + i].getValue();
@@ -298,33 +372,58 @@ struct Funcgen : Module {
 		float b = envelope[1].env;
 		float c = envelope[2].env;
 		float d = envelope[3].env;
-		outputs[MIN_OUTPUT].setVoltage(std::min(a * 10, std::min(b * 10, std::min(c * 10, d * 10))));
-		outputs[MAX_OUTPUT].setVoltage(std::max(a * 10, std::max(b * 10, std::max(c * 10, d * 10))));
-		outputs[AVG_OUTPUT].setVoltage((a * 10 + b * 10 + c * 10 + d * 10) / CHANNEL_COUNT);
+		outputs[MIN_OUTPUT].setVoltage(std::min(a * range[0], std::min(b * range[1], std::min(c * range[2], d * range[3]))));
+		outputs[MAX_OUTPUT].setVoltage(std::max(a * range[0], std::max(b * range[1], std::max(c * range[2], d * range[3]))));
+		outputs[AVG_OUTPUT].setVoltage((a * range[0] + b * range[1] + c * range[2] + d * range[3]) / CHANNEL_COUNT);
 		outputs[AGTB_OUTPUT].setVoltage(a > b ? 10.f : 0.f);
-		outputs[AGTC_OUTPUT].setVoltage(a > c ? 10.f : 0.f);
 		outputs[AGTD_OUTPUT].setVoltage(a > d ? 10.f : 0.f);
 		outputs[BGTA_OUTPUT].setVoltage(b > a ? 10.f : 0.f);
 		outputs[BGTC_OUTPUT].setVoltage(b > c ? 10.f : 0.f);
-		outputs[BGTD_OUTPUT].setVoltage(b > d ? 10.f : 0.f);
-		outputs[CGTA_OUTPUT].setVoltage(c > a ? 10.f : 0.f);
 		outputs[CGTB_OUTPUT].setVoltage(c > b ? 10.f : 0.f);
 		outputs[CGTD_OUTPUT].setVoltage(c > d ? 10.f : 0.f);
 		outputs[DGTA_OUTPUT].setVoltage(d > a ? 10.f : 0.f);
-		outputs[DGTB_OUTPUT].setVoltage(d > b ? 10.f : 0.f);
 		outputs[DGTC_OUTPUT].setVoltage(d > c ? 10.f : 0.f);
-		outputs[ABSAB_OUTPUT].setVoltage(10- std::abs(a * 10 - b * 10));
-		outputs[ABSAC_OUTPUT].setVoltage(10 - std::abs(a * 10 - c * 10));
-		outputs[ABSAD_OUTPUT].setVoltage(10 - std::abs(a * 10 - d * 10));
-		outputs[ABSBC_OUTPUT].setVoltage(10 - std::abs(b * 10 - c * 10));
-		outputs[ABSBD_OUTPUT].setVoltage(10 - std::abs(b * 10 - d * 10));
-		outputs[ABSCD_OUTPUT].setVoltage(10 - std::abs(c * 10 - d * 10));
-		outputs[ABSBA_OUTPUT].setVoltage(std::abs(a * 10 - b * 10));
-		outputs[ABSCA_OUTPUT].setVoltage(std::abs(a * 10 - c * 10));
-		outputs[ABSCB_OUTPUT].setVoltage(std::abs(b * 10 - c * 10));
-		outputs[ABSDA_OUTPUT].setVoltage(std::abs(a * 10 - d * 10));
-		outputs[ABSDB_OUTPUT].setVoltage(std::abs(b * 10 - d * 10));
-		outputs[ABSDC_OUTPUT].setVoltage(std::abs(c * 10 - d * 10));
+
+		if (unipolar_ab) {
+			// max is range_ab, min is 0
+			outputs[ABSAB_OUTPUT].setVoltage(range_ab - std::abs(a * range_ab - b * range_ab));
+			outputs[ABSBA_OUTPUT].setVoltage(std::abs(a * range_ab - b * range_ab));
+		}
+		else {
+			// max is range_ab, min is -range_ab
+			outputs[ABSAB_OUTPUT].setVoltage((1 - 2 * std::abs(a - b)) * range_ab);
+			outputs[ABSBA_OUTPUT].setVoltage((std::abs(a - b) * 2 - 1) * range_ab);
+		}
+		if (unipolar_bc) {
+			// max is range_bc, min is 0
+			outputs[ABSBC_OUTPUT].setVoltage(range_bc - std::abs(b * range_bc - c * range_bc));
+			outputs[ABSCB_OUTPUT].setVoltage(std::abs(b * range_bc - c * range_bc));
+		}
+		else {
+			// max is range_bc, min is -range_bc
+			outputs[ABSBC_OUTPUT].setVoltage((1 - 2 * std::abs(b - c)) * range_bc);
+			outputs[ABSCB_OUTPUT].setVoltage((std::abs(b - c) * 2 - 1) * range_bc);
+		}
+		if (unipolar_cd) {
+			// max is range_cd, min is 0
+			outputs[ABSCD_OUTPUT].setVoltage(range_cd - std::abs(c * range_cd - d * range_cd));
+			outputs[ABSDC_OUTPUT].setVoltage(std::abs(c * range_cd - d * range_cd));
+		}
+		else {
+			// max is range_cd, min is -range_cd
+			outputs[ABSCD_OUTPUT].setVoltage((1 - 2 * std::abs(c - d)) * range_cd);
+			outputs[ABSDC_OUTPUT].setVoltage((std::abs(c - d) * 2 - 1) * range_cd);
+		}
+		if (unipolar_da) {
+			// max is range_da, min is 0
+			outputs[ABSAD_OUTPUT].setVoltage(range_da - std::abs(d * range_da - a * range_da));
+			outputs[ABSDA_OUTPUT].setVoltage(std::abs(d * range_da - a * range_da));
+		}
+		else {
+			// max is range_da, min is -range_da
+			outputs[ABSAD_OUTPUT].setVoltage((1 - 2 * std::abs(d - a)) * range_da);
+			outputs[ABSDA_OUTPUT].setVoltage((std::abs(d - a) * 2 - 1) * range_da);
+		}
 
 		// find the two channels with the highest amplitude
 		float max_a = 0.f;
@@ -683,6 +782,20 @@ struct FuncgenWidget : ModuleWidget {
 		Funcgen *module = dynamic_cast<Funcgen*>(this->module);
 		assert(module);
 		menu->addChild(new MenuSeparator());
+		menu->addChild(createSubmenuItem("All Ranges", "", [=](Menu* menu) {
+			Menu* rangeMenu = new Menu();
+			rangeMenu->addChild(createMenuItem("Override individual range settings", CHECKMARK(module->range_override), [module]() { module->range_override = !module->range_override; module->not_range_override = !module->range_override; }));
+			rangeMenu->addChild(new MenuSeparator());
+			rangeMenu->addChild(createMenuItem("+/- 1v", CHECKMARK(module->range_all == 1), [module]() { module->range_all = 1; }));
+			rangeMenu->addChild(createMenuItem("+/- 2v", CHECKMARK(module->range_all == 2), [module]() { module->range_all = 2; }));
+			rangeMenu->addChild(createMenuItem("+/- 3v", CHECKMARK(module->range_all == 3), [module]() { module->range_all = 3; }));
+			rangeMenu->addChild(createMenuItem("+/- 5v", CHECKMARK(module->range_all == 5), [module]() { module->range_all = 5; }));
+			rangeMenu->addChild(createMenuItem("+/- 10v", CHECKMARK(module->range_all == 10), [module]() { module->range_all = 10; }));
+			rangeMenu->addChild(new MenuSeparator());
+			rangeMenu->addChild(createMenuItem("Unipolar", CHECKMARK(module->unipolar_all), [module]() { module->unipolar_all = !module->unipolar_all; }));
+			menu->addChild(rangeMenu);
+		}));
+		menu->addChild(new MenuSeparator());
 		menu->addChild(createSubmenuItem("Channel A Range", "", [=](Menu* menu) {
 			Menu* rangeMenu = new Menu();
 			rangeMenu->addChild(createMenuItem("+/- 1v", CHECKMARK(module->range[0] == 1), [module]() { module->range[0] = 1; }));
@@ -692,6 +805,17 @@ struct FuncgenWidget : ModuleWidget {
 			rangeMenu->addChild(createMenuItem("+/- 10v", CHECKMARK(module->range[0] == 10), [module]() { module->range[0] = 10; }));
 			rangeMenu->addChild(new MenuSeparator());
 			rangeMenu->addChild(createMenuItem("Unipolar", CHECKMARK(module->unipolar[0]), [module]() { module->unipolar[0] = !module->unipolar[0]; }));
+			menu->addChild(rangeMenu);
+		}));
+		menu->addChild(createSubmenuItem("A <-> B Range", "", [=](Menu* menu) {
+			Menu* rangeMenu = new Menu();
+			rangeMenu->addChild(createMenuItem("+/- 1v", CHECKMARK(module->range_ab == 1), [module]() { module->range_ab = 1; }));
+			rangeMenu->addChild(createMenuItem("+/- 2v", CHECKMARK(module->range_ab == 2), [module]() { module->range_ab = 2; }));
+			rangeMenu->addChild(createMenuItem("+/- 3v", CHECKMARK(module->range_ab == 3), [module]() { module->range_ab = 3; }));
+			rangeMenu->addChild(createMenuItem("+/- 5v", CHECKMARK(module->range_ab == 5), [module]() { module->range_ab = 5; }));
+			rangeMenu->addChild(createMenuItem("+/- 10v", CHECKMARK(module->range_ab == 10), [module]() { module->range_ab = 10; }));
+			rangeMenu->addChild(new MenuSeparator());
+			rangeMenu->addChild(createMenuItem("Unipolar", CHECKMARK(module->unipolar_ab), [module]() { module->unipolar_ab = !module->unipolar_ab; }));
 			menu->addChild(rangeMenu);
 		}));
 		menu->addChild(createSubmenuItem("Channel B Range", "", [=](Menu* menu) {
@@ -705,6 +829,17 @@ struct FuncgenWidget : ModuleWidget {
 			rangeMenu->addChild(createMenuItem("Unipolar", CHECKMARK(module->unipolar[1]), [module]() { module->unipolar[1] = !module->unipolar[1]; }));
 			menu->addChild(rangeMenu);
 		}));
+		menu->addChild(createSubmenuItem("B <-> C Range", "", [=](Menu* menu) {
+			Menu* rangeMenu = new Menu();
+			rangeMenu->addChild(createMenuItem("+/- 1v", CHECKMARK(module->range_bc == 1), [module]() { module->range_bc = 1; }));
+			rangeMenu->addChild(createMenuItem("+/- 2v", CHECKMARK(module->range_bc == 2), [module]() { module->range_bc = 2; }));
+			rangeMenu->addChild(createMenuItem("+/- 3v", CHECKMARK(module->range_bc == 3), [module]() { module->range_bc = 3; }));
+			rangeMenu->addChild(createMenuItem("+/- 5v", CHECKMARK(module->range_bc == 5), [module]() { module->range_bc = 5; }));
+			rangeMenu->addChild(createMenuItem("+/- 10v", CHECKMARK(module->range_bc == 10), [module]() { module->range_bc = 10; }));
+			rangeMenu->addChild(new MenuSeparator());
+			rangeMenu->addChild(createMenuItem("Unipolar", CHECKMARK(module->unipolar_bc), [module]() { module->unipolar_bc = !module->unipolar_bc; }));
+			menu->addChild(rangeMenu);
+		}));
 		menu->addChild(createSubmenuItem("Channel C Range", "", [=](Menu* menu) {
 			Menu* rangeMenu = new Menu();
 			rangeMenu->addChild(createMenuItem("+/- 1v", CHECKMARK(module->range[2] == 1), [module]() { module->range[2] = 1; }));
@@ -716,6 +851,17 @@ struct FuncgenWidget : ModuleWidget {
 			rangeMenu->addChild(createMenuItem("Unipolar", CHECKMARK(module->unipolar[2]), [module]() { module->unipolar[2] = !module->unipolar[2]; }));
 			menu->addChild(rangeMenu);
 		}));
+		menu->addChild(createSubmenuItem("C <-> D Range", "", [=](Menu* menu) {
+			Menu* rangeMenu = new Menu();
+			rangeMenu->addChild(createMenuItem("+/- 1v", CHECKMARK(module->range_cd == 1), [module]() { module->range_cd = 1; }));
+			rangeMenu->addChild(createMenuItem("+/- 2v", CHECKMARK(module->range_cd == 2), [module]() { module->range_cd = 2; }));
+			rangeMenu->addChild(createMenuItem("+/- 3v", CHECKMARK(module->range_cd == 3), [module]() { module->range_cd = 3; }));
+			rangeMenu->addChild(createMenuItem("+/- 5v", CHECKMARK(module->range_cd == 5), [module]() { module->range_cd = 5; }));
+			rangeMenu->addChild(createMenuItem("+/- 10v", CHECKMARK(module->range_cd == 10), [module]() { module->range_cd = 10; }));
+			rangeMenu->addChild(new MenuSeparator());
+			rangeMenu->addChild(createMenuItem("Unipolar", CHECKMARK(module->unipolar_cd), [module]() { module->unipolar_cd = !module->unipolar_cd; }));
+			menu->addChild(rangeMenu);
+		}));
 		menu->addChild(createSubmenuItem("Channel D Range", "", [=](Menu* menu) {
 			Menu* rangeMenu = new Menu();
 			rangeMenu->addChild(createMenuItem("+/- 1v", CHECKMARK(module->range[3] == 1), [module]() { module->range[3] = 1; }));
@@ -725,6 +871,17 @@ struct FuncgenWidget : ModuleWidget {
 			rangeMenu->addChild(createMenuItem("+/- 10v", CHECKMARK(module->range[3] == 10), [module]() { module->range[3] = 10; }));
 			rangeMenu->addChild(new MenuSeparator());
 			rangeMenu->addChild(createMenuItem("Unipolar", CHECKMARK(module->unipolar[3]), [module]() { module->unipolar[3] = !module->unipolar[3]; }));
+			menu->addChild(rangeMenu);
+		}));
+		menu->addChild(createSubmenuItem("D <-> A Range", "", [=](Menu* menu) {
+			Menu* rangeMenu = new Menu();
+			rangeMenu->addChild(createMenuItem("+/- 1v", CHECKMARK(module->range_da == 1), [module]() { module->range_da = 1; }));
+			rangeMenu->addChild(createMenuItem("+/- 2v", CHECKMARK(module->range_da == 2), [module]() { module->range_da = 2; }));
+			rangeMenu->addChild(createMenuItem("+/- 3v", CHECKMARK(module->range_da == 3), [module]() { module->range_da = 3; }));
+			rangeMenu->addChild(createMenuItem("+/- 5v", CHECKMARK(module->range_da == 5), [module]() { module->range_da = 5; }));
+			rangeMenu->addChild(createMenuItem("+/- 10v", CHECKMARK(module->range_da == 10), [module]() { module->range_da = 10; }));
+			rangeMenu->addChild(new MenuSeparator());
+			rangeMenu->addChild(createMenuItem("Unipolar", CHECKMARK(module->unipolar_da), [module]() { module->unipolar_da = !module->unipolar_da; }));
 			menu->addChild(rangeMenu);
 		}));
 		menu->addChild(createSubmenuItem("Cascade Range", "", [=](Menu* menu) {
