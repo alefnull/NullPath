@@ -23,7 +23,7 @@ MODES:
 
 ![Cascade](cascade.png)
 
-**Cascade** is a 4 channel envelope/function generator, capable of generating exponential, linear, and logarithmic curves. Each channel has a "Rising" and "Falling" gate output, CV control over the rise and fall times, a speed switch, a loop toggle, and a trigger input. In between the four channels around the outside of the module, there are sections with various outputs relating to the two channels each section connects. The "Trig All" input and button will start all 4 channels and the Cascade section from the beginning of their cycles. The center "Cascade" section has 3 modes, which will determine the section's output.
+**Cascade** is a 4 channel envelope/function generator, capable of generating exponential, linear, and logarithmic curves. The 4 channels rotate clockwise from the top left - A, B, C, D. Each channel has a "Rising" and "Falling" gate output, CV control over the rise and fall times, a speed switch, a loop toggle, and a trigger input. In between the four channels around the outside of the module, there are sections with various outputs relating to the two channels each section connects. The "Trig All" input and button will start all 4 channels and the Cascade section from the beginning of their cycles. The center "Cascade" section has 3 modes, which will determine the section's output. Finally, there are individual output range settings for all channels and their connected sections, as well as the "Cascade" section. There is also an "All Ranges" setting, with a toggle to override the individual range choices. When this is toggled off again, the most recent individual range settings will be restored.
 
 MODES:
 
