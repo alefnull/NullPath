@@ -225,6 +225,7 @@ struct Funcgen : Module {
 
 	void process(const ProcessArgs& args) override {
 		float st = args.sampleTime;
+		not_range_override = !range_override;
 
 		mode = Funcgen::Mode(params[MODE_PARAM].getValue());
 
@@ -564,6 +565,17 @@ struct Funcgen : Module {
 		json_object_set_new(rootJ, "unipolar_d", json_boolean(unipolar[3]));
 		json_object_set_new(rootJ, "range_cascade", json_integer(range_cascade));
 		json_object_set_new(rootJ, "unipolar_cascade", json_boolean(unipolar_cascade));
+		json_object_set_new(rootJ, "range_ab", json_integer(range_ab));
+		json_object_set_new(rootJ, "unipolar_ab", json_boolean(unipolar_ab));
+		json_object_set_new(rootJ, "range_bc", json_integer(range_bc));
+		json_object_set_new(rootJ, "unipolar_bc", json_boolean(unipolar_bc));
+		json_object_set_new(rootJ, "range_cd", json_integer(range_cd));
+		json_object_set_new(rootJ, "unipolar_cd", json_boolean(unipolar_cd));
+		json_object_set_new(rootJ, "range_da", json_integer(range_da));
+		json_object_set_new(rootJ, "unipolar_da", json_boolean(unipolar_da));
+		json_object_set_new(rootJ, "range_all", json_integer(range_all));
+		json_object_set_new(rootJ, "unipolar_all", json_boolean(unipolar_all));
+		json_object_set_new(rootJ, "range_override", json_boolean(range_override));
 		return rootJ;
 	}
 
@@ -598,6 +610,39 @@ struct Funcgen : Module {
 		json_t *unipolar_cascadeJ = json_object_get(rootJ, "unipolar_cascade");
 		if (unipolar_cascadeJ)
 			unipolar_cascade = json_boolean_value(unipolar_cascadeJ);
+		json_t *range_abJ = json_object_get(rootJ, "range_ab");
+		if (range_abJ)
+			range_ab = json_integer_value(range_abJ);
+		json_t *unipolar_abJ = json_object_get(rootJ, "unipolar_ab");
+		if (unipolar_abJ)
+			unipolar_ab = json_boolean_value(unipolar_abJ);
+		json_t *range_bcJ = json_object_get(rootJ, "range_bc");
+		if (range_bcJ)
+			range_bc = json_integer_value(range_bcJ);
+		json_t *unipolar_bcJ = json_object_get(rootJ, "unipolar_bc");
+		if (unipolar_bcJ)
+			unipolar_bc = json_boolean_value(unipolar_bcJ);
+		json_t *range_cdJ = json_object_get(rootJ, "range_cd");
+		if (range_cdJ)
+			range_cd = json_integer_value(range_cdJ);
+		json_t *unipolar_cdJ = json_object_get(rootJ, "unipolar_cd");
+		if (unipolar_cdJ)
+			unipolar_cd = json_boolean_value(unipolar_cdJ);
+		json_t *range_daJ = json_object_get(rootJ, "range_da");
+		if (range_daJ)
+			range_da = json_integer_value(range_daJ);
+		json_t *unipolar_daJ = json_object_get(rootJ, "unipolar_da");
+		if (unipolar_daJ)
+			unipolar_da = json_boolean_value(unipolar_daJ);
+		json_t *range_allJ = json_object_get(rootJ, "range_all");
+		if (range_allJ)
+			range_all = json_integer_value(range_allJ);
+		json_t *unipolar_allJ = json_object_get(rootJ, "unipolar_all");
+		if (unipolar_allJ)
+			unipolar_all = json_boolean_value(unipolar_allJ);
+		json_t *range_overrideJ = json_object_get(rootJ, "range_override");
+		if (range_overrideJ)
+			range_override = json_boolean_value(range_overrideJ);
 
 		for (int i = 0; i < CHANNEL_COUNT; i++) {
 			if (params[LOOP_PARAM + i].getValue() > 0.5f) {
@@ -784,7 +829,7 @@ struct FuncgenWidget : ModuleWidget {
 		menu->addChild(new MenuSeparator());
 		menu->addChild(createSubmenuItem("All Ranges", "", [=](Menu* menu) {
 			Menu* rangeMenu = new Menu();
-			rangeMenu->addChild(createMenuItem("Override individual range settings", CHECKMARK(module->range_override), [module]() { module->range_override = !module->range_override; module->not_range_override = !module->range_override; }));
+			rangeMenu->addChild(createMenuItem("Override individual range settings", CHECKMARK(module->range_override), [module]() { module->range_override = !module->range_override; }));
 			rangeMenu->addChild(new MenuSeparator());
 			rangeMenu->addChild(createMenuItem("+/- 1v", CHECKMARK(module->range_all == 1), [module]() { module->range_all = 1; }));
 			rangeMenu->addChild(createMenuItem("+/- 2v", CHECKMARK(module->range_all == 2), [module]() { module->range_all = 2; }));
