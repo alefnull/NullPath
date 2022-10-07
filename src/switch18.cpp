@@ -148,6 +148,8 @@ struct Switch18 : Module, SwitchBase {
 		int channels = inputs[SIGNAL_INPUT].getChannels();
 		mode = (int)params[MODE_PARAM].getValue();
 
+		float fade_factor = args.sampleTime * (1.f / fade_duration);
+
 		invert_trigger.process(inputs[INVERT_TRIGGER_INPUT].getVoltage());
 		invert_button.process(params[INVERT_WEIGHTS_PARAM].getValue() > 0.f);
 		invert_weights = invert_trigger.isHigh() != invert_button.state;
@@ -170,7 +172,6 @@ struct Switch18 : Module, SwitchBase {
 			for (int i = 0; i < STEP_COUNT; i++) {
 				outputs[STEP_1_OUTPUT + i].setChannels(channels);
 				if (crossfade) {
-					float fade_factor = args.sampleTime * (1.f / fade_duration);
 					if (i == current_step) {
 						volumes[i] = clamp(volumes[i] + fade_factor, 0.f, 1.f);
 						last_value_volume[i] = clamp(last_value_volume[i] - fade_factor, 0.f, 1.f);
