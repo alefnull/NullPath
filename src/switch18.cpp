@@ -170,9 +170,10 @@ struct Switch18 : Module, SwitchBase {
 			for (int i = 0; i < STEP_COUNT; i++) {
 				outputs[STEP_1_OUTPUT + i].setChannels(channels);
 				if (crossfade) {
+					float fade_factor = args.sampleTime * (1.f / fade_duration);
 					if (i == current_step) {
-						volumes[i] = clamp(volumes[i] + args.sampleTime * (1.f / fade_duration), 0.f, 1.f);
-						last_value_volume[i] = clamp(last_value_volume[i] - args.sampleTime * (1.f / fade_duration), 0.f, 1.f);
+						volumes[i] = clamp(volumes[i] + fade_factor, 0.f, 1.f);
+						last_value_volume[i] = clamp(last_value_volume[i] - fade_factor, 0.f, 1.f);
 					    if (hold_last_value) {
 							float out = last_value[i][c] * last_value_volume[i] + signal * volumes[i];
 							outputs[STEP_1_OUTPUT + i].setVoltage(out, c);
@@ -183,8 +184,8 @@ struct Switch18 : Module, SwitchBase {
 						}
 					}
 					else {
-						volumes[i] = clamp(volumes[i] - args.sampleTime * (1.f / fade_duration), 0.f, 1.f);
-						last_value_volume[i] = clamp(last_value_volume[i] + args.sampleTime * (1.f / fade_duration), 0.f, 1.f);
+						volumes[i] = clamp(volumes[i] - fade_factor, 0.f, 1.f);
+						last_value_volume[i] = clamp(last_value_volume[i] + fade_factor, 0.f, 1.f);
 						if (hold_last_value) {
 							float out = last_value[i][c] * last_value_volume[i] + signal * volumes[i];
 							outputs[STEP_1_OUTPUT + i].setVoltage(out, c);
