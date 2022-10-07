@@ -63,6 +63,10 @@ struct Switch18 : Module, SwitchBase {
 		LIGHTS_LEN
 	};
 
+	bool hold_last_value = false;
+	float last_value[STEP_COUNT][MAX_POLY] = { 0.f };
+	float last_value_volume[STEP_COUNT] = { 0.f };
+
 	Switch18() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
 		configSwitch(MODE_PARAM, 0.f, 3.f, 0.f, "Mode", { "Select Chance", "Skip Chance", "Repeat Weight", "Fixed Pattern" });
@@ -151,32 +155,57 @@ struct Switch18 : Module, SwitchBase {
 		compute_weights();
 
 		if (trigger.process(inputs[TRIGGER_INPUT].getVoltage())) {
+			for (int i = 0; i < STEP_COUNT; i++) {
+				if (i == current_step) {
+					for (int c = 0; c < channels; c++) {
+						last_value[i][c] = inputs[SIGNAL_INPUT].getVoltage(c);
+					}
+				}
+			}
 			advance_steps();
 		}
 		
 		for (int c = 0; c < channels; c++) {
 			float signal = inputs[SIGNAL_INPUT].getPolyVoltage(c);
-			for (int i = 0; i < OUTPUTS_LEN; i++) {
+			for (int i = 0; i < STEP_COUNT; i++) {
+				outputs[STEP_1_OUTPUT + i].setChannels(channels);
 				if (crossfade) {
 					if (i == current_step) {
 						volumes[i] = clamp(volumes[i] + args.sampleTime * (1.f / fade_duration), 0.f, 1.f);
-						outputs[STEP_1_OUTPUT + i].setChannels(channels);
-						outputs[STEP_1_OUTPUT + i].setVoltage(signal * volumes[i], c);
+						last_value_volume[i] = clamp(last_value_volume[i] - args.sampleTime * (1.f / fade_duration), 0.f, 1.f);
+					    if (hold_last_value) {
+							float out = last_value[i][c] * last_value_volume[i] + signal * volumes[i];
+							outputs[STEP_1_OUTPUT + i].setVoltage(out, c);
+						}
+						else {
+							float out = signal * volumes[i];
+							outputs[STEP_1_OUTPUT + i].setVoltage(out, c);
+						}
 					}
 					else {
 						volumes[i] = clamp(volumes[i] - args.sampleTime * (1.f / fade_duration), 0.f, 1.f);
-						outputs[STEP_1_OUTPUT + i].setChannels(1);
-						outputs[STEP_1_OUTPUT + i].setVoltage(signal * volumes[i]);
+						last_value_volume[i] = clamp(last_value_volume[i] + args.sampleTime * (1.f / fade_duration), 0.f, 1.f);
+						if (hold_last_value) {
+							float out = last_value[i][c] * last_value_volume[i] + signal * volumes[i];
+							outputs[STEP_1_OUTPUT + i].setVoltage(out, c);
+						}
+						else {
+							float out = signal * volumes[i];
+							outputs[STEP_1_OUTPUT + i].setVoltage(out, c);
+						}
 					}
 				}
 				else {
 					if (i == current_step) {
-						outputs[STEP_1_OUTPUT + i].setChannels(channels);
 						outputs[STEP_1_OUTPUT + i].setVoltage(signal, c);
 					}
 					else {
-						outputs[STEP_1_OUTPUT + i].setChannels(1);
-						outputs[STEP_1_OUTPUT +i].setVoltage(0.f);
+						if (hold_last_value) {
+							outputs[STEP_1_OUTPUT + i].setVoltage(last_value[i][c], c);
+						}
+						else {
+							outputs[STEP_1_OUTPUT + i].setVoltage(0.f, c);
+						}
 					}
 				}
 				lights[STEP_1_LIGHT + i].setBrightness(volumes[i]);
@@ -198,6 +227,7 @@ struct Switch18 : Module, SwitchBase {
         json_t* rootJ = json_object();
         json_object_set_new(rootJ, "crossfade", json_boolean(crossfade));
         json_object_set_new(rootJ, "fade_duration", json_real(fade_duration));
+		json_object_set_new(rootJ, "hold_last_value", json_boolean(hold_last_value));
         return rootJ;
     }
 
@@ -208,6 +238,9 @@ struct Switch18 : Module, SwitchBase {
         json_t* fade_durationJ = json_object_get(rootJ, "fade_duration");
         if (fade_durationJ)
             fade_duration = json_real_value(fade_durationJ);
+		json_t* hold_last_valueJ = json_object_get(rootJ, "hold_last_value");
+		if (hold_last_valueJ)
+			hold_last_value = json_boolean_value(hold_last_valueJ);
     }
 };
 
@@ -314,6 +347,7 @@ struct Switch18Widget : ModuleWidget {
 		assert(module);
 
 		menu->addChild(new MenuSeparator());
+		menu->addChild(createMenuItem("Hold last value", CHECKMARK(module->hold_last_value), [module]() { module->hold_last_value = !module->hold_last_value; }));
 		menu->addChild(createMenuItem("Fade while switching", CHECKMARK(module->crossfade), [module]() { module->crossfade = !module->crossfade; }));
 		FadeDurationSlider *fade_slider = new FadeDurationSlider(&(module->fade_duration));
 		fade_slider->box.size.x = 200.f;
