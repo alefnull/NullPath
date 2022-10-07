@@ -147,9 +147,8 @@ struct Switch81 : Module, SwitchBase {
 		invert_button.process(params[INVERT_WEIGHTS_PARAM].getValue() > 0.f);
 		invert_weights = invert_trigger.isHigh() != invert_button.state;
 
-		compute_weights();
-
 		if (trigger.process(inputs[TRIGGER_INPUT].getVoltage())) {
+			compute_weights();
 			advance_steps();
 		}
 

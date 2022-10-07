@@ -154,8 +154,6 @@ struct Switch18 : Module, SwitchBase {
 		invert_button.process(params[INVERT_WEIGHTS_PARAM].getValue() > 0.f);
 		invert_weights = invert_trigger.isHigh() != invert_button.state;
 
-		compute_weights();
-
 		if (trigger.process(inputs[TRIGGER_INPUT].getVoltage())) {
 			for (int i = 0; i < STEP_COUNT; i++) {
 				if (i == current_step) {
@@ -164,11 +162,12 @@ struct Switch18 : Module, SwitchBase {
 					}
 				}
 			}
+			compute_weights();
 			advance_steps();
 		}
 		
 		for (int c = 0; c < channels; c++) {
-			float signal = inputs[SIGNAL_INPUT].getPolyVoltage(c);
+			float signal = inputs[SIGNAL_INPUT].getVoltage(c);
 			for (int i = 0; i < STEP_COUNT; i++) {
 				outputs[STEP_1_OUTPUT + i].setChannels(channels);
 				if (crossfade) {
