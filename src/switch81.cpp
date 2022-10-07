@@ -141,6 +141,7 @@ struct Switch81 : Module, SwitchBase {
 
 	void process(const ProcessArgs& args) override {
 		mode = (int)params[MODE_PARAM].getValue();
+		float fade_factor = args.sampleTime * (1.f / fade_duration);
 
 		invert_trigger.process(inputs[INVERT_TRIGGER_INPUT].getVoltage());
 		invert_button.process(params[INVERT_WEIGHTS_PARAM].getValue() > 0.f);
@@ -163,10 +164,10 @@ struct Switch81 : Module, SwitchBase {
 			if (crossfade) {
 				for (int v = 0; v < STEP_COUNT; v++) {
 					if (v == current_step) {
-						volumes[v] = clamp(volumes[v] + args.sampleTime * (1.f / fade_duration), 0.f, 1.f);
+						volumes[v] = clamp(volumes[v] + fade_factor, 0.f, 1.f);
 					}
 					else {
-						volumes[v] = clamp(volumes[v] - args.sampleTime * (1.f / fade_duration), 0.f, 1.f);
+						volumes[v] = clamp(volumes[v] - fade_factor, 0.f, 1.f);
 					}
 					output += inputs[STEP_1_INPUT + v].getPolyVoltage(c) * volumes[v];
 				}
