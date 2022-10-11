@@ -1,9 +1,6 @@
 #include "plugin.hpp"
 #include "widgets.hpp"
 #include "SwitchBase.hpp"
-#include "profiler.hpp"
-
-using simd::float_4;
 
 
 struct Switch18 : Module, SwitchBase {
@@ -69,8 +66,6 @@ struct Switch18 : Module, SwitchBase {
 	bool hold_last_value = false;
 	float last_value[STEP_COUNT][MAX_POLY] = { 0.f };
 	float last_value_volume[STEP_COUNT] = { 0.f };
-
-	Profiler p;
 
 	Switch18() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
@@ -150,18 +145,15 @@ struct Switch18 : Module, SwitchBase {
 	}
 
 	void process(const ProcessArgs& args) override {
-		// p.profile(0);
 		int channels = inputs[SIGNAL_INPUT].getChannels();
 		mode = (int)params[MODE_PARAM].getValue();
 
-		// p.profile(1);
 		float fade_factor = args.sampleTime * (1.f / fade_duration);
 
 		invert_trigger.process(inputs[INVERT_TRIGGER_INPUT].getVoltage());
 		invert_button.process(params[INVERT_WEIGHTS_PARAM].getValue() > 0.f);
 		invert_weights = invert_trigger.isHigh() != invert_button.state;
 
-		// p.profile(2);
 		if (trigger.process(inputs[TRIGGER_INPUT].getVoltage())) {
 			for (int i = 0; i < STEP_COUNT; i++) {
 				if (i == current_step) {
@@ -174,79 +166,53 @@ struct Switch18 : Module, SwitchBase {
 			advance_steps();
 		}
 		
-		// p.profile(3);
 		for (int c = 0; c < channels; c++) {
-			// float signal = inputs[SIGNAL_INPUT].getVoltage(c);
-			float_4 signal = inputs[SIGNAL_INPUT].getVoltageSimd<float_4>(c);
+			float signal = inputs[SIGNAL_INPUT].getVoltage(c);
 			for (int i = 0; i < STEP_COUNT; i++) {
-				// p.profile(4);
-				float vol = volumes[i];
-				float last_vol = last_value_volume[i];
-				float fade_in = vol + fade_factor;
-				float fade_out = last_vol - fade_factor;
-				// p.profile(5);
 				outputs[STEP_1_OUTPUT + i].setChannels(channels);
-				// p.profile(6);
 				if (crossfade) {
 					if (i == current_step) {
-						// p.profile(7);
-						volumes[i] = clamp(fade_in, 0.f, 1.f);
-						// p.profile(8);
-						last_value_volume[i] = clamp(fade_out, 0.f, 1.f);
-						// p.profile(9);
+						volumes[i] = clamp(volumes[i] + fade_factor, 0.f, 1.f);
+						last_value_volume[i] = clamp(last_value_volume[i] - fade_factor, 0.f, 1.f);
 					    if (hold_last_value) {
-							float_4 out = last_value[i][c] * last_vol + signal * vol;
-							outputs[STEP_1_OUTPUT + i].setVoltageSimd<float_4>(out, c);
+							float out = last_value[i][c] * last_value_volume[i] + signal * volumes[i];
+							outputs[STEP_1_OUTPUT + i].setVoltage(out, c);
 						}
 						else {
-							float_4 out = signal * vol;
-							outputs[STEP_1_OUTPUT + i].setVoltageSimd<float_4>(out, c);
+							float out = signal * volumes[i];
+							outputs[STEP_1_OUTPUT + i].setVoltage(out, c);
 						}
-						// p.profile(10);
 					}
 					else {
-						// p.profile(11);
-						volumes[i] = clamp(vol - fade_factor, 0.f, 1.f);
-						// p.profile(12);
-						last_value_volume[i] = clamp(last_vol + fade_factor, 0.f, 1.f);
-						// p.profile(13);
+						volumes[i] = clamp(volumes[i] - fade_factor, 0.f, 1.f);
+						last_value_volume[i] = clamp(last_value_volume[i] + fade_factor, 0.f, 1.f);
 						if (hold_last_value) {
-							float_4 out = last_value[i][c] * last_vol + signal * vol;
-							outputs[STEP_1_OUTPUT + i].setVoltageSimd<float_4>(out, c);
+							float out = last_value[i][c] * last_value_volume[i] + signal * volumes[i];
+							outputs[STEP_1_OUTPUT + i].setVoltage(out, c);
 						}
 						else {
-							float_4 out = signal * vol;
-							outputs[STEP_1_OUTPUT + i].setVoltageSimd<float_4>(out, c);
+							float out = signal * volumes[i];
+							outputs[STEP_1_OUTPUT + i].setVoltage(out, c);
 						}
-						// p.profile(14);
 					}
 				}
 				else {
 					if (i == current_step) {
-						// p.profile(15);
-						outputs[STEP_1_OUTPUT + i].setVoltageSimd<float_4>(signal, c);
-						// p.profile(16);
+						outputs[STEP_1_OUTPUT + i].setVoltage(signal, c);
 					}
 					else {
-						// p.profile(17);
 						if (hold_last_value) {
 							outputs[STEP_1_OUTPUT + i].setVoltage(last_value[i][c], c);
 						}
 						else {
 							outputs[STEP_1_OUTPUT + i].setVoltage(0.f, c);
 						}
-						// p.profile(18);
 					}
 				}
-				// p.profile(19);
-				if (args.frame % 1000 == 0) {
-					lights[STEP_1_LIGHT + i].setBrightness(volumes[i]);
-				}
-				// p.profile(20);
+				lights[STEP_1_LIGHT + i].setBrightness(volumes[i]);
 			}
 		}
 
-		// p.profile(21);
 		if (reset.process(inputs[RESET_INPUT].getVoltage())) {
 			onReset();
 		}
@@ -256,7 +222,6 @@ struct Switch18 : Module, SwitchBase {
 		if (rand_mode_input.process(inputs[RANDOMIZE_MODE_INPUT].getVoltage()) || rand_mode_button.process(params[RANDOMIZE_MODE_PARAM].getValue() > 0.f)) {
 			randomize_mode();
 		}
-		// p.profile(-1);
 	}
 
     json_t* dataToJson() override {
