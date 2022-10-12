@@ -2,6 +2,8 @@
 #include "widgets.hpp"
 #include "SwitchBase.hpp"
 
+using simd::float_4;
+
 
 struct Switch18 : Module, SwitchBase {
 	enum ParamId {
@@ -146,6 +148,9 @@ struct Switch18 : Module, SwitchBase {
 
 	void process(const ProcessArgs& args) override {
 		int channels = inputs[SIGNAL_INPUT].getChannels();
+		if (channels > MAX_POLY) {
+			channels = MAX_POLY;
+		}
 		mode = (int)params[MODE_PARAM].getValue();
 
 		float fade_factor = args.sampleTime * (1.f / fade_duration);
@@ -165,40 +170,43 @@ struct Switch18 : Module, SwitchBase {
 			compute_weights();
 			advance_steps();
 		}
+
+		for (int i = 0; i < STEP_COUNT; i++) {
+			outputs[STEP_1_OUTPUT + i].setChannels(channels);
+		}
 		
-		for (int c = 0; c < channels; c++) {
-			float signal = inputs[SIGNAL_INPUT].getVoltage(c);
+		for (int c = 0; c < channels; c += 4) {
+			float_4 signal = inputs[SIGNAL_INPUT].getVoltageSimd<float_4>(c);
 			for (int i = 0; i < STEP_COUNT; i++) {
-				outputs[STEP_1_OUTPUT + i].setChannels(channels);
 				if (crossfade) {
 					if (i == current_step) {
 						volumes[i] = clamp(volumes[i] + fade_factor, 0.f, 1.f);
 						last_value_volume[i] = clamp(last_value_volume[i] - fade_factor, 0.f, 1.f);
 					    if (hold_last_value) {
-							float out = last_value[i][c] * last_value_volume[i] + signal * volumes[i];
-							outputs[STEP_1_OUTPUT + i].setVoltage(out, c);
+							float_4 out = last_value[i][c] * last_value_volume[i] + signal * volumes[i];
+							outputs[STEP_1_OUTPUT + i].setVoltageSimd<float_4>(out, c);
 						}
 						else {
-							float out = signal * volumes[i];
-							outputs[STEP_1_OUTPUT + i].setVoltage(out, c);
+							float_4 out = signal * volumes[i];
+							outputs[STEP_1_OUTPUT + i].setVoltageSimd<float_4>(out, c);
 						}
 					}
 					else {
 						volumes[i] = clamp(volumes[i] - fade_factor, 0.f, 1.f);
 						last_value_volume[i] = clamp(last_value_volume[i] + fade_factor, 0.f, 1.f);
 						if (hold_last_value) {
-							float out = last_value[i][c] * last_value_volume[i] + signal * volumes[i];
-							outputs[STEP_1_OUTPUT + i].setVoltage(out, c);
+							float_4 out = last_value[i][c] * last_value_volume[i] + signal * volumes[i];
+							outputs[STEP_1_OUTPUT + i].setVoltageSimd<float_4>(out, c);
 						}
 						else {
-							float out = signal * volumes[i];
-							outputs[STEP_1_OUTPUT + i].setVoltage(out, c);
+							float_4 out = signal * volumes[i];
+							outputs[STEP_1_OUTPUT + i].setVoltageSimd<float_4>(out, c);
 						}
 					}
 				}
 				else {
 					if (i == current_step) {
-						outputs[STEP_1_OUTPUT + i].setVoltage(signal, c);
+						outputs[STEP_1_OUTPUT + i].setVoltageSimd<float_4>(signal, c);
 					}
 					else {
 						if (hold_last_value) {

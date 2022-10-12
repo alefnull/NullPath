@@ -2,6 +2,9 @@
 #include "widgets.hpp"
 #include "SwitchBase.hpp"
 
+using simd::float_4;
+
+
 struct Switch81 : Module, SwitchBase {
 	enum ParamId {
 		MODE_PARAM,
@@ -158,8 +161,8 @@ struct Switch81 : Module, SwitchBase {
 		}
 		outputs[SIGNAL_OUTPUT].setChannels(channels);
 
-		for (int c = 0; c < channels; c++) {
-			float output = 0.f;
+		for (int c = 0; c < channels; c += 4) {
+			float_4 output = 0.f;
 			if (crossfade) {
 				for (int v = 0; v < STEP_COUNT; v++) {
 					if (v == current_step) {
@@ -168,14 +171,14 @@ struct Switch81 : Module, SwitchBase {
 					else {
 						volumes[v] = clamp(volumes[v] - fade_factor, 0.f, 1.f);
 					}
-					output += inputs[STEP_1_INPUT + v].getPolyVoltage(c) * volumes[v];
+					output += inputs[STEP_1_INPUT + v].getPolyVoltageSimd<float_4>(c) * volumes[v];
 				}
 			}
 			else {
-				output = inputs[STEP_1_INPUT + current_step].getPolyVoltage(c);
+				output = inputs[STEP_1_INPUT + current_step].getPolyVoltageSimd<float_4>(c);
 			}
 
-			outputs[SIGNAL_OUTPUT].setVoltage(output, c);
+			outputs[SIGNAL_OUTPUT].setVoltageSimd(output, c);
 		}
 
 		for (int i = 0; i < STEP_COUNT; i++) {
