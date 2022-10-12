@@ -4,6 +4,7 @@
 #include "Envelope.hpp"
 
 #define MAX_POLY 16
+using simd::float_4;
 
 struct Supersaw : Module {
 	enum ParamId {
@@ -175,8 +176,8 @@ struct Supersaw : Module {
 			pulse_width = clamp(pulse_width, pw_min, pw_max);
 		}
 
-		for (int c = 0; c < channels; c++) {
-			float voct = inputs[VOCT_INPUT].isConnected() ? inputs[VOCT_INPUT].getVoltage(c) : 0.f;
+		for (int c = 0; c < channels; c += 4) {
+			float_4 voct = inputs[VOCT_INPUT].isConnected() ? inputs[VOCT_INPUT].getVoltageSimd<float_4>(c) : 0.f;
 
 			if (noise_time > noise_dur) {
 				last_noise = osc4[c].noise();
@@ -185,36 +186,36 @@ struct Supersaw : Module {
 			noise_time += args.sampleTime;
 			float noise = last_noise * noise_mix;
 
-			float out = 0.f;
+			float_4 out = 0.f;
 
 			osc1[c].set_pitch(pitch + octave + fine1 + voct);
 			osc2[c].set_pitch(pitch + octave + fine2 + voct);
 			osc3[c].set_pitch(pitch + octave + fine3 + voct);
 
-			out += osc1[c].saw(osc1[c].freq, args.sampleTime) * 0.33f;
-			outputs[WAVE_OUTPUT].setVoltage(osc1[c].saw(osc1[c].freq, args.sampleTime) * 5.f, c);
+			out += osc1[c].saw(args.sampleTime) * 0.33f;
+			outputs[WAVE_OUTPUT].setVoltageSimd<float_4>(osc1[c].saw(args.sampleTime) * 5.f, c);
 			switch (wave) {
 				case 0:
 				  {
-				 	out += osc2[c].triangle(osc2[c].freq, args.sampleTime, pulse_width) * 0.33f;
-					outputs[WAVE_OUTPUT + 1].setVoltage(osc2[c].triangle(osc2[c].freq, args.sampleTime, pulse_width * 0.5) * 5.f, c);
+				 	out += osc2[c].triangle(args.sampleTime, pulse_width) * 0.33f;
+					outputs[WAVE_OUTPUT + 1].setVoltageSimd<float_4>(osc2[c].triangle(args.sampleTime, pulse_width * 0.5) * 5.f, c);
 					break;
 				  }
 				case 1:
-					out += osc2[c].pulse(osc2[c].freq, args.sampleTime, pulse_width) * 0.33f;
-					outputs[WAVE_OUTPUT + 1].setVoltage(osc2[c].pulse(osc2[c].freq, args.sampleTime, pulse_width) * 5.f, c);
+					out += osc2[c].pulse(args.sampleTime, pulse_width) * 0.33f;
+					outputs[WAVE_OUTPUT + 1].setVoltageSimd<float_4>(osc2[c].pulse(args.sampleTime, pulse_width) * 5.f, c);
 					break;
 			}
-			out += osc3[c].saw(osc3[c].freq, args.sampleTime) * 0.33f;
-			outputs[WAVE_OUTPUT + 2].setVoltage(osc3[c].saw(osc3[c].freq, args.sampleTime) * 5.f, c);
+			out += osc3[c].saw(args.sampleTime) * 0.33f;
+			outputs[WAVE_OUTPUT + 2].setVoltageSimd<float_4>(osc3[c].saw(args.sampleTime) * 5.f, c);
 
 			out += noise;
 
 			if (inputs[GATE_INPUT].isConnected()) {
-				outputs[SIGNAL_OUTPUT].setVoltage(out * 5.f * envelope.env, c);
+				outputs[SIGNAL_OUTPUT].setVoltageSimd<float_4>(out * 5.f * envelope.env, c);
 			}
 			else {
-				outputs[SIGNAL_OUTPUT].setVoltage(out * 5.f, c);
+				outputs[SIGNAL_OUTPUT].setVoltageSimd<float_4>(out * 5.f, c);
 			}
 		}
 
