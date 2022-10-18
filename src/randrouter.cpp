@@ -65,8 +65,9 @@ struct Randrouter : Module {
 					r = random::u32() % 9;
 					attempts++;
 				}
+				// swap the values in output_map[r] and output_map[temp]
 				int temp = output_map[r];
-				output_map[r] = r;
+				output_map[r] = output_map[temp];
 				output_map[temp] = temp;
 			}
 			else if (channels == 2) { // Stereo
