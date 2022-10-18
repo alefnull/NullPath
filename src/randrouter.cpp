@@ -54,214 +54,115 @@ struct Randrouter : Module {
 	int output_map[9] = { 0, 1, 2, 3, 4, 5, 6, 7, 8 };
 	int triplet_swap[3][3] = { { 1, 0, 2 }, { 2, 1, 0 }, { 0, 2, 1 } };
 	int triplet_randomize[5][3] = { { 0, 2, 1 }, { 1, 0, 2 }, { 1, 2, 0 }, { 2, 0, 1 }, { 2, 1, 0 } };
+	bool mono = true;
 
-	void process_basic(int entropy, int channels) {
-		if (entropy == 0) { // Negative
-			if (channels == 1) { // Mono
-				// Unwind
-				int r = random::u32() % 9;
-				int attempts = 0;
-				while (output_map[r] == r && attempts < 10) {
-					r = random::u32() % 9;
-					attempts++;
-				}
-				// swap the values in output_map[r] and output_map[temp]
-				int temp = output_map[r];
-				output_map[r] = output_map[temp];
-				output_map[temp] = temp;
-			}
-			else if (channels == 2) { // Stereo
-				// TODO
-			}
+	int random_index() {
+		if (mono) {
+			return random::u32() % 9;
 		}
-		else if (entropy == 1) { // Low
-			if (channels == 1) { // Mono
-				// Swap
-				int r1 = random::u32() % 9;
-				int r2 = random::u32() % 9;
-				int attempts = 0;
-				while (output_map[r1] == output_map[r2] && attempts < 10) {
-					r1 = random::u32() % 9;
-					r2 = random::u32() % 9;
-					attempts++;
-				}
-				int index_1 = output_map[r1];
-				int index_2 = output_map[r2];
-				output_map[r1] = index_2;
-				output_map[r2] = index_1;
-			}
-			else if (channels == 2) { // Stereo
-				// TODO
-			}
+		else {
+			return (random::u32() % 5) * 2;
 		}
-		else if (entropy == 2) { // High
-			if (channels == 1) { // Mono
-			 	// Randomize
-				for (int i = 0; i < 9; i++) {
-					int r = random::u32() % 9;
-					int temp = output_map[i];
-					output_map[i] = output_map[r];
-					output_map[r] = temp;
-				}
-			}
-			else if (channels == 2) { // Stereo
-				// TODO
+	}
+
+	void process_basic(int entropy) {
+		if (entropy == 0) { // Negative Entropy - Unwind
+			int r;
+			int attempts = 0;
+			do {
+				r = random_index();
+				attempts++;
+			} while (output_map[r] == r && attempts <= 10);
+			// swap the values in output_map[r] and output_map[temp]
+			int temp = output_map[r];
+			output_map[r] = output_map[temp];
+			output_map[temp] = temp;
+		}
+		else if (entropy == 1) { // Low Entropy - Swap
+			int r1, r2;
+			int attempts = 0;
+			do {
+				r1 = random_index();
+				r2 = random_index();
+				attempts++;
+			} while (output_map[r1] == output_map[r2] && attempts <= 10);
+			int index_1 = output_map[r1];
+			int index_2 = output_map[r2];
+			output_map[r1] = index_2;
+			output_map[r2] = index_1;
+		}
+		else if (entropy == 2) { // High Entropy - Randomize
+			for (int i = 0; i < 9; i++) {
+				int r = random_index();
+				int temp = output_map[i];
+				output_map[i] = output_map[r];
+				output_map[r] = temp;
 			}
 		}
 	}
 
-	void process_up(int entropy, int channels) {
-		if (entropy == 0) { // Negative
-			if (channels == 1) { // Mono
-				// Sort Up
-				// TODO
-			}
-			else if (channels == 2) { // Stereo
-				// TODO
-			}
+	void process_up(int entropy) {
+		if (entropy == 0) { // Negative Entropy - Sort Up
+			// TODO
 		}
-		else if (entropy == 1) { // Low
-			if (channels == 1) { // Mono
-				// Shunt Up
-				// TODO
-			}
-			else if (channels == 2) { // Stereo
-				// TODO
-			}
+		else if (entropy == 1) { // Low Entropy - Shunt Up
+			// TODO
 		}
-		else if (entropy == 2) { // High
-			if (channels == 1) { // Mono
-				// Rotate Up
-				// TODO
-			}
-			else if (channels == 2) { // Stereo
-				// TODO
-			}
+		else if (entropy == 2) { // High Entropy - Rotate Up
+			// TODO
 		}
 	}
 
-	void process_down(int entropy, int channels) {
-		if (entropy == 0) { // Negative
-			if (channels == 1) { // Mono
-				// Sort Down
-				// TODO
-			}
-			else if (channels == 2) { // Stereo
-				// TODO
-			}
+	void process_down(int entropy) {
+		if (entropy == 0) { // Negative Entropy - Sort Down
+			// TODO
 		}
-		else if (entropy == 1) { // Low
-			if (channels == 1) { // Mono
-				// Shunt Down
-				// TODO
-			}
-			else if (channels == 2) { // Stereo
-				// TODO
-			}
+		else if (entropy == 1) { // Low Entropy - Shunt Down
+			// TODO
 		}
-		else if (entropy == 2) { // High
-			if (channels == 1) { // Mono
-				// Rotate Down
-				// TODO
-			}
-			else if (channels == 2) { // Stereo
-				// TODO
-			}
+		else if (entropy == 2) { // High Entropy - Rotate Down
+			// TODO
 		}
 	}
 
-	void process_broadcast(int entropy, int channels) {
-		if (entropy == 0) { // Negative
-			if (channels == 1) { // Mono
-				// Split
-				// TODO
-			}
-			else if (channels == 2) { // Stereo
-				// TODO
-			}
+	void process_broadcast(int entropy) {
+		if (entropy == 0) { // Negative Entropy - Split
+			// TODO
 		}
-		else if (entropy == 1) { // Low
-			if (channels == 1) { // Mono
-				// Double
-				// TODO
-			}
-			else if (channels == 2) { // Stereo
-				// TODO
-			}
+		else if (entropy == 1) { // Low Entropy - Double
+			// TODO
 		}
-		else if (entropy == 2) { // High
-			if (channels == 1) { // Mono
-				// Blast
-				// TODO
-			}
-			else if (channels == 2) { // Stereo
-				// TODO
-			}
+		else if (entropy == 2) { // High Entropy - Blast
+			// TODO
 		}
 	}
 
-	void process_pairs(int entropy, int channels) {
-		if (entropy == 0) { // Negative
-			if (channels == 1) { // Mono
-				// Unwind-2
-				// TODO
-			}
-			else if (channels == 2) { // Stereo
-				// TODO
-			}
+	void process_pairs(int entropy) {
+		if (entropy == 0) { // Negative Entropy - Unwind-2
+			// TODO
 		}
-		else if (entropy == 1) { // Low
-			if (channels == 1) { // Mono
-				// Swap-2
-				// TODO
-			}
-			else if (channels == 2) { // Stereo
-				// TODO
-			}
+		else if (entropy == 1) { // Low Entropy - Swap-2
+			// TODO
 		}
-		else if (entropy == 2) { // High
-			if (channels == 1) { // Mono
-				// Randomize-2
-				// TODO
-			}
-			else if (channels == 2) { // Stereo
-				// TODO
-			}
+		else if (entropy == 2) { // High Entropy - Randomize-2
+			// TODO
 		}
 	}
 
-	void process_triplets(int entropy, int channels) {
-		if (entropy == 0) { // Negative
-			if (channels == 1) { // Mono
-				// Unwind-3
-				// TODO
-			}
-			else if (channels == 2) { // Stereo
-				// TODO
-			}
+	void process_triplets(int entropy) {
+		if (entropy == 0) { // Negative Entropy - Unwind-3
+			// TODO
 		}
-		else if (entropy == 1) { // Low
-			if (channels == 1) { // Mono
-				// Swap-3
-				// TODO
-			}
-			else if (channels == 2) { // Stereo
-				// TODO
-			}
+		else if (entropy == 1) { // Low Entropy - Swap-3
+			// TODO
 		}
-		else if (entropy == 2) { // High
-			if (channels == 1) { // Mono
-				// Randomize-3
-				// TODO
-			}
-			else if (channels == 2) { // Stereo
-				// TODO
-			}
+		else if (entropy == 2) { // High Entropy - Randomize-3
+			// TODO
 		}
 	}
 
 	void process(const ProcessArgs& args) override {
-		int channels = params[CHANNELS_PARAM].getValue() + 1;
+		mono = params[CHANNELS_PARAM].getValue() == 0;
 		int mode = params[MODE_PARAM].getValue();
 		int entropy = params[ENTROPY_PARAM].getValue();
 		bool clock = clock_trigger.process(inputs[CLOCK_INPUT].getVoltage());
@@ -276,22 +177,22 @@ struct Randrouter : Module {
 		if (clock) {
 			switch (mode) {
 				case 0: // Basic
-					process_basic(entropy, channels);
+					process_basic(entropy);
 					break;
 				case 1: // Up
-					process_up(entropy, channels);
+					process_up(entropy);
 					break;
 				case 2: // Down
-					process_down(entropy, channels);
+					process_down(entropy);
 					break;
 				case 3: // Broadcast
-					process_broadcast(entropy, channels);
+					process_broadcast(entropy);
 					break;
 				case 4: // Pairs
-					process_pairs(entropy, channels);
+					process_pairs(entropy);
 					break;
 				case 5: // Triplets
-					process_triplets(entropy, channels);
+					process_triplets(entropy);
 					break;
 			}
 		}
