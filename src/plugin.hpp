@@ -13,3 +13,4 @@ extern Model* modelSwitch18;
 extern Model* modelSwitch81;
 extern Model* modelFuncgen;
 extern Model* modelSupersaw;
+extern Model* modelRandrouter;

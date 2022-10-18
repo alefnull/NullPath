@@ -50,6 +50,15 @@
         "Polyphonic",
         "Synth voice"
       ]
+    },
+    {
+      "slug": "randrouter",
+      "name": "Entangle",
+      "description": "9-9 random router",
+      "tags": [
+        "Switch",
+        "Utility"
+      ]
     }
   ]
 }
