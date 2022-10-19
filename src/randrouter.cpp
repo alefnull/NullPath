@@ -197,8 +197,36 @@ struct Randrouter : Module {
 			}
 		}
 
-		for (int i = 0; i < 9; i++) {
-			outputs[SIGNAL_OUTPUT + i].setVoltage(inputs[SIGNAL_INPUT + output_map[i]].getVoltage());
+		if (mono) {
+			for (int i = 0; i < 9; i++) {
+				outputs[SIGNAL_OUTPUT + i].setVoltage(inputs[SIGNAL_INPUT + output_map[i]].getVoltage());
+			}
+		}
+		else {
+			for (int i = 0; i < 9; i += 2) {
+				int index = 2 * std::floor(output_map[i] / 2);
+				bool i_is_8 = i == 8;
+				bool index_is_8 = index == 8;
+				if (i_is_8) {
+					if (index_is_8) {
+						outputs[SIGNAL_OUTPUT + i].setVoltage(inputs[SIGNAL_INPUT + index].getVoltage());
+					}
+					else {
+						float sum = inputs[SIGNAL_INPUT + index + 0].getVoltage() + inputs[SIGNAL_INPUT + index + 1].getVoltage();
+						outputs[SIGNAL_OUTPUT + i].setVoltage(sum);
+					}
+				}
+				else {
+					if (index_is_8) {
+						outputs[SIGNAL_OUTPUT + i + 0].setVoltage(inputs[SIGNAL_INPUT + index].getVoltage());
+						outputs[SIGNAL_OUTPUT + i + 1].setVoltage(inputs[SIGNAL_INPUT + index].getVoltage());
+					}
+					else {
+						outputs[SIGNAL_OUTPUT + i + 0].setVoltage(inputs[SIGNAL_INPUT + index + 0].getVoltage());
+						outputs[SIGNAL_OUTPUT + i + 1].setVoltage(inputs[SIGNAL_INPUT + index + 1].getVoltage());
+					}
+				}
+			}
 		}
 	}
 };
