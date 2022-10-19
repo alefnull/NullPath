@@ -73,7 +73,6 @@ struct Randrouter : Module {
 				r = random_index();
 				attempts++;
 			} while (output_map[r] == r && attempts <= 10);
-			// swap the values in output_map[r] and output_map[temp]
 			int temp = output_map[r];
 			output_map[r] = output_map[temp];
 			output_map[temp] = temp;
@@ -103,25 +102,57 @@ struct Randrouter : Module {
 
 	void process_up(int entropy) {
 		if (entropy == 0) { // Negative Entropy - Sort Up
-			// TODO
+			int index_1 = 0;
+			int index_2 = 0;
+			for (int i = 8; i > 0; i--) {
+				if (output_map[i] < output_map[i - 1]) {
+					index_1 = i;
+					index_2 = i - 1;
+					break;
+				}
+			}
+			int temp = output_map[index_1];
+			output_map[index_1] = output_map[index_2];
+			output_map[index_2] = temp;
 		}
 		else if (entropy == 1) { // Low Entropy - Shunt Up
-			// TODO
+			int max_index = random_index();
+			for (int i = 0; i < max_index; i++) {
+				output_map[i] = (output_map[i] - 1 + 9) % 9;
+			}
 		}
 		else if (entropy == 2) { // High Entropy - Rotate Up
-			// TODO
+			for (int i = 0; i < 8; i++) {
+				output_map[i] = (output_map[i] - 1 + 9) % 9;
+			}
 		}
 	}
 
 	void process_down(int entropy) {
 		if (entropy == 0) { // Negative Entropy - Sort Down
-			// TODO
+			int index_1 = 0;
+			int index_2 = 0;
+			for (int i = 0; i < 8; i++) {
+				if (output_map[i] > output_map[i + 1]) {
+					index_1 = i;
+					index_2 = i + 1;
+					break;
+				}
+			}
+			int temp = output_map[index_1];
+			output_map[index_1] = output_map[index_2];
+			output_map[index_2] = temp;
 		}
 		else if (entropy == 1) { // Low Entropy - Shunt Down
-			// TODO
+			int max_index = random_index();
+			for (int i = 0; i < max_index; i++) {
+				output_map[i] = (output_map[i] + 1) % 9;
+			}
 		}
 		else if (entropy == 2) { // High Entropy - Rotate Down
-			// TODO
+			for (int i = 0; i < 8; i++) {
+				output_map[i] = (output_map[i] + 1) % 9;
+			}
 		}
 	}
 
