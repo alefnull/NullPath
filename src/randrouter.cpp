@@ -127,13 +127,28 @@ struct Randrouter : Module {
 
 	void process_broadcast(int entropy) {
 		if (entropy == 0) { // Negative Entropy - Split
-			// TODO
+			int out_index;
+			int in_index;
+			int attempts = 0;
+			do {
+				out_index = random_index();
+				in_index = output_map[out_index];
+				attempts++;
+			} while (output_map[out_index] != in_index && attempts <= 10);
+			output_map[out_index] = out_index;
 		}
 		else if (entropy == 1) { // Low Entropy - Double
-			// TODO
+			int out_1 = random_index();
+			int out_2 = random_index();
+			int in = random_index();
+			output_map[out_1] = in;
+			output_map[out_2] = in;
 		}
 		else if (entropy == 2) { // High Entropy - Blast
-			// TODO
+			int r = random_index();
+			for (int i = 0; i < 9; i++) {
+				output_map[i] = r;
+			}
 		}
 	}
 
