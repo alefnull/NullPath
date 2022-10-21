@@ -203,6 +203,7 @@ struct Switch18 : Module, SwitchBase {
 							outputs[STEP_1_OUTPUT + i].setVoltageSimd<float_4>(out, c);
 						}
 					}
+					lights[STEP_1_LIGHT + i].setBrightness(volumes[i]);
 				}
 				else {
 					if (i == current_step) {
@@ -216,8 +217,8 @@ struct Switch18 : Module, SwitchBase {
 							outputs[STEP_1_OUTPUT + i].setVoltage(0.f, c);
 						}
 					}
+					lights[STEP_1_LIGHT + i].setBrightness(i == current_step);
 				}
-				lights[STEP_1_LIGHT + i].setBrightness(volumes[i]);
 			}
 		}
 

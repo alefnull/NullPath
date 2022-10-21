@@ -181,9 +181,17 @@ struct Switch81 : Module, SwitchBase {
 			outputs[SIGNAL_OUTPUT].setVoltageSimd(output, c);
 		}
 
-		for (int i = 0; i < STEP_COUNT; i++) {
-			lights[STEP_1_LIGHT + i].setBrightness(volumes[i]);
+		if (crossfade) {
+			for (int i = 0; i < STEP_COUNT; i++) {
+				lights[STEP_1_LIGHT + i].setBrightness(volumes[i]);
+			}
 		}
+		else {
+			for (int i = 0; i < STEP_COUNT; i++) {
+				lights[STEP_1_LIGHT + i].setBrightness(i == current_step ? 1.f : 0.f);
+			}
+		}
+
 
 		if (reset.process(inputs[RESET_INPUT].getVoltage())) {
 			onReset();
