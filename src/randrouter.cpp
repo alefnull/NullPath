@@ -65,6 +65,11 @@ struct Randrouter : Module {
 		}
 	}
 
+	int random_index(const int indices[]) {
+		int len = sizeof(indices) / sizeof(indices[0]);
+		return indices[random::u32() % len];
+	}
+
 	void process_basic(int entropy) {
 		if (entropy == 0) { // Negative Entropy - Unwind
 			int r;
@@ -91,6 +96,9 @@ struct Randrouter : Module {
 			output_map[r2] = index_1;
 		}
 		else if (entropy == 2) { // High Entropy - Randomize
+			for (int i = 0; i < 9; i++) {
+				output_map[i] = i;
+			}
 			for (int i = 0; i < 9; i++) {
 				int r = random_index();
 				int temp = output_map[i];
@@ -185,25 +193,162 @@ struct Randrouter : Module {
 
 	void process_pairs(int entropy) {
 		if (entropy == 0) { // Negative Entropy - Unwind-2
-			// TODO
+			if (mono) {
+				const int choices_mono[5] = { 0, 2, 4, 6, 8 };
+				int index = random_index(choices_mono);
+				output_map[index] = index;
+				if (index + 1 < 9) {
+					output_map[index + 1] = index + 1;
+				}
+			}
+			else {
+				const int choices_stereo[3] = { 0, 4, 8 };
+				int index = random_index(choices_stereo);
+				output_map[index] = index;
+				if (index + 2 < 9) {
+					output_map[index + 2] = index + 2;
+				}
+			}
 		}
 		else if (entropy == 1) { // Low Entropy - Swap-2
-			// TODO
+			if (mono) {
+				const int choices_mono[4] = { 0, 2, 4, 6 };
+				int index = random_index(choices_mono);
+				int prev_input = output_map[index];
+				int prev_input_2 = output_map[index + 1];
+				output_map[index] = prev_input_2;
+				output_map[index + 1] = prev_input;
+			}
+			else {
+				const int choices_stereo[2] = { 0, 4 };
+				int index = random_index(choices_stereo);
+				int prev_input = output_map[index];
+				int prev_input_2 = output_map[index + 2];
+				output_map[index] = prev_input_2;
+				output_map[index + 2] = prev_input;
+			}
 		}
 		else if (entropy == 2) { // High Entropy - Randomize-2
-			// TODO
+			if (mono) {
+				for (int i = 0; i <= 6; i += 2) {
+					bool flipped = random::uniform() < 0.5;
+					if (flipped) {
+						int prev_input = output_map[i];
+						int prev_input_2 = output_map[i + 1];
+						output_map[i] = prev_input_2;
+						output_map[i + 1] = prev_input;
+					}
+				}
+			}
+			else {
+				for (int i = 0; i <= 4; i += 4) {
+					bool flipped = random::uniform() < 0.5;
+					if (flipped) {
+						int prev_input = output_map[i];
+						int prev_input_2 = output_map[i + 2];
+						output_map[i] = prev_input_2;
+						output_map[i + 2] = prev_input;
+					}
+				}
+			}
 		}
 	}
 
 	void process_triplets(int entropy) {
 		if (entropy == 0) { // Negative Entropy - Unwind-3
-			// TODO
+			if (mono) {
+				const int choices_mono[3] = { 0, 3, 6 };
+				int index = random_index(choices_mono);
+				output_map[index] = index;
+				output_map[index + 1] = index + 1;
+				output_map[index + 2] = index + 2;
+			}
+			else {
+				float odds = random::uniform();
+				if (odds < 0.66) {
+					for (int i = 0; i < 6; i++) {
+						output_map[i] = i;
+					}
+				}
+				else {
+					for (int i = 6; i < 9; i++) {
+						output_map[i] = i;
+					}
+				}
+			}
 		}
 		else if (entropy == 1) { // Low Entropy - Swap-3
-			// TODO
+			if (mono) {
+				const int choices_mono[3] = { 0, 3, 6 };
+				int index = random_index(choices_mono);
+				int r = random::uniform() * 3;
+				int* row = triplet_swap[r];
+				int prev_input_0 = output_map[index + row[0]];
+				int prev_input_1 = output_map[index + row[1]];
+				int prev_input_2 = output_map[index + row[2]];
+				output_map[index + 0] = prev_input_0;
+				output_map[index + 1] = prev_input_1;
+				output_map[index + 2] = prev_input_2;
+			}
+			else {
+				float odds = random::uniform();
+				if (odds < 0.66) {
+					int r = random::uniform() * 3;
+					int* row = triplet_swap[r];
+					int prev_input_0 = output_map[2 * row[0]];
+					int prev_input_1 = output_map[2 * row[1]];
+					int prev_input_2 = output_map[2 * row[2]];
+					output_map[0] = prev_input_0;
+					output_map[2] = prev_input_1;
+					output_map[4] = prev_input_2;
+				}
+				else {
+					int r = random::uniform() * 3;
+					int* row = triplet_swap[r];
+					int prev_input_0 = output_map[6 + row[0]];
+					int prev_input_1 = output_map[6 + row[1]];
+					int prev_input_2 = output_map[6 + row[2]];
+					output_map[6] = prev_input_0;
+					output_map[7] = prev_input_1;
+					output_map[8] = prev_input_2;
+				}
+			}
 		}
 		else if (entropy == 2) { // High Entropy - Randomize-3
-			// TODO
+			if (mono) {
+				for (int i = 0; i <= 6; i += 3) {
+					int r = random::uniform() * 6;
+					int* row = triplet_randomize[r];
+					int prev_input_0 = output_map[i + row[0]];
+					int prev_input_1 = output_map[i + row[1]];
+					int prev_input_2 = output_map[i + row[2]];
+					output_map[i + 0] = prev_input_0;
+					output_map[i + 1] = prev_input_1;
+					output_map[i + 2] = prev_input_2;
+				}
+			}
+			else {
+				for (int i = 0; i < 6; i++) {
+					int r = random::uniform() * 6;
+					int* row = triplet_randomize[r];
+					int prev_input_0 = output_map[2 * row[0]];
+					int prev_input_1 = output_map[2 * row[1]];
+					int prev_input_2 = output_map[2 * row[2]];
+					output_map[0] = prev_input_0;
+					output_map[2] = prev_input_1;
+					output_map[4] = prev_input_2;
+				}
+				for (int i = 6; i < 9; i++) {
+					int r = random::uniform() * 6;
+					int* row = triplet_randomize[r];
+					int prev_input_0 = output_map[6 + row[0]];
+					int prev_input_1 = output_map[6 + row[1]];
+					int prev_input_2 = output_map[6 + row[2]];
+					output_map[6] = prev_input_0;
+					output_map[7] = prev_input_1;
+					output_map[8] = prev_input_2;
+				}
+			}
 		}
 	}
 
@@ -258,8 +403,21 @@ struct Randrouter : Module {
 						outputs[SIGNAL_OUTPUT + i].setVoltage(inputs[SIGNAL_INPUT + index].getVoltage());
 					}
 					else {
-						float sum = inputs[SIGNAL_INPUT + index + 0].getVoltage() + inputs[SIGNAL_INPUT + index + 1].getVoltage();
-						outputs[SIGNAL_OUTPUT + i].setVoltage(sum);
+						bool con_1 = inputs[SIGNAL_INPUT + index + 0].isConnected();
+						bool con_2 = inputs[SIGNAL_INPUT + index + 1].isConnected();
+						if (con_1 && con_2) {
+							float avg = (inputs[SIGNAL_INPUT + index + 0].getVoltage() + inputs[SIGNAL_INPUT + index + 1].getVoltage()) / 2;
+							outputs[SIGNAL_OUTPUT + i].setVoltage(avg);
+						}
+						else if (con_1 && !con_2) {
+							outputs[SIGNAL_OUTPUT + i].setVoltage(inputs[SIGNAL_INPUT + index + 0].getVoltage());
+						}
+						else if (!con_1 && con_2) {
+							outputs[SIGNAL_OUTPUT + i].setVoltage(inputs[SIGNAL_INPUT + index + 1].getVoltage());
+						}
+						else {
+							outputs[SIGNAL_OUTPUT + i].setVoltage(0);
+						}
 					}
 				}
 				else {
