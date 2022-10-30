@@ -27,6 +27,21 @@ struct Randrouter : Module {
 		LIGHTS_LEN
 	};
 
+	enum Mode{
+		Basic,
+		Up,
+		Down,
+		Broadcast,
+		Pairs,
+		Triplets,
+	};
+
+	enum Entropy{
+		Negative,
+		Low,
+		High,
+	};
+
 	Randrouter() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
 		configSwitch(CHANNELS_PARAM, 0, 1, 0, "Channels", { "Mono", "Stereo" });
@@ -76,7 +91,7 @@ struct Randrouter : Module {
 	}
 
 	void process_basic(int entropy) {
-		if (entropy == 0) { // Negative Entropy - Unwind
+		if (entropy == Entropy::Negative) { // Negative Entropy - Unwind
 			int r;
 			int attempts = 0;
 			do {
@@ -87,7 +102,7 @@ struct Randrouter : Module {
 			output_map[r] = output_map[temp];
 			output_map[temp] = temp;
 		}
-		else if (entropy == 1) { // Low Entropy - Swap
+		else if (entropy == Entropy::Low) { // Low Entropy - Swap
 			int r1, r2;
 			int attempts = 0;
 			do {
@@ -100,11 +115,12 @@ struct Randrouter : Module {
 			output_map[r1] = index_2;
 			output_map[r2] = index_1;
 		}
-		else if (entropy == 2) { // High Entropy - Randomize
-			for (int i = 0; i < SIGNAL_COUNT; i++) {
+		else if (entropy == Entropy::High) { // High Entropy - Randomize
+			int di = mono ? 1 : 2;
+			for (int i = 0; i < SIGNAL_COUNT; i+=di) {
 				output_map[i] = i;
 			}
-			for (int i = 0; i < SIGNAL_COUNT; i++) {
+			for (int i = 0; i < SIGNAL_COUNT; i+=di) {
 				int r = random_index();
 				int temp = output_map[i];
 				output_map[i] = output_map[r];
@@ -114,7 +130,7 @@ struct Randrouter : Module {
 	}
 
 	void process_up(int entropy) {
-		if (entropy == 0) { // Negative Entropy - Sort Up
+		if (entropy == Entropy::Negative) { // Negative Entropy - Sort Up
 			int index_1 = 0;
 			int index_2 = 0;
 			for (int i = 8; i > 0; i--) {
@@ -128,21 +144,25 @@ struct Randrouter : Module {
 			output_map[index_1] = output_map[index_2];
 			output_map[index_2] = temp;
 		}
-		else if (entropy == 1) { // Low Entropy - Shunt Up
-			int max_index = random_index();
+		else if (entropy == Entropy::Low) { // Low Entropy - Shunt Up
+			int new_out_map[SIGNAL_COUNT]; //Temp store for new values so they do mess up the mapping
+			int max_index = 1 + random_index(); //add 1 to include max_index
 			for (int i = 0; i < max_index; i++) {
-				output_map[i] = (output_map[i] - 1 + SIGNAL_COUNT) % SIGNAL_COUNT;
+				new_out_map[i] = output_map[(i - 1 + max_index) % max_index];
 			}
+			memcpy(output_map,new_out_map,sizeof(int) * max_index);
 		}
-		else if (entropy == 2) { // High Entropy - Rotate Up
-			for (int i = 0; i < 8; i++) {
-				output_map[i] = (output_map[i] - 1 + SIGNAL_COUNT) % SIGNAL_COUNT;
+		else if (entropy == Entropy::High) { // High Entropy - Rotate Up
+			int new_out_map[SIGNAL_COUNT]; //Temp store for new values so they do mess up the mapping
+			for (int i = 0; i < SIGNAL_COUNT; i++) {
+				new_out_map[i] = output_map[(i - 1 + SIGNAL_COUNT) % SIGNAL_COUNT];
 			}
+			memcpy(output_map,new_out_map,sizeof(int) * SIGNAL_COUNT);
 		}
 	}
 
 	void process_down(int entropy) {
-		if (entropy == 0) { // Negative Entropy - Sort Down
+		if (entropy == Entropy::Negative) { // Negative Entropy - Sort Down
 			int index_1 = 0;
 			int index_2 = 0;
 			for (int i = 0; i < 8; i++) {
@@ -156,21 +176,25 @@ struct Randrouter : Module {
 			output_map[index_1] = output_map[index_2];
 			output_map[index_2] = temp;
 		}
-		else if (entropy == 1) { // Low Entropy - Shunt Down
-			int max_index = random_index();
+		else if (entropy == Entropy::Low) { // Low Entropy - Shunt Down
+			int new_out_map[SIGNAL_COUNT]; //Temp store for new values so they do mess up the mapping
+			int max_index = 1 + random_index(); //add 1 to include max_index
 			for (int i = 0; i < max_index; i++) {
-				output_map[i] = (output_map[i] + 1) % SIGNAL_COUNT;
+				new_out_map[i] = output_map[(i + 1) % max_index];
 			}
+			memcpy(output_map,new_out_map,sizeof(int) * max_index);
 		}
-		else if (entropy == 2) { // High Entropy - Rotate Down
-			for (int i = 0; i < 8; i++) {
-				output_map[i] = (output_map[i] + 1) % SIGNAL_COUNT;
+		else if (entropy == Entropy::High) { // High Entropy - Rotate Down
+			int new_out_map[SIGNAL_COUNT]; //Temp store for new values so they do mess up the mapping
+			for (int i = 0; i < SIGNAL_COUNT; i++) {
+				new_out_map[i] = output_map[(i + 1) % SIGNAL_COUNT];
 			}
+			memcpy(output_map,new_out_map,sizeof(int) * SIGNAL_COUNT);
 		}
 	}
 
 	void process_broadcast(int entropy) {
-		if (entropy == 0) { // Negative Entropy - Split
+		if (entropy == Entropy::Negative) { // Negative Entropy - Split
 			int out_index;
 			int in_index;
 			int attempts = 0;
@@ -181,14 +205,14 @@ struct Randrouter : Module {
 			} while (output_map[out_index] != in_index && attempts <= 10);
 			output_map[out_index] = out_index;
 		}
-		else if (entropy == 1) { // Low Entropy - Double
+		else if (entropy == Entropy::Low) { // Low Entropy - Double
 			int out_1 = random_index();
 			int out_2 = random_index();
 			int in = random_index();
 			output_map[out_1] = in;
 			output_map[out_2] = in;
 		}
-		else if (entropy == 2) { // High Entropy - Blast
+		else if (entropy == Entropy::High) { // High Entropy - Blast
 			int r = random_index();
 			for (int i = 0; i < SIGNAL_COUNT; i++) {
 				output_map[i] = r;
@@ -197,7 +221,7 @@ struct Randrouter : Module {
 	}
 
 	void process_pairs(int entropy) {
-		if (entropy == 0) { // Negative Entropy - Unwind-2
+		if (entropy == Entropy::Negative) { // Negative Entropy - Unwind-2
 			if (mono) {
 				const int choices_mono[5] = { 0, 2, 4, 6, 8 };
 				int index = random_index<5>(choices_mono);
@@ -215,7 +239,7 @@ struct Randrouter : Module {
 				}
 			}
 		}
-		else if (entropy == 1) { // Low Entropy - Swap-2
+		else if (entropy == Entropy::Low) { // Low Entropy - Swap-2
 			if (mono) {
 				const int choices_mono[4] = { 0, 2, 4, 6 };
 				int index = random_index<4>(choices_mono);
@@ -233,7 +257,7 @@ struct Randrouter : Module {
 				output_map[index + 2] = prev_input;
 			}
 		}
-		else if (entropy == 2) { // High Entropy - Randomize-2
+		else if (entropy == Entropy::High) { // High Entropy - Randomize-2
 			if (mono) {
 				for (int i = 0; i <= 6; i += 2) {
 					bool flipped = random::uniform() < 0.5;
@@ -260,7 +284,7 @@ struct Randrouter : Module {
 	}
 
 	void process_triplets(int entropy) {
-		if (entropy == 0) { // Negative Entropy - Unwind-3
+		if (entropy == Entropy::Negative) { // Negative Entropy - Unwind-3
 			if (mono) {
 				const int choices_mono[3] = { 0, 3, 6 };
 				int index = random_index<3>(choices_mono);
@@ -282,7 +306,7 @@ struct Randrouter : Module {
 				}
 			}
 		}
-		else if (entropy == 1) { // Low Entropy - Swap-3
+		else if (entropy == Entropy::Low) { // Low Entropy - Swap-3
 			if (mono) {
 				const int choices_mono[3] = { 0, 3, 6 };
 				int index = random_index<3>(choices_mono);
@@ -308,21 +332,20 @@ struct Randrouter : Module {
 					output_map[4] = prev_input_2;
 				}
 				else {
-					int r = random::uniform() * 3;
-					int* row = triplet_swap[r];
-					int prev_input_0 = output_map[6 + row[0]];
-					int prev_input_1 = output_map[6 + row[1]];
-					int prev_input_2 = output_map[6 + row[2]];
-					output_map[6] = prev_input_0;
-					output_map[7] = prev_input_1;
-					output_map[8] = prev_input_2;
+					bool flipped = random::uniform() < 0.5;
+					if (flipped) {
+						int prev_input = output_map[6];
+						int prev_input_2 = output_map[8];
+						output_map[6] = prev_input_2;
+						output_map[8] = prev_input;
+					}
 				}
 			}
 		}
-		else if (entropy == 2) { // High Entropy - Randomize-3
+		else if (entropy == Entropy::High) { // High Entropy - Randomize-3
 			if (mono) {
 				for (int i = 0; i <= 6; i += 3) {
-					int r = random::uniform() * 6;
+					int r = random::uniform() * 5;
 					int* row = triplet_randomize[r];
 					int prev_input_0 = output_map[i + row[0]];
 					int prev_input_1 = output_map[i + row[1]];
@@ -333,8 +356,8 @@ struct Randrouter : Module {
 				}
 			}
 			else {
-				for (int i = 0; i < 6; i++) {
-					int r = random::uniform() * 6;
+				{
+					int r = random::uniform() * 5;
 					int* row = triplet_randomize[r];
 					int prev_input_0 = output_map[2 * row[0]];
 					int prev_input_1 = output_map[2 * row[1]];
@@ -343,15 +366,14 @@ struct Randrouter : Module {
 					output_map[2] = prev_input_1;
 					output_map[4] = prev_input_2;
 				}
-				for (int i = 6; i < SIGNAL_COUNT; i++) {
-					int r = random::uniform() * 6;
-					int* row = triplet_randomize[r];
-					int prev_input_0 = output_map[6 + row[0]];
-					int prev_input_1 = output_map[6 + row[1]];
-					int prev_input_2 = output_map[6 + row[2]];
-					output_map[6] = prev_input_0;
-					output_map[7] = prev_input_1;
-					output_map[8] = prev_input_2;
+				{					
+					bool flipped = random::uniform() < 0.5;
+					if (flipped) {
+						int prev_input = output_map[6];
+						int prev_input_2 = output_map[8];
+						output_map[6] = prev_input_2;
+						output_map[8] = prev_input;
+					}
 				}
 			}
 		}
@@ -372,22 +394,22 @@ struct Randrouter : Module {
 
 		if (clock) {
 			switch (mode) {
-				case 0: // Basic
+				case Mode::Basic: // Basic
 					process_basic(entropy);
 					break;
-				case 1: // Up
+				case Mode::Up: // Up
 					process_up(entropy);
 					break;
-				case 2: // Down
+				case Mode::Down: // Down
 					process_down(entropy);
 					break;
-				case 3: // Broadcast
+				case Mode::Broadcast: // Broadcast
 					process_broadcast(entropy);
 					break;
-				case 4: // Pairs
+				case Mode::Pairs: // Pairs
 					process_pairs(entropy);
 					break;
-				case 5: // Triplets
+				case Mode::Triplets: // Triplets
 					process_triplets(entropy);
 					break;
 			}
