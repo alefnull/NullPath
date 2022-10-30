@@ -76,6 +76,31 @@ struct Randrouter : Module {
 	int triplet_randomize[5][3] = { { 0, 2, 1 }, { 1, 0, 2 }, { 1, 2, 0 }, { 2, 0, 1 }, { 2, 1, 0 } };
 	bool mono = true;
 
+	void onReset() override {
+		for (int i = 0; i < SIGNAL_COUNT; i++) {
+			output_map[i] = i;
+		}
+	}
+
+	json_t *dataToJson() override {
+		json_t *rootJ = json_object();
+		json_t *mapJ = json_array();
+		for (int i = 0; i < SIGNAL_COUNT; i++) {
+			json_array_insert_new(mapJ, i, json_integer(output_map[i]));
+		}
+		json_object_set_new(rootJ, "output_map", mapJ);
+		return rootJ;
+	}
+
+	void dataFromJson(json_t *rootJ) override {
+		json_t *mapJ = json_object_get(rootJ, "output_map");
+		if (mapJ) {
+			for (int i = 0; i < SIGNAL_COUNT; i++) {
+				output_map[i] = json_integer_value(json_array_get(mapJ, i));
+			}
+		}
+	}
+
 	int random_index() {
 		if (mono) {
 			return random::u32() % SIGNAL_COUNT;
