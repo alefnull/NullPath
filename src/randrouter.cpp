@@ -70,9 +70,9 @@ struct Randrouter : Module {
 		}
 	}
 
-	int random_index(const int indices[]) {
-		int len = sizeof(indices) / sizeof(indices[0]);
-		return indices[random::u32() % len];
+	template <int N>
+	int random_index(const int indices[N]) {
+		return indices[random::u32() % N];
 	}
 
 	void process_basic(int entropy) {
@@ -200,7 +200,7 @@ struct Randrouter : Module {
 		if (entropy == 0) { // Negative Entropy - Unwind-2
 			if (mono) {
 				const int choices_mono[5] = { 0, 2, 4, 6, 8 };
-				int index = random_index(choices_mono);
+				int index = random_index<5>(choices_mono);
 				output_map[index] = index;
 				if (index + 1 < SIGNAL_COUNT) {
 					output_map[index + 1] = index + 1;
@@ -208,7 +208,7 @@ struct Randrouter : Module {
 			}
 			else {
 				const int choices_stereo[3] = { 0, 4, 8 };
-				int index = random_index(choices_stereo);
+				int index = random_index<3>(choices_stereo);
 				output_map[index] = index;
 				if (index + 2 < SIGNAL_COUNT) {
 					output_map[index + 2] = index + 2;
@@ -218,7 +218,7 @@ struct Randrouter : Module {
 		else if (entropy == 1) { // Low Entropy - Swap-2
 			if (mono) {
 				const int choices_mono[4] = { 0, 2, 4, 6 };
-				int index = random_index(choices_mono);
+				int index = random_index<4>(choices_mono);
 				int prev_input = output_map[index];
 				int prev_input_2 = output_map[index + 1];
 				output_map[index] = prev_input_2;
@@ -226,7 +226,7 @@ struct Randrouter : Module {
 			}
 			else {
 				const int choices_stereo[2] = { 0, 4 };
-				int index = random_index(choices_stereo);
+				int index = random_index<2>(choices_stereo);
 				int prev_input = output_map[index];
 				int prev_input_2 = output_map[index + 2];
 				output_map[index] = prev_input_2;
@@ -263,7 +263,7 @@ struct Randrouter : Module {
 		if (entropy == 0) { // Negative Entropy - Unwind-3
 			if (mono) {
 				const int choices_mono[3] = { 0, 3, 6 };
-				int index = random_index(choices_mono);
+				int index = random_index<3>(choices_mono);
 				output_map[index] = index;
 				output_map[index + 1] = index + 1;
 				output_map[index + 2] = index + 2;
@@ -285,7 +285,7 @@ struct Randrouter : Module {
 		else if (entropy == 1) { // Low Entropy - Swap-3
 			if (mono) {
 				const int choices_mono[3] = { 0, 3, 6 };
-				int index = random_index(choices_mono);
+				int index = random_index<3>(choices_mono);
 				int r = random::uniform() * 3;
 				int* row = triplet_swap[r];
 				int prev_input_0 = output_map[index + row[0]];
@@ -478,8 +478,6 @@ struct RandrouterWidget : ModuleWidget {
 
 			if (layer == 0){
 
-				DEBUG("drawLayer Start");
-
 				const int DEFAULT_OUTPUT_MAP[SIGNAL_COUNT] = { 5, 6, 7, 4, 0, 8, 2, 3, 1 };
 				const NVGcolor LINE_COLOR = nvgRGBA(0x97, 0xf7, 0xf9, 0x80);
 				const float CONST_RND[SIGNAL_COUNT][SIGNAL_COUNT][4] = {{{0.799f,0.199f,0.007f,0.023f},{0.158f,0.268f,0.887f,0.505f},{0.829f,0.654f,0.756f,0.280f},{0.833f,0.826f,0.479f,0.340f},{0.624f,0.468f,0.544f,0.841f},{0.328f,0.930f,0.496f,0.966f},{0.258f,0.022f,0.003f,0.742f},{0.257f,0.516f,0.592f,0.339f},{0.676f,0.857f,0.465f,0.965f}},{{0.889f,0.320f,0.343f,0.212f},{0.361f,0.072f,0.290f,0.173f},{0.520f,0.152f,0.802f,0.263f},{0.076f,0.900f,0.643f,0.085f},{0.662f,0.072f,0.010f,0.087f},{0.345f,0.046f,0.558f,0.579f},{0.716f,0.336f,0.997f,0.374f},{0.489f,0.861f,0.283f,0.961f},{0.424f,0.954f,0.526f,0.695f}},{{0.552f,0.922f,0.571f,0.014f},{0.910f,0.770f,0.263f,0.045f},{0.763f,0.509f,0.397f,0.620f},{0.914f,0.642f,0.129f,0.849f},{0.534f,0.806f,0.559f,0.353f},{0.657f,0.587f,0.647f,0.085f},{0.348f,0.417f,0.297f,0.695f},{0.652f,0.898f,0.245f,0.241f},{0.368f,0.207f,0.884f,0.593f}},{{0.662f,0.684f,0.716f,0.360f},{0.431f,0.149f,0.519f,0.267f},{0.563f,0.271f,0.630f,0.576f},{0.547f,0.195f,0.629f,0.383f},{0.113f,0.156f,0.088f,0.653f},{0.525f,0.489f,0.227f,0.357f},{0.058f,0.963f,0.232f,0.563f},{0.165f,0.934f,0.515f,0.145f},{0.635f,0.224f,0.684f,0.383f}},{{0.447f,0.363f,0.661f,0.121f},{0.569f,0.888f,0.141f,0.582f},{0.408f,0.779f,0.384f,0.569f},{0.339f,0.832f,0.716f,0.360f},{0.240f,0.173f,0.669f,0.867f},{0.545f,0.315f,0.938f,0.286f},{0.567f,0.911f,0.774f,0.250f},{0.153f,0.179f,0.319f,0.237f},{0.616f,0.110f,0.682f,0.270f}},{{0.559f,0.642f,0.873f,0.179f},{0.844f,0.514f,0.780f,0.954f},{0.461f,0.076f,0.289f,0.694f},{0.924f,0.382f,0.763f,0.522f},{0.479f,0.053f,0.534f,0.423f},{0.281f,0.580f,0.489f,0.320f},{0.110f,0.895f,0.625f,0.666f},{0.467f,0.428f,0.513f,0.714f},{0.641f,0.788f,0.128f,0.733f}},{{0.024f,0.782f,0.744f,0.810f},{0.998f,0.316f,0.414f,0.147f},{0.259f,0.920f,0.687f,0.446f},{0.563f,0.716f,0.039f,0.268f},{0.941f,0.254f,0.918f,0.375f},{0.787f,0.783f,0.158f,0.166f},{0.925f,0.750f,0.355f,0.509f},{0.039f,0.778f,0.073f,0.806f},{0.369f,0.754f,0.652f,0.596f}},{{0.767f,0.822f,0.813f,0.561f},{0.530f,0.280f,0.308f,0.498f},{0.357f,0.570f,0.693f,0.373f},{0.367f,0.433f,0.238f,0.067f},{0.537f,0.888f,0.638f,0.080f},{0.553f,0.825f,0.200f,0.405f},{0.019f,0.037f,0.568f,0.700f},{0.405f,0.365f,0.437f,0.348f},{0.950f,0.463f,0.474f,0.147f}},{{0.110f,0.736f,0.628f,0.519f},{0.534f,0.808f,0.994f,0.545f},{0.842f,0.059f,0.038f,0.157f},{0.740f,0.470f,0.208f,0.379f},{0.785f,0.450f,0.909f,0.500f},{0.810f,0.161f,0.066f,0.958f},{0.926f,0.403f,0.393f,0.354f},{0.338f,0.901f,0.998f,0.533f},{0.111f,0.584f,0.872f,0.080f}}};
@@ -505,6 +503,10 @@ struct RandrouterWidget : ModuleWidget {
 			
 				for(int oi = 0; oi < SIGNAL_COUNT; oi += (stereo ? 2 : 1)){
 					int ii = module == NULL ? DEFAULT_OUTPUT_MAP[oi] : module->output_map[oi];
+
+					if(stereo){
+						ii = 2 * std::floor(ii / 2);
+					}
 
 					Vec in = ins[ii];
 					Vec out = outs[oi];
@@ -548,8 +550,6 @@ struct RandrouterWidget : ModuleWidget {
 						nvgStroke(args.vg);
 					}
 				}
-
-				DEBUG("drawLayer Stop");
 			}	
 		}
 
