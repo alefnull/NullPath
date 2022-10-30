@@ -443,6 +443,18 @@ struct Randrouter : Module {
 
 struct RandrouterWidget : ModuleWidget {
 
+	struct RRModeSwitch : app::SvgSwitch {
+		RRModeSwitch(){
+			addFrame(Svg::load(asset::plugin(pluginInstance,"res/entangle_mode_switch_basic.svg")));
+			addFrame(Svg::load(asset::plugin(pluginInstance,"res/entangle_mode_switch_up.svg")));
+			addFrame(Svg::load(asset::plugin(pluginInstance,"res/entangle_mode_switch_down.svg")));
+			addFrame(Svg::load(asset::plugin(pluginInstance,"res/entangle_mode_switch_broadcast.svg")));
+			addFrame(Svg::load(asset::plugin(pluginInstance,"res/entangle_mode_switch_pairs.svg")));
+			addFrame(Svg::load(asset::plugin(pluginInstance,"res/entangle_mode_switch_triplets.svg")));
+			shadow->blurRadius = 0;
+		}
+	};
+
 	struct RoutingWidget : widget::Widget{
 		Randrouter* module;
 
@@ -465,6 +477,8 @@ struct RandrouterWidget : ModuleWidget {
 		void drawLayer(const DrawArgs& args, int layer) override {
 
 			if (layer == 0){
+
+				DEBUG("drawLayer Start");
 
 				const int DEFAULT_OUTPUT_MAP[SIGNAL_COUNT] = { 5, 6, 7, 4, 0, 8, 2, 3, 1 };
 				const NVGcolor LINE_COLOR = nvgRGBA(0x97, 0xf7, 0xf9, 0x80);
@@ -534,6 +548,8 @@ struct RandrouterWidget : ModuleWidget {
 						nvgStroke(args.vg);
 					}
 				}
+
+				DEBUG("drawLayer Stop");
 			}	
 		}
 
@@ -555,9 +571,9 @@ struct RandrouterWidget : ModuleWidget {
 		addChild(createWidget<ScrewBlack>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewBlack>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createParamCentered<CKSSThree>(mm2px(Vec(63.404, 28.433)), module, Randrouter::MODE_PARAM));
-		addParam(createParamCentered<CKSSThree>(mm2px(Vec(63.404, 66.81)), module, Randrouter::ENTROPY_PARAM));
-		addParam(createParamCentered<CKSS>(mm2px(Vec(63.404, 99.503)), module, Randrouter::CHANNELS_PARAM));
+		addParam(createParamCentered<RRModeSwitch>(mm2px(Vec(63.404, 29.491)), module, Randrouter::MODE_PARAM));
+		addParam(createParamCentered<NP::EntropySwitch>(mm2px(Vec(63.404, 67.338)), module, Randrouter::ENTROPY_PARAM));
+		addParam(createParamCentered<NP::ChannelsSwitch>(mm2px(Vec(63.404, 99.503)), module, Randrouter::CHANNELS_PARAM));
 
 		addInput(createInputCentered<NP::InPort>(mm2px(Vec(21.534, 17.146)), module, Randrouter::SIGNAL_INPUT + 0));
 		addInput(createInputCentered<NP::InPort>(mm2px(Vec(21.557, 28.794)), module, Randrouter::SIGNAL_INPUT + 1));
@@ -570,8 +586,8 @@ struct RandrouterWidget : ModuleWidget {
 		addInput(createInputCentered<NP::InPort>(mm2px(Vec(21.557, 109.746)), module, Randrouter::SIGNAL_INPUT + 8));
 		addInput(createInputCentered<NP::InPort>(mm2px(Vec(8.129, 58.382)), module, Randrouter::CLOCK_INPUT));
 		addInput(createInputCentered<NP::InPort>(mm2px(Vec(8.151, 76.546)), module, Randrouter::RESET_INPUT));
-		addInput(createInputCentered<NP::InPort>(mm2px(Vec(63.404, 44.207)), module, Randrouter::MODE_CV_INPUT));
-		addInput(createInputCentered<NP::InPort>(mm2px(Vec(63.381, 78.229)), module, Randrouter::ENTROPY_CV_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(63.404, 46.323)), module, Randrouter::MODE_CV_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(63.381, 79.287)), module, Randrouter::ENTROPY_CV_INPUT));
 		addInput(createInputCentered<NP::InPort>(mm2px(Vec(63.404, 109.741)), module, Randrouter::CHANNELS_CV_INPUT));
 
 		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(49.567, 17.286)), module, Randrouter::SIGNAL_OUTPUT + 0));

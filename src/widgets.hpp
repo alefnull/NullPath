@@ -96,4 +96,21 @@ struct SpeedSwitch : app::SvgSwitch {
 	}
 };
 
+struct ChannelsSwitch : app::SvgSwitch {
+	ChannelsSwitch(){
+		addFrame(Svg::load(asset::plugin(pluginInstance,"res/channels_switch_1.svg")));
+		addFrame(Svg::load(asset::plugin(pluginInstance,"res/channels_switch_2.svg")));
+		shadow->blurRadius = 0;
+	}
+};
+
+struct EntropySwitch : app::SvgSwitch {
+	EntropySwitch(){
+		addFrame(Svg::load(asset::plugin(pluginInstance,"res/entropy_switch_neg.svg")));
+		addFrame(Svg::load(asset::plugin(pluginInstance,"res/entropy_switch_low.svg")));
+		addFrame(Svg::load(asset::plugin(pluginInstance,"res/entropy_switch_high.svg")));
+		shadow->blurRadius = 0;
+	}
+};
+
 }
