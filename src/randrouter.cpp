@@ -58,6 +58,9 @@ struct Randrouter : Module {
 		configInput(SIGNAL_INPUT + 6, "Signal 7");
 		configInput(SIGNAL_INPUT + 7, "Signal 8");
 		configInput(SIGNAL_INPUT + 8, "Signal 9");
+		configInput(CHANNELS_CV_INPUT, "Channels CV");
+		configInput(MODE_CV_INPUT, "Mode CV");
+		configInput(ENTROPY_CV_INPUT, "Entropy CV");
 		configOutput(SIGNAL_OUTPUT + 0, "Signal 1");
 		configOutput(SIGNAL_OUTPUT + 1, "Signal 2");
 		configOutput(SIGNAL_OUTPUT + 2, "Signal 3");
@@ -410,6 +413,21 @@ struct Randrouter : Module {
 		int entropy = params[ENTROPY_PARAM].getValue();
 		bool clock = clock_trigger.process(inputs[CLOCK_INPUT].getVoltage());
 		bool reset = reset_trigger.process(inputs[RESET_INPUT].getVoltage());
+
+		// channels cv input - 0 = mono, 1 = stereo
+		if (inputs[CHANNELS_CV_INPUT].isConnected()) {
+			mono = inputs[CHANNELS_CV_INPUT].getVoltage() < 1.0;
+		}
+
+		// mode cv input - 0 = basic, 1 = up, 2 = down, 3 = broadcast, 4 = pairs, 5 = triplets
+		if (inputs[MODE_CV_INPUT].isConnected()) {
+			mode = clamp((int)std::round(inputs[MODE_CV_INPUT].getVoltage()), 0, 5);
+		}
+
+		// entropy cv input - 0 = negative, 1 = low, 2 = high
+		if (inputs[ENTROPY_CV_INPUT].isConnected()) {
+			entropy = clamp((int)std::round(inputs[ENTROPY_CV_INPUT].getVoltage()), 0, 2);
+		}
 
 		if (reset) {
 			for (int i = 0; i < SIGNAL_COUNT; i++) {
