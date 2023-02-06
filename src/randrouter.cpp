@@ -77,11 +77,19 @@ struct Randrouter : Module {
 	int output_map[SIGNAL_COUNT] = { 0, 1, 2, 3, 4, 5, 6, 7, 8 };
 	int triplet_swap[3][3] = { { 1, 0, 2 }, { 2, 1, 0 }, { 0, 2, 1 } };
 	int triplet_randomize[5][3] = { { 0, 2, 1 }, { 1, 0, 2 }, { 1, 2, 0 }, { 2, 0, 1 }, { 2, 1, 0 } };
+	// a 2-dimensional array, 9x9, representing the 'volumes' of every input-output combination
+	float volumes[SIGNAL_COUNT][SIGNAL_COUNT] = { 0 };
+	// a float to store the current fade duration
+    float fade_duration = 0.005f;
 	bool mono = true;
+	bool crossfade = false;
 
 	void onReset() override {
 		for (int i = 0; i < SIGNAL_COUNT; i++) {
 			output_map[i] = i;
+			for (int j = 0; j < SIGNAL_COUNT; j++) {
+				volumes[i][j] = 0;
+			}
 		}
 	}
 
@@ -92,6 +100,8 @@ struct Randrouter : Module {
 			json_array_insert_new(mapJ, i, json_integer(output_map[i]));
 		}
 		json_object_set_new(rootJ, "output_map", mapJ);
+		json_object_set_new(rootJ, "crossfade", json_boolean(crossfade));
+		json_object_set_new(rootJ, "fade_duration", json_real(fade_duration));
 		return rootJ;
 	}
 
@@ -101,6 +111,14 @@ struct Randrouter : Module {
 			for (int i = 0; i < SIGNAL_COUNT; i++) {
 				output_map[i] = json_integer_value(json_array_get(mapJ, i));
 			}
+		}
+		json_t *crossfadeJ = json_object_get(rootJ, "crossfade");
+		if (crossfadeJ) {
+			crossfade = json_boolean_value(crossfadeJ);
+		}
+		json_t *fade_durationJ = json_object_get(rootJ, "fade_duration");
+		if (fade_durationJ) {
+			fade_duration = json_real_value(fade_durationJ);
 		}
 	}
 
@@ -414,6 +432,11 @@ struct Randrouter : Module {
 		bool clock = clock_trigger.process(inputs[CLOCK_INPUT].getVoltage());
 		bool reset = reset_trigger.process(inputs[RESET_INPUT].getVoltage());
 
+		// a 2-dimensional array, 9x9, representing the 'target volumes' of every input-output combination
+		float target_volumes[SIGNAL_COUNT][SIGNAL_COUNT] = { 0 };
+
+		float fade_factor = args.sampleTime * (1.f / fade_duration);
+
 		// channels cv input - 0 = mono, 1 = stereo
 		if (inputs[CHANNELS_CV_INPUT].isConnected()) {
 			mono = inputs[CHANNELS_CV_INPUT].getVoltage() < 1.0;
@@ -432,6 +455,10 @@ struct Randrouter : Module {
 		if (reset) {
 			for (int i = 0; i < SIGNAL_COUNT; i++) {
 				output_map[i] = i;
+				for (int j = 0; j < SIGNAL_COUNT; j++) {
+					volumes[i][j] = 0.f;
+					target_volumes[i][j] = 0.f;
+				}
 			}
 		}
 
@@ -460,7 +487,10 @@ struct Randrouter : Module {
 
 		if (mono) {
 			for (int i = 0; i < SIGNAL_COUNT; i++) {
-				outputs[SIGNAL_OUTPUT + i].setVoltage(inputs[SIGNAL_INPUT + output_map[i]].getVoltage());
+				// set target volumes
+				for (int j = 0; j < SIGNAL_COUNT; j++) {
+					target_volumes[i][j] = (j == output_map[i]) ? 1.f : 0.f;
+				}
 			}
 		}
 		else {
@@ -470,37 +500,69 @@ struct Randrouter : Module {
 				bool index_is_8 = index == 8;
 				if (i_is_8) {
 					if (index_is_8) {
-						outputs[SIGNAL_OUTPUT + i].setVoltage(inputs[SIGNAL_INPUT + index].getVoltage());
+						// set target volume
+						target_volumes[i][index] = 1.f;
 					}
 					else {
 						bool con_1 = inputs[SIGNAL_INPUT + index + 0].isConnected();
 						bool con_2 = inputs[SIGNAL_INPUT + index + 1].isConnected();
 						if (con_1 && con_2) {
-							float avg = (inputs[SIGNAL_INPUT + index + 0].getVoltage() + inputs[SIGNAL_INPUT + index + 1].getVoltage()) / 2;
-							outputs[SIGNAL_OUTPUT + i].setVoltage(avg);
+							// set target volumes
+							target_volumes[i][index + 0] = 0.5f;
+							target_volumes[i][index + 1] = 0.5f;
 						}
 						else if (con_1 && !con_2) {
-							outputs[SIGNAL_OUTPUT + i].setVoltage(inputs[SIGNAL_INPUT + index + 0].getVoltage());
+							// set target volume
+							target_volumes[i][index + 0] = 1.f;
 						}
 						else if (!con_1 && con_2) {
-							outputs[SIGNAL_OUTPUT + i].setVoltage(inputs[SIGNAL_INPUT + index + 1].getVoltage());
+							// set target volume
+							target_volumes[i][index + 1] = 1.f;
 						}
 						else {
-							outputs[SIGNAL_OUTPUT + i].setVoltage(0);
+							// set target volume
+							target_volumes[i][index + 0] = 0.f;
+							target_volumes[i][index + 1] = 0.f;
 						}
 					}
 				}
 				else {
 					if (index_is_8) {
-						outputs[SIGNAL_OUTPUT + i + 0].setVoltage(inputs[SIGNAL_INPUT + index].getVoltage());
-						outputs[SIGNAL_OUTPUT + i + 1].setVoltage(inputs[SIGNAL_INPUT + index].getVoltage());
+						// set target volumes
+						target_volumes[i + 0][index] = 1.f;
+						target_volumes[i + 1][index] = 1.f;
 					}
 					else {
-						outputs[SIGNAL_OUTPUT + i + 0].setVoltage(inputs[SIGNAL_INPUT + index + 0].getVoltage());
-						outputs[SIGNAL_OUTPUT + i + 1].setVoltage(inputs[SIGNAL_INPUT + index + 1].getVoltage());
+						// set target volumes
+						target_volumes[i + 0][index + 0] = 1.f;
+						target_volumes[i + 1][index + 1] = 1.f;
 					}
 				}
 			}
+		}
+
+		for (int i = 0; i < SIGNAL_COUNT; i++) {
+			for (int j = 0; j < SIGNAL_COUNT; j++) {
+				if (crossfade) {
+					if (volumes[i][j] < target_volumes[i][j]) {
+						volumes[i][j] = std::min(volumes[i][j] + fade_factor, target_volumes[i][j]);
+					}
+					else if (volumes[i][j] > target_volumes[i][j]) {
+						volumes[i][j] = std::max(volumes[i][j] - fade_factor, target_volumes[i][j]);
+					}
+				}
+				else {
+					volumes[i][j] = target_volumes[i][j];
+				}
+			}
+		}
+
+		for (int i = 0; i < SIGNAL_COUNT; i++) {
+			float out = 0;
+			for (int j = 0; j < SIGNAL_COUNT; j++) {
+				out += inputs[SIGNAL_INPUT + j].getVoltage() * volumes[i][j];
+			}
+			outputs[SIGNAL_OUTPUT + i].setVoltage(out);
 		}
 	}
 };
@@ -666,6 +728,53 @@ struct RandrouterWidget : ModuleWidget {
 		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(49.567, 109.89)), module, Randrouter::SIGNAL_OUTPUT + 8));
 
 		addChild(createRoutingWidget(module,mm2px(Vec(21.557, 17.142)),mm2px(Vec(28.006, 92.756))));
+	}
+
+	struct FadeDurationQuantity : Quantity {
+		float* fade_duration;
+
+		FadeDurationQuantity(float* fs) {
+			fade_duration = fs;
+		}
+
+		void setValue(float value) override {
+			value = (int)(value * 1000);
+			value = (float)value / 1000;
+			*fade_duration = clamp(value, 0.005f, 10.f);
+		}
+
+		float getValue() override {
+			return *fade_duration;
+		}
+		
+		float getMinValue() override {return 0.005f;}
+		float getMaxValue() override {return 10.f;}
+		float getDefaultValue() override {return 0.005f;}
+		float getDisplayValue() override {return *fade_duration;}
+
+		std::string getUnit() override {
+			return "s";
+		}
+	};
+
+	struct FadeDurationSlider : ui::Slider {
+		FadeDurationSlider(float* fade_duration) {
+			quantity = new FadeDurationQuantity(fade_duration);
+		}
+		~FadeDurationSlider() {
+			delete quantity;
+		}
+	};
+
+	void appendContextMenu(Menu* menu) override {
+		Randrouter* module = dynamic_cast<Randrouter*>(this->module);
+		assert(module);
+
+		menu->addChild(new MenuSeparator());
+		menu->addChild(createMenuItem("Fade while switching", CHECKMARK(module->crossfade), [module]() { module->crossfade = !module->crossfade; }));
+		FadeDurationSlider *fade_slider = new FadeDurationSlider(&(module->fade_duration));
+		fade_slider->box.size.x = 200.f;
+		menu->addChild(fade_slider);
 	}
 
 	RoutingWidget* createRoutingWidget(Randrouter* module, Vec pos, Vec size){
