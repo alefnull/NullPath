@@ -2,6 +2,8 @@
 #include "widgets.hpp"
 
 #define SIGNAL_COUNT 9
+#define MODE_COUNT 6
+#define ENTROPY_COUNT 3
 
 struct Randrouter : Module {
 	enum ParamId {
@@ -74,6 +76,9 @@ struct Randrouter : Module {
 
 	dsp::SchmittTrigger clock_trigger;
 	dsp::SchmittTrigger reset_trigger;
+	dsp::SchmittTrigger mode_trigger;
+	dsp::SchmittTrigger entropy_trigger;
+	dsp::SchmittTrigger channels_trigger;
 	int output_map[SIGNAL_COUNT] = { 0, 1, 2, 3, 4, 5, 6, 7, 8 };
 	int triplet_swap[3][3] = { { 1, 0, 2 }, { 2, 1, 0 }, { 0, 2, 1 } };
 	int triplet_randomize[5][3] = { { 0, 2, 1 }, { 1, 0, 2 }, { 1, 2, 0 }, { 2, 0, 1 }, { 2, 1, 0 } };
@@ -86,8 +91,17 @@ struct Randrouter : Module {
 	bool mono = true;
 	bool crossfade = false;
 	bool hold_last_value = false;
+	bool trigger_mode = false;
+	bool sequential_mode = true;
 
 	void onReset() override {
+		fade_duration = 0.005f;
+		mono = true;
+		params[CHANNELS_PARAM].setValue(0);
+		crossfade = false;
+		hold_last_value = false;
+		trigger_mode = false;
+		sequential_mode = true;
 		for (int i = 0; i < SIGNAL_COUNT; i++) {
 			output_map[i] = i;
 			for (int j = 0; j < SIGNAL_COUNT; j++) {
@@ -103,6 +117,8 @@ struct Randrouter : Module {
 			json_array_insert_new(mapJ, i, json_integer(output_map[i]));
 		}
 		json_object_set_new(rootJ, "output_map", mapJ);
+		json_object_set_new(rootJ, "trigger_mode", json_boolean(trigger_mode));
+		json_object_set_new(rootJ, "sequential_mode", json_boolean(sequential_mode));
 		json_object_set_new(rootJ, "hold_last_value", json_boolean(hold_last_value));
 		json_object_set_new(rootJ, "crossfade", json_boolean(crossfade));
 		json_object_set_new(rootJ, "fade_duration", json_real(fade_duration));
@@ -115,6 +131,14 @@ struct Randrouter : Module {
 			for (int i = 0; i < SIGNAL_COUNT; i++) {
 				output_map[i] = json_integer_value(json_array_get(mapJ, i));
 			}
+		}
+		json_t *trigger_modeJ = json_object_get(rootJ, "trigger_mode");
+		if (trigger_modeJ) {
+			trigger_mode = json_boolean_value(trigger_modeJ);
+		}
+		json_t *sequential_modeJ = json_object_get(rootJ, "sequential_mode");
+		if (sequential_modeJ) {
+			sequential_mode = json_boolean_value(sequential_modeJ);
 		}
 		json_t *hold_last_valueJ = json_object_get(rootJ, "hold_last_value");
 		if (hold_last_valueJ) {
@@ -445,19 +469,60 @@ struct Randrouter : Module {
 
 		float fade_factor = args.sampleTime * (1.f / fade_duration);
 
-		// channels cv input - 0 = mono, 1 = stereo
-		if (inputs[CHANNELS_CV_INPUT].isConnected()) {
-			mono = inputs[CHANNELS_CV_INPUT].getVoltage() < 1.0;
+		if (trigger_mode) {
+			if (sequential_mode) {
+				if (mode_trigger.process(inputs[MODE_CV_INPUT].getVoltage())) {
+					mode = (mode + 1) % MODE_COUNT;
+					params[MODE_PARAM].setValue(mode);
+					DEBUG("mode: %d", mode);
+				}
+				if (entropy_trigger.process(inputs[ENTROPY_CV_INPUT].getVoltage())) {
+					entropy = (entropy + 1) % ENTROPY_COUNT;
+					params[ENTROPY_PARAM].setValue(entropy);
+					DEBUG("entropy: %d", entropy);
+				}
+				if (channels_trigger.process(inputs[CHANNELS_CV_INPUT].getVoltage())) {
+					mono = !mono;
+					params[CHANNELS_PARAM].setValue(mono ? 0 : 1);
+					DEBUG("mono: %d", mono);
+				}
+			}
+			else {
+				if (mode_trigger.process(inputs[MODE_CV_INPUT].getVoltage())) {
+					mode = random::u32() % MODE_COUNT;
+					params[MODE_PARAM].setValue(mode);
+					DEBUG("mode: %d", mode);
+				}
+				if (entropy_trigger.process(inputs[ENTROPY_CV_INPUT].getVoltage())) {
+					entropy = random::u32() % ENTROPY_COUNT;
+					params[ENTROPY_PARAM].setValue(entropy);
+					DEBUG("entropy: %d", entropy);
+				}
+				if (channels_trigger.process(inputs[CHANNELS_CV_INPUT].getVoltage())) {
+					mono = random::uniform() < 0.5;
+					params[CHANNELS_PARAM].setValue(mono ? 0 : 1);
+					DEBUG("mono: %d", mono);
+				}
+			}
 		}
+		else {
+			// channels cv input - 0 = mono, 1 = stereo
+			if (inputs[CHANNELS_CV_INPUT].isConnected()) {
+				mono = inputs[CHANNELS_CV_INPUT].getVoltage() < 1.0;
+				params[CHANNELS_PARAM].setValue(mono ? 0 : 1);
+			}
 
-		// mode cv input - 0 = basic, 1 = up, 2 = down, 3 = broadcast, 4 = pairs, 5 = triplets
-		if (inputs[MODE_CV_INPUT].isConnected()) {
-			mode = clamp((int)std::round(inputs[MODE_CV_INPUT].getVoltage()), 0, 5);
-		}
+			// mode cv input - 0 = basic, 1 = up, 2 = down, 3 = broadcast, 4 = pairs, 5 = triplets
+			if (inputs[MODE_CV_INPUT].isConnected()) {
+				mode = clamp((int)std::round(inputs[MODE_CV_INPUT].getVoltage()), 0, 5);
+				params[MODE_PARAM].setValue(mode);
+			}
 
-		// entropy cv input - 0 = negative, 1 = low, 2 = high
-		if (inputs[ENTROPY_CV_INPUT].isConnected()) {
-			entropy = clamp((int)std::round(inputs[ENTROPY_CV_INPUT].getVoltage()), 0, 2);
+			// entropy cv input - 0 = negative, 1 = low, 2 = high
+			if (inputs[ENTROPY_CV_INPUT].isConnected()) {
+				entropy = clamp((int)std::round(inputs[ENTROPY_CV_INPUT].getVoltage()), 0, 2);
+				params[ENTROPY_PARAM].setValue(entropy);
+			}
 		}
 
 		if (reset) {
@@ -785,6 +850,13 @@ struct RandrouterWidget : ModuleWidget {
 		assert(module);
 
 		menu->addChild(new MenuSeparator());
+		menu->addChild(createSubmenuItem("Trigger mode", "", [=](Menu* menu) {
+			Menu* modeMenu = new Menu();
+			modeMenu->addChild(createMenuItem("Enabled", CHECKMARK(module->trigger_mode), [module]() { module->trigger_mode = !module->trigger_mode; }));
+			modeMenu->addChild(new MenuSeparator());
+			modeMenu->addChild(createMenuItem("Random mode", CHECKMARK(!module->sequential_mode), [module]() { module->sequential_mode = !module->sequential_mode; }));
+			menu->addChild(modeMenu);
+		}));
 		menu->addChild(createMenuItem("Hold last value", CHECKMARK(module->hold_last_value), [module]() { module->hold_last_value = !module->hold_last_value; }));
 		menu->addChild(createMenuItem("Fade while switching", CHECKMARK(module->crossfade), [module]() { module->crossfade = !module->crossfade; }));
 		FadeDurationSlider *fade_slider = new FadeDurationSlider(&(module->fade_duration));
