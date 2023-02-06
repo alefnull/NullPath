@@ -79,10 +79,13 @@ struct Randrouter : Module {
 	int triplet_randomize[5][3] = { { 0, 2, 1 }, { 1, 0, 2 }, { 1, 2, 0 }, { 2, 0, 1 }, { 2, 1, 0 } };
 	// a 2-dimensional array, 9x9, representing the 'volumes' of every input-output combination
 	float volumes[SIGNAL_COUNT][SIGNAL_COUNT] = { 0 };
+	// an array of 9 floats, representing the last output value for each output
+	float last_values[SIGNAL_COUNT] = { 0 };
 	// a float to store the current fade duration
     float fade_duration = 0.005f;
 	bool mono = true;
 	bool crossfade = false;
+	bool hold_last_value = false;
 
 	void onReset() override {
 		for (int i = 0; i < SIGNAL_COUNT; i++) {
@@ -100,6 +103,7 @@ struct Randrouter : Module {
 			json_array_insert_new(mapJ, i, json_integer(output_map[i]));
 		}
 		json_object_set_new(rootJ, "output_map", mapJ);
+		json_object_set_new(rootJ, "hold_last_value", json_boolean(hold_last_value));
 		json_object_set_new(rootJ, "crossfade", json_boolean(crossfade));
 		json_object_set_new(rootJ, "fade_duration", json_real(fade_duration));
 		return rootJ;
@@ -111,6 +115,10 @@ struct Randrouter : Module {
 			for (int i = 0; i < SIGNAL_COUNT; i++) {
 				output_map[i] = json_integer_value(json_array_get(mapJ, i));
 			}
+		}
+		json_t *hold_last_valueJ = json_object_get(rootJ, "hold_last_value");
+		if (hold_last_valueJ) {
+			hold_last_value = json_boolean_value(hold_last_valueJ);
 		}
 		json_t *crossfadeJ = json_object_get(rootJ, "crossfade");
 		if (crossfadeJ) {
@@ -559,9 +567,15 @@ struct Randrouter : Module {
 
 		for (int i = 0; i < SIGNAL_COUNT; i++) {
 			float out = 0;
-			for (int j = 0; j < SIGNAL_COUNT; j++) {
-				out += inputs[SIGNAL_INPUT + j].getVoltage() * volumes[i][j];
+			if (hold_last_value && !inputs[SIGNAL_INPUT + output_map[i]].isConnected()) {
+				out = last_values[i];
 			}
+			else {
+				for (int j = 0; j < SIGNAL_COUNT; j++) {
+					out += inputs[SIGNAL_INPUT + j].getVoltage() * volumes[i][j];
+				}
+			}
+			last_values[i] = out;
 			outputs[SIGNAL_OUTPUT + i].setVoltage(out);
 		}
 	}
@@ -771,6 +785,7 @@ struct RandrouterWidget : ModuleWidget {
 		assert(module);
 
 		menu->addChild(new MenuSeparator());
+		menu->addChild(createMenuItem("Hold last value", CHECKMARK(module->hold_last_value), [module]() { module->hold_last_value = !module->hold_last_value; }));
 		menu->addChild(createMenuItem("Fade while switching", CHECKMARK(module->crossfade), [module]() { module->crossfade = !module->crossfade; }));
 		FadeDurationSlider *fade_slider = new FadeDurationSlider(&(module->fade_duration));
 		fade_slider->box.size.x = 200.f;
