@@ -48,7 +48,7 @@ struct Randrouter : Module {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
 		configSwitch(CHANNELS_PARAM, 0, 1, 0, "Channels", { "Mono", "Stereo" });
 		configSwitch(MODE_PARAM, 0, 5, 0, "Mode", { "Basic", "Up", "Down", "Broadcast", "Pairs", "Triplets" });
-		configSwitch(ENTROPY_PARAM, 0, 2, 0, "Entropy", { "Negative", "Low", "High" });
+		configSwitch(ENTROPY_PARAM, 0, 2, 1, "Entropy", { "Negative", "Low", "High" });
 		configInput(CLOCK_INPUT, "Clock");
 		configInput(RESET_INPUT, "Reset");
 		configInput(SIGNAL_INPUT + 0, "Signal 1");
