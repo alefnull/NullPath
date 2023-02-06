@@ -708,52 +708,61 @@ struct RandrouterWidget : ModuleWidget {
 
 			
 				for(int oi = 0; oi < SIGNAL_COUNT; oi += (stereo ? 2 : 1)){
-					int ii = module == NULL ? DEFAULT_OUTPUT_MAP[oi] : module->output_map[oi];
+					for(int _ii = 0; _ii < SIGNAL_COUNT; _ii += (stereo ? 2 : 1)){
+						int ii = _ii;
+						if(module == NULL){
+							if(ii != DEFAULT_OUTPUT_MAP[oi]) continue;
+						}else{
+							float vol = module->volumes[oi][ii];
+							if(vol == 0) continue;
+							nvgGlobalAlpha(args.vg, vol);	
+						}		
 
-					if(stereo){
-						ii = 2 * std::floor(ii / 2);
-					}
+						if(stereo){
+							ii = 2 * std::floor(ii / 2);
+						}
 
-					Vec in = ins[ii];
-					Vec out = outs[oi];
+						Vec in = ins[ii];
+						Vec out = outs[oi];
 
-					if(stereo){
-						if(ii+1 < SIGNAL_COUNT) in = in.plus(ins[ii+1]).mult(0.5f);
-						if(oi+1 < SIGNAL_COUNT) out = out.plus(outs[oi+1]).mult(0.5f);
-					}
+						if(stereo){
+							if(ii+1 < SIGNAL_COUNT) in = in.plus(ins[ii+1]).mult(0.5f);
+							if(oi+1 < SIGNAL_COUNT) out = out.plus(outs[oi+1]).mult(0.5f);
+						}
 
-					int di = std::abs(ii - oi);
+						int di = std::abs(ii - oi);
 
-					if(di <= 1){
-						//Draw Straight Line
-						nvgBeginPath(args.vg);
-						nvgMoveTo(args.vg, VEC_ARGS(in));
-						nvgLineTo(args.vg, VEC_ARGS(out));
-						nvgStroke(args.vg);
-					}else{
-						Vec m1;
-						Vec m2;
+						if(di <= 1){
+							//Draw Straight Line
+							nvgBeginPath(args.vg);
+							nvgMoveTo(args.vg, VEC_ARGS(in));
+							nvgLineTo(args.vg, VEC_ARGS(out));
+							nvgStroke(args.vg);
+						}else{
+							Vec m1;
+							Vec m2;
 
-						Vec d = out.minus(in);
+							Vec d = out.minus(in);
 
-						float h1 = 0.33f + 0.2f * (CONST_RND[oi][ii][0] * 2.f - 1);
-						float h2 = 0.66f + 0.2f * (CONST_RND[oi][ii][1] * 2.f - 1);
+							float h1 = 0.33f + 0.2f * (CONST_RND[oi][ii][0] * 2.f - 1);
+							float h2 = 0.66f + 0.2f * (CONST_RND[oi][ii][1] * 2.f - 1);
 
-						m1 = in.plus(d.mult(h1));
-						m2 = in.plus(d.mult(h2));
+							m1 = in.plus(d.mult(h1));
+							m2 = in.plus(d.mult(h2));
 
-						float v1 = 0.5f + 0.5f * (CONST_RND[oi][ii][2] * 2.f - 1);
-						float v2 = 0.5f + 0.5f * (CONST_RND[oi][ii][3] * 2.f - 1);
+							float v1 = 0.5f + 0.5f * (CONST_RND[oi][ii][2] * 2.f - 1);
+							float v2 = 0.5f + 0.5f * (CONST_RND[oi][ii][3] * 2.f - 1);
 
-						m1.y = m1.y * (1-v1) + v1 * in.y;
-						m2.y = m2.y * (1-v2) + v2 * out.y;
+							m1.y = m1.y * (1-v1) + v1 * in.y;
+							m2.y = m2.y * (1-v2) + v2 * out.y;
 
-						nvgBeginPath(args.vg);
-						nvgMoveTo(args.vg, VEC_ARGS(in));
-						nvgLineTo(args.vg, VEC_ARGS(m1));
-						nvgLineTo(args.vg, VEC_ARGS(m2));
-						nvgLineTo(args.vg, VEC_ARGS(out));
-						nvgStroke(args.vg);
+							nvgBeginPath(args.vg);
+							nvgMoveTo(args.vg, VEC_ARGS(in));
+							nvgLineTo(args.vg, VEC_ARGS(m1));
+							nvgLineTo(args.vg, VEC_ARGS(m2));
+							nvgLineTo(args.vg, VEC_ARGS(out));
+							nvgStroke(args.vg);
+						}
 					}
 				}
 			}	
