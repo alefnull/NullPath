@@ -110,6 +110,8 @@ struct Switch81 : Module, SwitchBase {
 
 	void onReset() override {
 		current_step = 0;
+		crossfade = false;
+		fade_duration = 0.005f;
 	}
 
 	void randomize_steps() {
@@ -194,7 +196,7 @@ struct Switch81 : Module, SwitchBase {
 
 
 		if (reset.process(inputs[RESET_INPUT].getVoltage())) {
-			onReset();
+			current_step = 0;
 		}
 		if (rand_steps_input.process(inputs[RANDOMIZE_STEPS_INPUT].getVoltage()) || rand_steps_button.process(params[RANDOMIZE_STEPS_PARAM].getValue() > 0.f)) {
 			randomize_steps();
