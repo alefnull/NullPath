@@ -96,6 +96,10 @@ struct Supersaw : Module {
 		configOutput(ENV_OUTPUT, "Envelope");
 	}
 
+	void onReset() override {
+		linear = false;
+	}
+
 	void process(const ProcessArgs& args) override {
 		int channels = std::max(1, inputs[VOCT_INPUT].getChannels());
 		outputs[SIGNAL_OUTPUT].setChannels(channels);
