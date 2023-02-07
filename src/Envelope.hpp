@@ -33,6 +33,7 @@ struct Envelope {
     float release_shape = 0.f;
     bool loop = false;
     bool eoc = false;
+    bool idle = true;
     float sampleTime = 0.f;
     int processCount = 0;
 
@@ -74,6 +75,7 @@ struct Envelope {
     }
     void reset() {
         stage = IDLE;
+        idle = true;
         _env = MIN_VALUE;
     }
 };
@@ -176,9 +178,11 @@ struct ADSREnvelope : Envelope {
         switch (stage) {
             case IDLE:
                 eoc = false;
+                idle = true;
                 break;
             case ATTACK:
                 eoc = false;
+                idle = false;
                 if (attack_shape < 0.f) {
                     attack_shape = abs(attack_shape);
                     float func1 = (1.f - _env) * 6.21461f * st / attack_time;
