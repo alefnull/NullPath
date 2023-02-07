@@ -98,6 +98,14 @@ struct Supersaw : Module {
 
 	void onReset() override {
 		linear = false;
+		// reset the envelope
+		envelope.reset();
+		// reset the oscillators
+		for (int i = 0; i < MAX_POLY; i++) {
+			osc1[i].reset_phase();
+			osc2[i].reset_phase();
+			osc3[i].reset_phase();
+		}
 	}
 
 	void process(const ProcessArgs& args) override {
