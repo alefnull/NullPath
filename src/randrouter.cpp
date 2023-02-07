@@ -474,34 +474,28 @@ struct Randrouter : Module {
 				if (mode_trigger.process(inputs[MODE_CV_INPUT].getVoltage())) {
 					mode = (mode + 1) % MODE_COUNT;
 					params[MODE_PARAM].setValue(mode);
-					DEBUG("mode: %d", mode);
 				}
 				if (entropy_trigger.process(inputs[ENTROPY_CV_INPUT].getVoltage())) {
 					entropy = (entropy + 1) % ENTROPY_COUNT;
 					params[ENTROPY_PARAM].setValue(entropy);
-					DEBUG("entropy: %d", entropy);
 				}
 				if (channels_trigger.process(inputs[CHANNELS_CV_INPUT].getVoltage())) {
 					mono = !mono;
 					params[CHANNELS_PARAM].setValue(mono ? 0 : 1);
-					DEBUG("mono: %d", mono);
 				}
 			}
 			else {
 				if (mode_trigger.process(inputs[MODE_CV_INPUT].getVoltage())) {
 					mode = random::u32() % MODE_COUNT;
 					params[MODE_PARAM].setValue(mode);
-					DEBUG("mode: %d", mode);
 				}
 				if (entropy_trigger.process(inputs[ENTROPY_CV_INPUT].getVoltage())) {
 					entropy = random::u32() % ENTROPY_COUNT;
 					params[ENTROPY_PARAM].setValue(entropy);
-					DEBUG("entropy: %d", entropy);
 				}
 				if (channels_trigger.process(inputs[CHANNELS_CV_INPUT].getVoltage())) {
 					mono = random::uniform() < 0.5;
 					params[CHANNELS_PARAM].setValue(mono ? 0 : 1);
-					DEBUG("mono: %d", mono);
 				}
 			}
 		}
