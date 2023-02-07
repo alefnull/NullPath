@@ -224,7 +224,12 @@ struct Supersaw : Module {
 			out += noise;
 
 			if (inputs[GATE_INPUT].isConnected()) {
-				outputs[SIGNAL_OUTPUT].setVoltageSimd<float_4>(out * 5.f * envelope.env, c);
+				if (envelope.idle) {
+					outputs[SIGNAL_OUTPUT].setVoltageSimd<float_4>(0.f, c);
+				}
+				else {
+					outputs[SIGNAL_OUTPUT].setVoltageSimd<float_4>(out * 5.f * envelope.env, c);
+				}
 			}
 			else {
 				outputs[SIGNAL_OUTPUT].setVoltageSimd<float_4>(out * 5.f, c);
