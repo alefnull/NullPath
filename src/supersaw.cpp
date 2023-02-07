@@ -76,10 +76,10 @@ struct Supersaw : Module {
 		configInput(NOISE_MIX_CV_INPUT, "Noise mix CV");
 		configParam(PULSE_WIDTH_PARAM, 0.0, 1.0, 0.0, "B width");
 		configInput(PULSE_WIDTH_CV_INPUT, "B width CV");
-		configParam(ATTACK_PARAM, 0.01, 5.0, 0.01, "Attack time", " s");
-		configParam(DECAY_PARAM, 0.1, 5.0, 0.1, "Decay time", " s");
+		configParam(ATTACK_PARAM, 0.001, 5.0, 0.01, "Attack time", " s");
+		configParam(DECAY_PARAM, 0.001, 5.0, 0.1, "Decay time", " s");
 		configParam(SUSTAIN_PARAM, 0.0, 1.0, 1.0, "Sustain level");
-		configParam(RELEASE_PARAM, 0.01, 5.0, 0.01, "Release time", " s");
+		configParam(RELEASE_PARAM, 0.001, 5.0, 0.01, "Release time", " s");
 		configSwitch(ENV_TO_DUR_PARAM, 0.0, 1.0, 0.0, "Env -> Noise duration", {"Off", "On"});
 		configSwitch(ENV_TO_MIX_PARAM, 0.0, 1.0, 0.0, "Env -> Noise mix", {"Off", "On"});
 		configSwitch(ENV_TO_PW_PARAM, 0.0, 1.0, 0.0, "Env -> B width", {"Off", "On"});
@@ -241,7 +241,7 @@ struct Supersaw : Module {
 		}
 
 		if (last_gate && !(inputs[GATE_INPUT].getVoltage() > 0.5)) {
-			envelope.stage = envelope.RELEASE;
+			envelope.release();
 		}
 
 		envelope.process(args.sampleTime);

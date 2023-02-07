@@ -5,6 +5,7 @@
 #define MAX_VALUE 0.999f
 #define MIN_VALUE 0.001f
 
+#define MAX_PROCESS_COUNT 32
 
 struct Envelope {
     enum Stage {
@@ -69,14 +70,23 @@ struct Envelope {
     void trigger() {
         stage = ATTACK;
         _env = MIN_VALUE;
+        processCount = MAX_PROCESS_COUNT;
+        sampleTime = 0;
     }
     void retrigger() {
         stage = ATTACK;
+        processCount = MAX_PROCESS_COUNT;
+    }
+    void release(){
+    	stage = RELEASE;
+    	processCount = MAX_PROCESS_COUNT;
     }
     void reset() {
         stage = IDLE;
         idle = true;
         _env = MIN_VALUE;
+        processCount = MAX_PROCESS_COUNT;
+        sampleTime = 0;
     }
 };
 
@@ -87,7 +97,7 @@ struct ADEnvelope : Envelope {
     void process(float st) {
     	processCount++;
     	sampleTime += st;
-    	if (processCount < 64) {
+    	if (processCount < MAX_PROCESS_COUNT) {
     		return;
     	}
         else {
@@ -167,7 +177,7 @@ struct ADSREnvelope : Envelope {
     void process(float st) {
         processCount++;
         sampleTime += st;
-        if (processCount < 64) {
+        if (processCount < MAX_PROCESS_COUNT) {
             return;
         }
         else {
