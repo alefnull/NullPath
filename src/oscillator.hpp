@@ -19,6 +19,9 @@ struct Oscillator {
     void set_phase(float phase) {
         this->phase = phase;
     }
+    void reset_phase() {
+        this->phase = 0.f;
+    }
     void set_pitch(float_4 pitch) {
         this->freq = FREQ_C3 * simd::pow(2.f, pitch);
     }
