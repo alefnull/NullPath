@@ -31,6 +31,10 @@ struct Supersaw : Module {
 	};
 	enum InputId {
 		VOCT_INPUT,
+		ATTACK_CV_INPUT,
+		DECAY_CV_INPUT,
+		SUSTAIN_CV_INPUT,
+		RELEASE_CV_INPUT,
 		NOISE_DUR_CV_INPUT,
 		PULSE_WIDTH_CV_INPUT,
 		GATE_INPUT,
@@ -87,6 +91,10 @@ struct Supersaw : Module {
 		configParam(ENV_MIX_ATT_PARAM, 0.0, 1.0, 0.0, "Env -> Noise mix amount", "%", 0.0, 100.0);
 		configParam(ENV_PW_ATT_PARAM, -1.0, 1.0, 0.0, "Env -> B width amount", "%", 0.0, 100.0);
 		configInput(VOCT_INPUT, "1 V/Oct");
+		configInput(ATTACK_CV_INPUT, "Attack CV");
+		configInput(DECAY_CV_INPUT, "Decay CV");
+		configInput(SUSTAIN_CV_INPUT, "Sustain CV");
+		configInput(RELEASE_CV_INPUT, "Release CV");
 		configOutput(SIGNAL_OUTPUT, "Signal");
 		for (int i = 0; i < 3; i++) {
 			configOutput(WAVE_OUTPUT + i, "Wave " + std::to_string(i + 1));
@@ -148,6 +156,19 @@ struct Supersaw : Module {
 		float decay_time = params[DECAY_PARAM].getValue();
 		float sustain_level = params[SUSTAIN_PARAM].getValue();
 		float release_time = params[RELEASE_PARAM].getValue();
+		if (inputs[ATTACK_CV_INPUT].isConnected()) {
+			attack_time *= clamp(inputs[ATTACK_CV_INPUT].getVoltage() / 10.f, 0.001f, 1.f);
+		}
+		if (inputs[DECAY_CV_INPUT].isConnected()) {
+			decay_time *= clamp(inputs[DECAY_CV_INPUT].getVoltage() / 10.f, 0.001f, 1.f);
+		}
+		if (inputs[SUSTAIN_CV_INPUT].isConnected()) {
+			sustain_level *= clamp(inputs[SUSTAIN_CV_INPUT].getVoltage() / 10.f, 0.f, 1.f);
+		}
+		if (inputs[RELEASE_CV_INPUT].isConnected()) {
+			release_time *= clamp(inputs[RELEASE_CV_INPUT].getVoltage() / 10.f, 0.001f, 1.f);
+		}
+
 		bool env_to_dur = params[ENV_TO_DUR_PARAM].getValue() > 0.5;
 		bool env_to_mix = params[ENV_TO_MIX_PARAM].getValue() > 0.5;
 		bool env_to_pw = params[ENV_TO_PW_PARAM].getValue() > 0.5;
@@ -297,6 +318,10 @@ struct SupersawWidget : ModuleWidget {
 		addInput(createInputCentered<NP::InPort>(mm2px(Vec(39.692, 35.599)), module, Supersaw::NOISE_DUR_CV_INPUT));
 		addInput(createInputCentered<NP::InPort>(mm2px(Vec(51.748, 35.599)), module, Supersaw::NOISE_MIX_CV_INPUT));
 		addInput(createInputCentered<NP::InPort>(mm2px(Vec(9.964, 103.205)), module, Supersaw::PULSE_WIDTH_CV_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(70.0, 34.556)), module, Supersaw::ATTACK_CV_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(70.0, 53.718)), module, Supersaw::DECAY_CV_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(70.0, 72.878)), module, Supersaw::SUSTAIN_CV_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(70.0, 92.04)), module, Supersaw::RELEASE_CV_INPUT));
 
 		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(45.72, 19.046)), module, Supersaw::NOISE_OUTPUT));
 		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(30.48, 73.399)), module, Supersaw::WAVE_OUTPUT + 0));
