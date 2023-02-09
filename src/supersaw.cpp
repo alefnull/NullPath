@@ -21,6 +21,8 @@ struct Supersaw : Module {
 		DECAY_PARAM,
 		SUSTAIN_PARAM,
 		RELEASE_PARAM,
+		ENUMS(WAVE_LEVEL_PARAM, 3),
+		FINAL_LEVEL_PARAM,
 		ENV_TO_DUR_PARAM,
 		ENV_TO_MIX_PARAM,
 		ENV_TO_PW_PARAM,
@@ -35,6 +37,8 @@ struct Supersaw : Module {
 		DECAY_CV_INPUT,
 		SUSTAIN_CV_INPUT,
 		RELEASE_CV_INPUT,
+		ENUMS(WAVE_LEVEL_CV_INPUT, 3),
+		FINAL_LEVEL_CV_INPUT,
 		NOISE_DUR_CV_INPUT,
 		PULSE_WIDTH_CV_INPUT,
 		GATE_INPUT,
@@ -84,6 +88,14 @@ struct Supersaw : Module {
 		configParam(DECAY_PARAM, 0.001, 5.0, 0.1, "Decay time", " s");
 		configParam(SUSTAIN_PARAM, 0.0, 1.0, 1.0, "Sustain level");
 		configParam(RELEASE_PARAM, 0.001, 5.0, 0.01, "Release time", " s");
+		configParam(WAVE_LEVEL_PARAM + 0, 0.0, 1.0, 1.0, "Wave 1 level");
+		configInput(WAVE_LEVEL_CV_INPUT + 0, "Wave 1 level CV");
+		configParam(WAVE_LEVEL_PARAM + 1, 0.0, 1.0, 1.0, "Wave 2 level");
+		configInput(WAVE_LEVEL_CV_INPUT + 1, "Wave 2 level CV");
+		configParam(WAVE_LEVEL_PARAM + 2, 0.0, 1.0, 1.0, "Wave 3 level");
+		configInput(WAVE_LEVEL_CV_INPUT + 2, "Wave 3 level CV");
+		configParam(FINAL_LEVEL_PARAM, 0.0, 1.0, 1.0, "Final level");
+		configInput(FINAL_LEVEL_CV_INPUT, "Final level CV");
 		configSwitch(ENV_TO_DUR_PARAM, 0.0, 1.0, 0.0, "Env -> Noise duration", {"Off", "On"});
 		configSwitch(ENV_TO_MIX_PARAM, 0.0, 1.0, 0.0, "Env -> Noise mix", {"Off", "On"});
 		configSwitch(ENV_TO_PW_PARAM, 0.0, 1.0, 0.0, "Env -> B width", {"Off", "On"});
@@ -212,6 +224,18 @@ struct Supersaw : Module {
 		for (int c = 0; c < channels; c += 4) {
 			float_4 voct = inputs[VOCT_INPUT].isConnected() ? inputs[VOCT_INPUT].getVoltageSimd<float_4>(c) : 0.f;
 
+			float_4 wave_levels[3];
+			for (int i = 0; i < 3; i++) {
+				wave_levels[i] = params[WAVE_LEVEL_PARAM + i].getValue();
+				if (inputs[WAVE_LEVEL_CV_INPUT + i].isConnected()) {
+					wave_levels[i] *= clamp(inputs[WAVE_LEVEL_CV_INPUT + i].getVoltageSimd<float_4>(c) / 10.f, 0.f, 1.f);
+				}
+			}
+			float_4 final_level = params[FINAL_LEVEL_PARAM].getValue();
+			if (inputs[FINAL_LEVEL_CV_INPUT].isConnected()) {
+				final_level *= clamp(inputs[FINAL_LEVEL_CV_INPUT].getVoltageSimd<float_4>(c) / 10.f, 0.f, 1.f);
+			}
+
 			if (noise_time > noise_dur) {
 				last_noise = osc4[c].noise();
 				noise_time = 0.f;
@@ -225,22 +249,22 @@ struct Supersaw : Module {
 			osc2[c].set_pitch(pitch + octave + fine2 + voct);
 			osc3[c].set_pitch(pitch + octave + fine3 + voct);
 
-			out += osc1[c].saw(args.sampleTime) * 0.33f;
-			outputs[WAVE_OUTPUT].setVoltageSimd<float_4>(osc1[c].saw(args.sampleTime) * 5.f, c);
+			out += osc1[c].saw(args.sampleTime) * 0.33f * wave_levels[0];
+			outputs[WAVE_OUTPUT].setVoltageSimd<float_4>(osc1[c].saw(args.sampleTime) * 5.f * wave_levels[0], c);
 			switch (wave) {
 				case 0:
 				  {
-				 	out += osc2[c].triangle(args.sampleTime, pulse_width) * 0.33f;
-					outputs[WAVE_OUTPUT + 1].setVoltageSimd<float_4>(osc2[c].triangle(args.sampleTime, pulse_width * 0.5) * 5.f, c);
+				 	out += osc2[c].triangle(args.sampleTime, pulse_width) * 0.33f * wave_levels[1];
+					outputs[WAVE_OUTPUT + 1].setVoltageSimd<float_4>(osc2[c].triangle(args.sampleTime, pulse_width * 0.5) * 5.f * wave_levels[1], c);
 					break;
 				  }
 				case 1:
-					out += osc2[c].pulse(args.sampleTime, pulse_width) * 0.33f;
-					outputs[WAVE_OUTPUT + 1].setVoltageSimd<float_4>(osc2[c].pulse(args.sampleTime, pulse_width) * 5.f, c);
+					out += osc2[c].pulse(args.sampleTime, pulse_width) * 0.33f * wave_levels[1];
+					outputs[WAVE_OUTPUT + 1].setVoltageSimd<float_4>(osc2[c].pulse(args.sampleTime, pulse_width) * 5.f * wave_levels[1], c);
 					break;
 			}
-			out += osc3[c].saw(args.sampleTime) * 0.33f;
-			outputs[WAVE_OUTPUT + 2].setVoltageSimd<float_4>(osc3[c].saw(args.sampleTime) * 5.f, c);
+			out += osc3[c].saw(args.sampleTime) * 0.33f * wave_levels[2];
+			outputs[WAVE_OUTPUT + 2].setVoltageSimd<float_4>(osc3[c].saw(args.sampleTime) * 5.f * wave_levels[2], c);
 
 			out += noise;
 
@@ -249,11 +273,14 @@ struct Supersaw : Module {
 					outputs[SIGNAL_OUTPUT].setVoltageSimd<float_4>(0.f, c);
 				}
 				else {
-					outputs[SIGNAL_OUTPUT].setVoltageSimd<float_4>(out * 5.f * envelope.env, c);
+					outputs[SIGNAL_OUTPUT].setVoltageSimd<float_4>(out * 5.f * envelope.env * final_level, c);
 				}
 			}
 			else {
-				outputs[SIGNAL_OUTPUT].setVoltageSimd<float_4>(out * 5.f, c);
+				if (inputs[FINAL_LEVEL_CV_INPUT].isConnected()) {
+					final_level *= clamp(inputs[FINAL_LEVEL_CV_INPUT].getVoltageSimd<float_4>(c) / 10.f, 0.f, 1.f);
+				}
+				outputs[SIGNAL_OUTPUT].setVoltageSimd<float_4>(out * 5.f * final_level, c);
 			}
 		}
 
@@ -302,6 +329,10 @@ struct SupersawWidget : ModuleWidget {
 		addParam(createParamCentered<NP::Knob>(mm2px(Vec(80.72, 53.718)), module, Supersaw::DECAY_PARAM));
 		addParam(createParamCentered<NP::Knob>(mm2px(Vec(80.72, 72.878)), module, Supersaw::SUSTAIN_PARAM));
 		addParam(createParamCentered<NP::Knob>(mm2px(Vec(80.718, 92.04)), module, Supersaw::RELEASE_PARAM));
+		addParam(createParamCentered<NP::SmallKnob>(mm2px(Vec(25.48, 62.399)), module, Supersaw::WAVE_LEVEL_PARAM + 0));
+		addParam(createParamCentered<NP::SmallKnob>(mm2px(Vec(40.724, 62.399)), module, Supersaw::WAVE_LEVEL_PARAM + 1));
+		addParam(createParamCentered<NP::SmallKnob>(mm2px(Vec(55.968, 62.399)), module, Supersaw::WAVE_LEVEL_PARAM + 2));
+		addParam(createParamCentered<NP::Knob>(mm2px(Vec(40.008, 103.205)), module, Supersaw::FINAL_LEVEL_PARAM));
 		addParam(createParamCentered<WaveSwitch>(mm2px(Vec(9.621, 72.742)), module, Supersaw::WAVE_PARAM));
 		addParam(createParamCentered<NP::SmallKnob>(mm2px(Vec(30.475, 81.47)), module, Supersaw::FINE_1_PARAM));
 		addParam(createParamCentered<NP::SmallKnob>(mm2px(Vec(45.719, 81.476)), module, Supersaw::FINE_2_PARAM));
@@ -313,6 +344,10 @@ struct SupersawWidget : ModuleWidget {
 		addParam(createParamCentered<NP::OrangeSwitch>(mm2px(Vec(38.619, 47.471)), module, Supersaw::ENV_TO_DUR_PARAM));
 		addParam(createParamCentered<NP::OrangeSwitch>(mm2px(Vec(48.067, 47.269)), module, Supersaw::ENV_TO_MIX_PARAM));
 
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(32.48, 62.399)), module, Supersaw::WAVE_LEVEL_CV_INPUT + 0));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(47.72, 62.399)), module, Supersaw::WAVE_LEVEL_CV_INPUT + 1));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(62.967, 62.399)), module, Supersaw::WAVE_LEVEL_CV_INPUT + 2));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(51.748, 103.205)), module, Supersaw::FINAL_LEVEL_CV_INPUT));
 		addInput(createInputCentered<NP::InPort>(mm2px(Vec(10.0, 15.997)), module, Supersaw::VOCT_INPUT));
 		addInput(createInputCentered<NP::InPort>(mm2px(Vec(80.607, 15.711)), module, Supersaw::GATE_INPUT));
 		addInput(createInputCentered<NP::InPort>(mm2px(Vec(39.692, 35.599)), module, Supersaw::NOISE_DUR_CV_INPUT));
