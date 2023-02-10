@@ -16,9 +16,9 @@ struct Randrouter : Module {
 		CLOCK_INPUT,
 		RESET_INPUT,
 		ENUMS(SIGNAL_INPUT, SIGNAL_COUNT),
-		CHANNELS_CV_INPUT, //TODO Implement
-		MODE_CV_INPUT, //TODO Implement
-		ENTROPY_CV_INPUT, //TODO Implement
+		CHANNELS_CV_INPUT,
+		MODE_CV_INPUT,
+		ENTROPY_CV_INPUT,
 		INPUTS_LEN
 	};
 	enum OutputId {
