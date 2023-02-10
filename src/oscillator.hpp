@@ -24,11 +24,6 @@ struct Oscillator {
         phase = simd::fmod(phase, 1.f);
     }
 
-    float_4 sine(float sample_time) {
-        update_phase(sample_time);
-        return simd::sin(2.f * M_PI * phase);
-    }
-
     float_4 pulse(float sample_time, float width) {
         update_phase(sample_time);
         return simd::ifelse(phase < width, 1.f, -1.f);
