@@ -13,12 +13,6 @@ struct Oscillator {
         freq = FREQ_C3;
     }
 
-    void set_freq(float freq) {
-        this->freq = freq;
-    }
-    void set_phase(float phase) {
-        this->phase = phase;
-    }
     void reset_phase() {
         this->phase = 0.f;
     }
