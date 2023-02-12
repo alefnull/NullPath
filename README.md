@@ -58,7 +58,7 @@ MODES:
 | Pairs     | Unwind-2  | Swap-2     | Randomize-2 |
 | Triplets  | Unwind-3  | Swap-3     | Randomize-3 |
 
-Full
+Basic
 * Unwind - Swaps two mappings so one output is back to normal
 * Swap - Swap two mappings
 * Randomize - Randomly assign each output to one of the inputs
