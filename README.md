@@ -19,6 +19,8 @@ MODES:
 - **Repeat Weight** - The weight is the number of times the step will be repeated. Higher weights are repeated more times.
 - **Fixed Pattern** - Generates a repeated pattern where the weight controls how frequent a step will be selected.
 
+---
+
 ## Cascade
 
 ![Cascade](cascade.png)
@@ -31,8 +33,27 @@ MODES:
 - **Shuffle** - Each envelope will be triggered one after the other, in a random order. Once all envelopes have been triggered, the order will be reshuffled, leading to a random sequence of envelopes with no repeats.
 - **Random** - A random envelope will be chosen at the end of each envelope's cycle, leading to a random sequence of envelopes with possible repeats.
 
+---
+
 ## Turbulence
 
 ![Turbulence](turbulence.png)
 
 **Turbulence** is a supersaw oscillator, with 3 waves (2 surrounding saws, and a center wave which can be toggled between a pulse wave or a saw/triangle wave), as well as a noise generator with optional "Duration" parameter. Longer "Duration" values hold the random noise sample for longer periods of time, causing "crunchier" noise. "Noise Mix" will mix the noise output in with the final output of the oscillator. The three waves can be detuned against each other using the "Fine tune" knobs below their individual outputs. There is also a built in amplitude envelope with ADSR controls, which can also be routed to various parameters such as Noise Duration, Noise Mix, and the central wave's "width" param. When the central wave is a pulse wave, the "width" param acts as a pulse width. When the wave is set to saw/triangle, the "width" param smoothly transitions between the two waves (0 = saw, 1 = triangle). If the Noise mix or Noise duration inputs are connected, their associated parameters become attenuators for the modulation signal. There is also an item in the right click menu to toggle between an exponential and linear envelope shape.
+
+---
+
+## Entangle
+
+![Entangle](entangle.png)
+
+**Entangle** is a 9 to 9 "random router" module, with a number of different mode combinations using the "Mode", "Entropy", and "Channels" switches. The "Channels" switch toggles the module between "mono" and "stereo". In "mono" mode, each input and output are independent of the others. In "stereo" mode, every two inputs and outputs are linked together and will behave as a single channel. The "Mode" switch toggles between 6 overall modes, while the "Entropy" switch toggles between 3 different "sub-modes", leading to 18 different routing modes in total (see the table and following descriptions for more details).
+
+|           | Negative  | Low        | High        |
+|-----------|-----------|------------|-------------|
+| Basic     | Unwind    | Swap       | Randomize   |
+| Up        | Sort Up   | Shunt Up   | Rotate Up   |
+| Down      | Sort Down | Shunt Down | Rotate Down |
+| Broadcast | Split     | Double     | Blast       |
+| Pairs     | Unwind-2  | Swap-2     | Randomize-2 |
+| Triplets  | Unwind-3  | Swap-3     | Randomize-3 |
