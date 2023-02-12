@@ -561,48 +561,50 @@ struct Randrouter : Module {
 			}
 		}
 		else {
-			for (int i = 0; i < SIGNAL_COUNT; i += 2) {
-				int index = 2 * std::floor(output_map[i] / 2);
-				bool i_is_8 = i == 8;
-				bool index_is_8 = index == 8;
-				if (i_is_8) {
-					if (index_is_8) {
-						// set target volume
-						target_volumes[i][index] = 1.f;
+			for (int ii = 0; ii < SIGNAL_COUNT; ii += 2) {
+				int oi = 2 * std::floor(output_map[ii] / 2);
+				bool ii_is_8 = oi == 8;
+				bool oi_is_8 = oi == 8;
+				if (ii_is_8) {
+					if (oi_is_8) {
+						//Both input and output are mono so connect them
+						target_volumes[ii][oi] = 1.f;
 					}
 					else {
-						bool con_1 = inputs[SIGNAL_INPUT + index + 0].isConnected();
-						bool con_2 = inputs[SIGNAL_INPUT + index + 1].isConnected();
-						if (con_1 && con_2) {
-							// set target volumes
-							target_volumes[i][index + 0] = 0.5f;
-							target_volumes[i][index + 1] = 0.5f;
-						}
-						else if (con_1 && !con_2) {
-							// set target volume
-							target_volumes[i][index + 0] = 1.f;
-						}
-						else if (!con_1 && con_2) {
-							// set target volume
-							target_volumes[i][index + 1] = 1.f;
-						}
-						else {
-							// set target volume
-							target_volumes[i][index + 0] = 0.f;
-							target_volumes[i][index + 1] = 0.f;
-						}
+						//Input is Mono and Ouptut is Stereo so connect the input to both outputs at full strenth
+						target_volumes[ii + 0][oi] = 1.f;
+						target_volumes[ii + 1][oi] = 1.f;
 					}
 				}
 				else {
-					if (index_is_8) {
-						// set target volumes
-						target_volumes[i + 0][index] = 1.f;
-						target_volumes[i + 1][index] = 1.f;
+					if (oi_is_8) {
+						//Input is Stereo and Ouptut is Mono
+						//So check to see if both inputs are connected
+						bool con_1 = inputs[SIGNAL_INPUT + ii + 0].isConnected();
+						bool con_2 = inputs[SIGNAL_INPUT + ii + 1].isConnected();
+						if (con_1 && con_2) {
+							//If both are connected, blend them at 50% volume
+							target_volumes[ii + 0][oi] = 0.5f;
+							target_volumes[ii + 1][oi] = 0.5f;
+						}
+						else if (con_1 && !con_2) {
+							//Only one is connected
+							target_volumes[ii + 0][oi] = 1.f;
+						}
+						else if (!con_1 && con_2) {
+							//Only one is connected
+							target_volumes[ii + 1][oi] = 1.f;
+						}
+						else {
+							//Neither are connected, set volume to 0
+							target_volumes[ii + 0][oi] = 0.f;
+							target_volumes[ii + 1][oi] = 0.f;
+						}
 					}
 					else {
-						// set target volumes
-						target_volumes[i + 0][index + 0] = 1.f;
-						target_volumes[i + 1][index + 1] = 1.f;
+						//Neither input nor output is mono so connect L to L and R to R
+						target_volumes[ii + 0][oi + 0] = 1.f;
+						target_volumes[ii + 1][oi + 1] = 1.f;
 					}
 				}
 			}
@@ -692,7 +694,7 @@ struct RandrouterWidget : ModuleWidget {
 					stereo = !module->mono;
 				}
 
-				//Draw Stero Connectors
+				//Draw Stereo Connectors
 				if(stereo){
 					for(int si = 0; si < 8; si += 2){
 						drawConnector(args,ins[si],ins[si+1]);
@@ -708,6 +710,7 @@ struct RandrouterWidget : ModuleWidget {
 							if(ii != DEFAULT_OUTPUT_MAP[oi]) continue;
 						}else{
 							float vol = module->volumes[oi][ii];
+							DEBUG("%i to %i vol = %f",ii,oi,vol);
 							if(vol == 0) continue;
 							nvgGlobalAlpha(args.vg, vol);	
 						}		
@@ -718,7 +721,7 @@ struct RandrouterWidget : ModuleWidget {
 
 						Vec in = ins[ii];
 						Vec out = outs[oi];
-
+						DEBUG("drawing %i to %i",ii,oi);
 						if(stereo){
 							if(ii+1 < SIGNAL_COUNT) in = in.plus(ins[ii+1]).mult(0.5f);
 							if(oi+1 < SIGNAL_COUNT) out = out.plus(outs[oi+1]).mult(0.5f);
