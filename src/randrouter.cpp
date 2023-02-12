@@ -19,6 +19,9 @@ struct Randrouter : Module {
 		CHANNELS_CV_INPUT,
 		MODE_CV_INPUT,
 		ENTROPY_CV_INPUT,
+		NEG_ENT_CLOCK_INPUT,
+		LOW_ENT_CLOCK_INPUT,
+		HIGH_ENT_CLOCK_INPUT,
 		INPUTS_LEN
 	};
 	enum OutputId {
@@ -63,6 +66,9 @@ struct Randrouter : Module {
 		configInput(CHANNELS_CV_INPUT, "Channels CV");
 		configInput(MODE_CV_INPUT, "Mode CV");
 		configInput(ENTROPY_CV_INPUT, "Entropy CV");
+		configInput(NEG_ENT_CLOCK_INPUT, "Negative Entropy Clock");
+		configInput(LOW_ENT_CLOCK_INPUT, "Low Entropy Clock");
+		configInput(HIGH_ENT_CLOCK_INPUT, "High Entropy Clock");
 		configOutput(SIGNAL_OUTPUT + 0, "Signal 1");
 		configOutput(SIGNAL_OUTPUT + 1, "Signal 2");
 		configOutput(SIGNAL_OUTPUT + 2, "Signal 3");
@@ -75,6 +81,9 @@ struct Randrouter : Module {
 	}
 
 	dsp::SchmittTrigger clock_trigger;
+	dsp::SchmittTrigger neg_entropy_clock_trigger;
+	dsp::SchmittTrigger low_entropy_clock_trigger;
+	dsp::SchmittTrigger high_entropy_clock_trigger;
 	dsp::SchmittTrigger reset_trigger;
 	dsp::SchmittTrigger mode_trigger;
 	dsp::SchmittTrigger entropy_trigger;
@@ -462,7 +471,13 @@ struct Randrouter : Module {
 		int mode = params[MODE_PARAM].getValue();
 		int entropy = params[ENTROPY_PARAM].getValue();
 		bool clock = clock_trigger.process(inputs[CLOCK_INPUT].getVoltage());
+		bool neg_entropy_clock = neg_entropy_clock_trigger.process(inputs[NEG_ENT_CLOCK_INPUT].getVoltage());
+		bool low_entropy_clock = low_entropy_clock_trigger.process(inputs[LOW_ENT_CLOCK_INPUT].getVoltage());
+		bool high_entropy_clock = high_entropy_clock_trigger.process(inputs[HIGH_ENT_CLOCK_INPUT].getVoltage());
 		bool reset = reset_trigger.process(inputs[RESET_INPUT].getVoltage());
+		bool clock_neg = false;
+		bool clock_low = false;
+		bool clock_high = false;
 
 		// a 2-dimensional array, 9x9, representing the 'target volumes' of every input-output combination
 		float target_volumes[SIGNAL_COUNT][SIGNAL_COUNT] = { 0 };
@@ -519,6 +534,101 @@ struct Randrouter : Module {
 			}
 		}
 
+		if (clock) {
+			switch (entropy) {
+				case 0: // negative
+					clock_neg = true;
+					break;
+				case 1: // low
+					clock_low = true;
+					break;
+				case 2: // high
+					clock_high = true;
+					break;
+			}
+		}
+
+		if (high_entropy_clock) {
+			clock_high = true;
+		}
+
+		if (low_entropy_clock) {
+			clock_low = true;
+		}
+
+		if (neg_entropy_clock) {
+			clock_neg = true;
+		}
+
+		if (clock_high) {
+			switch (mode) {
+				case Mode::Basic: // Basic
+					process_basic(2);
+					break;
+				case Mode::Up: // Up
+					process_up(2);
+					break;
+				case Mode::Down: // Down
+					process_down(2);
+					break;
+				case Mode::Broadcast: // Broadcast
+					process_broadcast(2);
+					break;
+				case Mode::Pairs: // Pairs
+					process_pairs(2);
+					break;
+				case Mode::Triplets: // Triplets
+					process_triplets(2);
+					break;
+			}
+		}
+
+		if (clock_low) {
+			switch (mode) {
+				case Mode::Basic: // Basic
+					process_basic(1);
+					break;
+				case Mode::Up: // Up
+					process_up(1);
+					break;
+				case Mode::Down: // Down
+					process_down(1);
+					break;
+				case Mode::Broadcast: // Broadcast
+					process_broadcast(1);
+					break;
+				case Mode::Pairs: // Pairs
+					process_pairs(1);
+					break;
+				case Mode::Triplets: // Triplets
+					process_triplets(1);
+					break;
+			}
+		}
+
+		if (clock_neg) {
+			switch (mode) {
+				case Mode::Basic: // Basic
+					process_basic(0);
+					break;
+				case Mode::Up: // Up
+					process_up(0);
+					break;
+				case Mode::Down: // Down
+					process_down(0);
+					break;
+				case Mode::Broadcast: // Broadcast
+					process_broadcast(0);
+					break;
+				case Mode::Pairs: // Pairs
+					process_pairs(0);
+					break;
+				case Mode::Triplets: // Triplets
+					process_triplets(0);
+					break;
+			}
+		}
+
 		if (reset) {
 			for (int i = 0; i < SIGNAL_COUNT; i++) {
 				output_map[i] = i;
@@ -526,29 +636,6 @@ struct Randrouter : Module {
 					volumes[i][j] = 0.f;
 					target_volumes[i][j] = 0.f;
 				}
-			}
-		}
-
-		if (clock) {
-			switch (mode) {
-				case Mode::Basic: // Basic
-					process_basic(entropy);
-					break;
-				case Mode::Up: // Up
-					process_up(entropy);
-					break;
-				case Mode::Down: // Down
-					process_down(entropy);
-					break;
-				case Mode::Broadcast: // Broadcast
-					process_broadcast(entropy);
-					break;
-				case Mode::Pairs: // Pairs
-					process_pairs(entropy);
-					break;
-				case Mode::Triplets: // Triplets
-					process_triplets(entropy);
-					break;
 			}
 		}
 
@@ -801,6 +888,9 @@ struct RandrouterWidget : ModuleWidget {
 		addInput(createInputCentered<NP::InPort>(mm2px(Vec(63.404, 46.323)), module, Randrouter::MODE_CV_INPUT));
 		addInput(createInputCentered<NP::InPort>(mm2px(Vec(63.381, 79.287)), module, Randrouter::ENTROPY_CV_INPUT));
 		addInput(createInputCentered<NP::InPort>(mm2px(Vec(63.404, 109.741)), module, Randrouter::CHANNELS_CV_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(8.151, 88.046)), module, Randrouter::NEG_ENT_CLOCK_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(8.151, 99.546)), module, Randrouter::LOW_ENT_CLOCK_INPUT));
+		addInput(createInputCentered<NP::InPort>(mm2px(Vec(8.151, 111.046)), module, Randrouter::HIGH_ENT_CLOCK_INPUT));
 
 		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(49.567, 17.286)), module, Randrouter::SIGNAL_OUTPUT + 0));
 		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(49.563, 28.87)), module, Randrouter::SIGNAL_OUTPUT + 1));
