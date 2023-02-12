@@ -47,7 +47,7 @@ MODES:
 
 ![Entangle](entangle.png)
 
-**Entangle** is a 9 to 9 "random router" module, with a number of different mode combinations using the "Mode", "Entropy", and "Channels" switches. The "Channels" switch toggles the module between "mono" and "stereo". In "mono" mode, each input and output are independent of the others. In "stereo" mode, every two inputs and outputs are linked together and will behave as a single channel. The "Mode" switch toggles between 6 overall modes, while the "Entropy" switch toggles between 3 different "sub-modes", leading to 18 different routing modes in total (see the table and following descriptions for more details).
+**Entangle** is a 9 to 9 "random router" module, with a number of different mode combinations using the "Mode", "Entropy", and "Channels" switches. The "Channels" switch toggles the module between "mono" and "stereo". In "mono" mode, each input and output are independent of the others. In "stereo" mode, every two inputs and outputs are linked together and will behave as a single channel. The "Mode" switch toggles between 6 overall modes, while the "Entropy" switch toggles between 3 different "sub-modes", leading to 18 different routing modes in total (see the table and following descriptions for more details. "Mode" listed down left hand side, "Entropy" along the top). In the right click menu, there are options to toggle crossfading between routing changes, set the crossfade time, and to toggle "Hold last value" which will hold an output's last value when its paired input is disconnected. Finally, there is a sub-menu to toggle "Trigger Mode" on/off. By default, when "Trigger Mode" is enabled, the "Mode", "Entropy", and "Channels" CV inputs become trigger inputs, and each trigger will cycle through the modes sequentially. If the optional "Random mode" menu item is enabled, each trigger will choose a random mode instead.
 
 |           | Negative  | Low        | High        |
 |-----------|-----------|------------|-------------|
@@ -59,22 +59,23 @@ MODES:
 | Triplets  | Unwind-3  | Swap-3     | Randomize-3 |
 
 Basic
-* Unwind - Swaps two mappings so one output is back to normal
-* Swap - Swap two mappings
-* Randomize - Randomly assign each output to one of the inputs
+
+- Unwind - Swaps two mappings so one output is back to normal
+- Swap - Swap two mappings
+- Randomize - Randomly assign each output to one of the inputs
 
 Up/Down
-* Sort - Swap two adjacent mappings so they become more sorted
-* Shunt - Rotate the some of the mappings
-* Rotate - Rotate all of the mappings
+
+- Sort - Swap two adjacent mappings so they become more sorted
+- Shunt - Rotate some of the mappings
+- Rotate - Rotate all of the mappings
 
 Broadcast
-* Split - Find a doubled mapping and restore one to normal
-* Double - Randomly set two outputs to the same input
-* Blast - Randomly set all outputs to one input
+
+- Split - Find a doubled mapping and restore one to normal
+- Double - Randomly set two outputs to the same input
+- Blast - Randomly set all outputs to the same input
 
 Pairs/Triplets
-* Like Full but works in sets of 2 or 3
-* Note in Pairs, channel 9 is still mono
-* Note in Triples, channels 7, 8 & 9 are still mono
 
+- Like Full but works in sets of 2 or 3
