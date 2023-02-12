@@ -710,7 +710,7 @@ struct RandrouterWidget : ModuleWidget {
 							if(ii != DEFAULT_OUTPUT_MAP[oi]) continue;
 						}else{
 							float vol = module->volumes[oi][ii];
-							DEBUG("%i to %i vol = %f",ii,oi,vol);
+							// DEBUG("%i to %i vol = %f",ii,oi,vol);
 							if(vol == 0) continue;
 							nvgGlobalAlpha(args.vg, vol);	
 						}		
@@ -721,7 +721,7 @@ struct RandrouterWidget : ModuleWidget {
 
 						Vec in = ins[ii];
 						Vec out = outs[oi];
-						DEBUG("drawing %i to %i",ii,oi);
+						// DEBUG("drawing %i to %i",ii,oi);
 						if(stereo){
 							if(ii+1 < SIGNAL_COUNT) in = in.plus(ins[ii+1]).mult(0.5f);
 							if(oi+1 < SIGNAL_COUNT) out = out.plus(outs[oi+1]).mult(0.5f);
