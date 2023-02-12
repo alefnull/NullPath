@@ -57,3 +57,24 @@ MODES:
 | Broadcast | Split     | Double     | Blast       |
 | Pairs     | Unwind-2  | Swap-2     | Randomize-2 |
 | Triplets  | Unwind-3  | Swap-3     | Randomize-3 |
+
+Full
+* Unwind - Swaps two mappings so one output is back to normal
+* Swap - Swap two mappings
+* Randomize - Randomly assign each output to one of the inputs
+
+Up/Down
+* Sort - Swap two adjacent mappings so they become more sorted
+* Shunt - Rotate the some of the mappings
+* Rotate - Rotate all of the mappings
+
+Broadcast
+* Split - Find a doubled mapping and restore one to normal
+* Double - Randomly set two outputs to the same input
+* Blast - Randomly set all outputs to one input
+
+Pairs/Triplets
+* Like Full but works in sets of 2 or 3
+* Note in Pairs, channel 9 is still mono
+* Note in Triples, channels 7, 8 & 9 are still mono
+
