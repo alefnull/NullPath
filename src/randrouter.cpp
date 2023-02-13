@@ -64,8 +64,11 @@ struct Randrouter : Module {
 		configInput(SIGNAL_INPUT + 7, "Signal 8");
 		configInput(SIGNAL_INPUT + 8, "Signal 9");
 		configInput(CHANNELS_CV_INPUT, "Channels CV");
+		getInputInfo(CHANNELS_CV_INPUT)->description = "Expects a 0-10V signal";
 		configInput(MODE_CV_INPUT, "Mode CV");
+		getInputInfo(MODE_CV_INPUT)->description = "Expects a 0-10V signal";
 		configInput(ENTROPY_CV_INPUT, "Entropy CV");
+		getInputInfo(ENTROPY_CV_INPUT)->description = "Expects a 0-10V signal";
 		configInput(NEG_ENT_CLOCK_INPUT, "Negative Entropy Clock");
 		configInput(LOW_ENT_CLOCK_INPUT, "Low Entropy Clock");
 		configInput(HIGH_ENT_CLOCK_INPUT, "High Entropy Clock");
