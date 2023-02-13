@@ -518,21 +518,24 @@ struct Randrouter : Module {
 			}
 		}
 		else {
-			// channels cv input - 0 = mono, 1 = stereo
+			// channels has two possible states, mono or stereo,
+			// so take a 0-10V input and map it to 0 or 1 (0-5V = mono, 5-10V = stereo)
 			if (inputs[CHANNELS_CV_INPUT].isConnected()) {
-				mono = inputs[CHANNELS_CV_INPUT].getVoltage() < 1.0;
+				mono = inputs[CHANNELS_CV_INPUT].getVoltage() < 5.0;
 				params[CHANNELS_PARAM].setValue(mono ? 0 : 1);
 			}
 
-			// mode cv input - 0 = basic, 1 = up, 2 = down, 3 = broadcast, 4 = pairs, 5 = triplets
+			// mode has six possible states, basic, up, down, broadcast, pairs, triplets,
+			// so take a 0-10V input and map it to 0-5 (0-1.66V = basic, 1.66-3.33V = up, etc.)
 			if (inputs[MODE_CV_INPUT].isConnected()) {
-				mode = clamp((int)std::round(inputs[MODE_CV_INPUT].getVoltage()), 0, 5);
+				mode = clamp((int)std::round(inputs[MODE_CV_INPUT].getVoltage() * 0.6), 0, 5);
 				params[MODE_PARAM].setValue(mode);
 			}
 
-			// entropy cv input - 0 = negative, 1 = low, 2 = high
+			// entropy has three possible states, negative, low, high,
+			// so take a 0-10V input and map it to 0-2 (0-3.33V = negative, 3.33-6.66V = low, etc.)
 			if (inputs[ENTROPY_CV_INPUT].isConnected()) {
-				entropy = clamp((int)std::round(inputs[ENTROPY_CV_INPUT].getVoltage()), 0, 2);
+				entropy = clamp((int)std::round(inputs[ENTROPY_CV_INPUT].getVoltage() * 0.3), 0, 2);
 				params[ENTROPY_PARAM].setValue(entropy);
 			}
 		}
