@@ -163,7 +163,9 @@ struct Funcgen : Module {
 				configInput(TRIGGER_INPUT + i, "Trigger A");
 				configOutput(FUNCTION_OUTPUT + i, "Function A");
 				configInput(RISE_CV_INPUT + i, "A Rise CV");
+				getInputInfo(RISE_CV_INPUT + i)->description = "Expects a 0-10V signal";
 				configInput(FALL_CV_INPUT + i, "A Fall CV");
+				getInputInfo(FALL_CV_INPUT + i)->description = "Expects a 0-10V signal";
 				configOutput(RISING_OUTPUT + i, "A Rising");
 				configOutput(FALLING_OUTPUT + i, "A Falling");
 			}
@@ -171,7 +173,9 @@ struct Funcgen : Module {
 				configInput(TRIGGER_INPUT + i, "Trigger B");
 				configOutput(FUNCTION_OUTPUT + i, "Function B");
 				configInput(RISE_CV_INPUT + i, "B Rise CV");
+				getInputInfo(RISE_CV_INPUT + i)->description = "Expects a 0-10V signal";
 				configInput(FALL_CV_INPUT + i, "B Fall CV");
+				getInputInfo(FALL_CV_INPUT + i)->description = "Expects a 0-10V signal";
 				configOutput(RISING_OUTPUT + i, "B Rising");
 				configOutput(FALLING_OUTPUT + i, "B Falling");
 			}
@@ -179,7 +183,9 @@ struct Funcgen : Module {
 				configInput(TRIGGER_INPUT + i, "Trigger C");
 				configOutput(FUNCTION_OUTPUT + i, "Function C");
 				configInput(RISE_CV_INPUT + i, "C Rise CV");
+				getInputInfo(RISE_CV_INPUT + i)->description = "Expects a 0-10V signal";
 				configInput(FALL_CV_INPUT + i, "C Fall CV");
+				getInputInfo(FALL_CV_INPUT + i)->description = "Expects a 0-10V signal";
 				configOutput(RISING_OUTPUT + i, "C Rising");
 				configOutput(FALLING_OUTPUT + i, "C Falling");
 			}
@@ -187,7 +193,9 @@ struct Funcgen : Module {
 				configInput(TRIGGER_INPUT + i, "Trigger D");
 				configOutput(FUNCTION_OUTPUT + i, "Function D");
 				configInput(RISE_CV_INPUT + i, "D Rise CV");
+				getInputInfo(RISE_CV_INPUT + i)->description = "Expects a 0-10V signal";
 				configInput(FALL_CV_INPUT + i, "D Fall CV");
+				getInputInfo(FALL_CV_INPUT + i)->description = "Expects a 0-10V signal";
 				configOutput(RISING_OUTPUT + i, "D Rising");
 				configOutput(FALLING_OUTPUT + i, "D Falling");
 			}
