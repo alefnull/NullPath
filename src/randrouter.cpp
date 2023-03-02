@@ -91,6 +91,8 @@ struct Randrouter : Module {
 	dsp::SchmittTrigger mode_trigger;
 	dsp::SchmittTrigger entropy_trigger;
 	dsp::SchmittTrigger channels_trigger;
+	// output map, used to determine which input is routed to which output
+	// index is the input, value is the output
 	int output_map[SIGNAL_COUNT] = { 0, 1, 2, 3, 4, 5, 6, 7, 8 };
 	int triplet_swap[3][3] = { { 1, 0, 2 }, { 2, 1, 0 }, { 0, 2, 1 } };
 	int triplet_randomize[5][3] = { { 0, 2, 1 }, { 1, 0, 2 }, { 1, 2, 0 }, { 2, 0, 1 }, { 2, 1, 0 } };
