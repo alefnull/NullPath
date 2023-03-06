@@ -658,8 +658,8 @@ struct Randrouter : Module {
 		else {
 			for (int ii = 0; ii < SIGNAL_COUNT; ii += 2) {
 				int oi = 2 * std::floor(output_map[ii] / 2);
-				bool ii_is_8 = ii == 8;
-				bool oi_is_8 = oi == 8;
+				bool ii_is_8 = ii == 7;
+				bool oi_is_8 = oi == 7;
 				if (ii_is_8) {
 					if (oi_is_8) {
 						//Both input and output are mono so connect them
