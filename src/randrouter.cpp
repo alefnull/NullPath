@@ -1,6 +1,7 @@
 #include "plugin.hpp"
 #include "widgets.hpp"
 
+#define MAX_POLY 16
 #define SIGNAL_COUNT 9
 #define MODE_COUNT 6
 #define ENTROPY_COUNT 3
@@ -99,7 +100,7 @@ struct Randrouter : Module {
 	// a 2-dimensional array, 9x9, representing the 'volumes' of every input-output combination
 	float volumes[SIGNAL_COUNT][SIGNAL_COUNT] = { 0 };
 	// an array of 9 floats, representing the last output value for each output
-	float last_values[SIGNAL_COUNT] = { 0 };
+	float last_values[MAX_POLY][SIGNAL_COUNT] = { 0 };
 	// a float to store the current fade duration
     float fade_duration = 0.005f;
 	bool mono = true;
@@ -721,18 +722,23 @@ struct Randrouter : Module {
 			}
 		}
 
+
 		for (int i = 0; i < SIGNAL_COUNT; i++) {
-			float out = 0;
-			if (hold_last_value && !inputs[SIGNAL_INPUT + output_map[i]].isConnected()) {
-				out = last_values[i];
-			}
-			else {
-				for (int j = 0; j < SIGNAL_COUNT; j++) {
-					out += inputs[SIGNAL_INPUT + j].getVoltage() * volumes[i][j];
+			int poly = inputs[SIGNAL_INPUT + i].getChannels();
+			outputs[SIGNAL_OUTPUT + i].setChannels(poly);
+			for (int ch = 0; ch < poly; ch++) {
+				float out = 0;
+				if (hold_last_value && !inputs[SIGNAL_INPUT + output_map[i]].isConnected()) {
+					out = last_values[ch][i];
 				}
+				else {
+					for (int j = 0; j < SIGNAL_COUNT; j++) {
+						out += inputs[SIGNAL_INPUT + j].getVoltage(ch) * volumes[i][j];
+					}
+				}
+				last_values[ch][i] = out;
+				outputs[SIGNAL_OUTPUT + i].setVoltage(out, ch);
 			}
-			last_values[i] = out;
-			outputs[SIGNAL_OUTPUT + i].setVoltage(out);
 		}
 	}
 };
