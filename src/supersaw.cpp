@@ -87,10 +87,10 @@ struct Supersaw : Module {
 		configParam(PULSE_WIDTH_PARAM, 0.0, 1.0, 0.0, "B width");
 		configInput(PULSE_WIDTH_CV_INPUT, "B width CV");
 		getInputInfo(PULSE_WIDTH_CV_INPUT)->description = "Expects a 0-10V signal";
-		configParam(ATTACK_PARAM, 0.001, 5.0, 0.01, "Attack time", " s");
-		configParam(DECAY_PARAM, 0.001, 5.0, 0.1, "Decay time", " s");
+		configParam(ATTACK_PARAM, 0.001, 5.0, 0.001, "Attack time", " s");
+		configParam(DECAY_PARAM, 0.01, 5.0, 0.01, "Decay time", " s");
 		configParam(SUSTAIN_PARAM, 0.0, 1.0, 1.0, "Sustain level");
-		configParam(RELEASE_PARAM, 0.001, 5.0, 0.01, "Release time", " s");
+		configParam(RELEASE_PARAM, 0.01, 5.0, 0.01, "Release time", " s");
 		configParam(WAVE_LEVEL_PARAM + 0, 0.0, 1.0, 1.0, "Wave 1 level");
 		configInput(WAVE_LEVEL_CV_INPUT + 0, "Wave 1 level CV");
 		getInputInfo(WAVE_LEVEL_CV_INPUT + 0)->description = "Expects a 0-10V signal";
