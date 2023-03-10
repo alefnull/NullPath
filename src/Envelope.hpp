@@ -47,7 +47,7 @@ struct Envelope {
     	this->attack_shape = shape;
     }
     void set_decay(float decay_time) {
-        this->decay_time = clamp(decay_time, 0.001f, 10.f);
+        this->decay_time = clamp(decay_time, 0.01f, 10.f);
     }
     void set_decay_shape(float shape){
     	this->decay_shape = shape;
@@ -56,7 +56,7 @@ struct Envelope {
         this->sustain_level = clamp(sustain_level, 0.f, 1.f);
     }
     void set_release(float release_time) {
-        this->release_time = clamp(release_time, 0.001f, 10.f);
+        this->release_time = clamp(release_time, 0.01f, 10.f);
     }
     void set_release_shape(float shape){
     	this->release_shape = shape;
