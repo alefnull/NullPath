@@ -1,5 +1,6 @@
 #include "plugin.hpp"
 #include "widgets.hpp"
+#include "Entangle.inl"
 
 #define MAX_POLY 16
 #define SIGNAL_COUNT 9
@@ -884,39 +885,39 @@ struct RandrouterWidget : ModuleWidget {
 		addChild(createWidget<ScrewBlack>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewBlack>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createParamCentered<RRModeSwitch>(mm2px(Vec(63.404, 29.491)), module, Randrouter::MODE_PARAM));
-		addParam(createParamCentered<NP::EntropySwitch>(mm2px(Vec(63.404, 67.338)), module, Randrouter::ENTROPY_PARAM));
-		addParam(createParamCentered<NP::ChannelsSwitch>(mm2px(Vec(63.404, 99.503)), module, Randrouter::CHANNELS_PARAM));
+		addParam(createParamCentered<RRModeSwitch>(POS::MODE_PARAM, module, Randrouter::MODE_PARAM));
+		addParam(createParamCentered<NP::EntropySwitch>(POS::ENTROPY_PARAM, module, Randrouter::ENTROPY_PARAM));
+		addParam(createParamCentered<NP::ChannelsSwitch>(POS::CHANNELS_PARAM, module, Randrouter::CHANNELS_PARAM));
 
-		addInput(createInputCentered<NP::InPort>(mm2px(Vec(21.534, 17.146)), module, Randrouter::SIGNAL_INPUT + 0));
-		addInput(createInputCentered<NP::InPort>(mm2px(Vec(21.557, 28.794)), module, Randrouter::SIGNAL_INPUT + 1));
-		addInput(createInputCentered<NP::InPort>(mm2px(Vec(21.557, 40.353)), module, Randrouter::SIGNAL_INPUT + 2));
-		addInput(createInputCentered<NP::InPort>(mm2px(Vec(21.557, 51.869)), module, Randrouter::SIGNAL_INPUT + 3));
-		addInput(createInputCentered<NP::InPort>(mm2px(Vec(21.534, 63.448)), module, Randrouter::SIGNAL_INPUT + 4));
-		addInput(createInputCentered<NP::InPort>(mm2px(Vec(21.534, 75.023)), module, Randrouter::SIGNAL_INPUT + 5));
-		addInput(createInputCentered<NP::InPort>(mm2px(Vec(21.557, 86.671)), module, Randrouter::SIGNAL_INPUT + 6));
-		addInput(createInputCentered<NP::InPort>(mm2px(Vec(21.557, 98.247)), module, Randrouter::SIGNAL_INPUT + 7));
-		addInput(createInputCentered<NP::InPort>(mm2px(Vec(21.557, 109.746)), module, Randrouter::SIGNAL_INPUT + 8));
-		addInput(createInputCentered<NP::InPort>(mm2px(Vec(8.129, 58.382)), module, Randrouter::CLOCK_INPUT));
-		addInput(createInputCentered<NP::InPort>(mm2px(Vec(8.151, 76.546)), module, Randrouter::RESET_INPUT));
-		addInput(createInputCentered<NP::InPort>(mm2px(Vec(63.404, 46.323)), module, Randrouter::MODE_CV_INPUT));
-		addInput(createInputCentered<NP::InPort>(mm2px(Vec(63.381, 79.287)), module, Randrouter::ENTROPY_CV_INPUT));
-		addInput(createInputCentered<NP::InPort>(mm2px(Vec(63.404, 109.741)), module, Randrouter::CHANNELS_CV_INPUT));
-		addInput(createInputCentered<NP::InPort>(mm2px(Vec(8.151, 88.046)), module, Randrouter::NEG_ENT_CLOCK_INPUT));
-		addInput(createInputCentered<NP::InPort>(mm2px(Vec(8.151, 99.546)), module, Randrouter::LOW_ENT_CLOCK_INPUT));
-		addInput(createInputCentered<NP::InPort>(mm2px(Vec(8.151, 111.046)), module, Randrouter::HIGH_ENT_CLOCK_INPUT));
+		addInput(createInputCentered<NP::InPort>(POS::SIGNAL_1_INPUT, module, Randrouter::SIGNAL_INPUT + 0));
+		addInput(createInputCentered<NP::InPort>(POS::SIGNAL_2_INPUT, module, Randrouter::SIGNAL_INPUT + 1));
+		addInput(createInputCentered<NP::InPort>(POS::SIGNAL_3_INPUT, module, Randrouter::SIGNAL_INPUT + 2));
+		addInput(createInputCentered<NP::InPort>(POS::SIGNAL_4_INPUT, module, Randrouter::SIGNAL_INPUT + 3));
+		addInput(createInputCentered<NP::InPort>(POS::SIGNAL_5_INPUT, module, Randrouter::SIGNAL_INPUT + 4));
+		addInput(createInputCentered<NP::InPort>(POS::SIGNAL_6_INPUT, module, Randrouter::SIGNAL_INPUT + 5));
+		addInput(createInputCentered<NP::InPort>(POS::SIGNAL_7_INPUT, module, Randrouter::SIGNAL_INPUT + 6));
+		addInput(createInputCentered<NP::InPort>(POS::SIGNAL_8_INPUT, module, Randrouter::SIGNAL_INPUT + 7));
+		addInput(createInputCentered<NP::InPort>(POS::SIGNAL_9_INPUT, module, Randrouter::SIGNAL_INPUT + 8));
+		addInput(createInputCentered<NP::InPort>(POS::CLOCK_INPUT, module, Randrouter::CLOCK_INPUT));
+		addInput(createInputCentered<NP::InPort>(POS::RESET_INPUT, module, Randrouter::RESET_INPUT));
+		addInput(createInputCentered<NP::InPort>(POS::MODE_INPUT, module, Randrouter::MODE_CV_INPUT));
+		addInput(createInputCentered<NP::InPort>(POS::ENTROPY_INPUT, module, Randrouter::ENTROPY_CV_INPUT));
+		addInput(createInputCentered<NP::InPort>(POS::CHANNELS_INPUT, module, Randrouter::CHANNELS_CV_INPUT));
+		addInput(createInputCentered<NP::InPort>(POS::NEG_ENT_CLOCK_INPUT, module, Randrouter::NEG_ENT_CLOCK_INPUT));
+		addInput(createInputCentered<NP::InPort>(POS::LOW_ENT_CLOCK_INPUT, module, Randrouter::LOW_ENT_CLOCK_INPUT));
+		addInput(createInputCentered<NP::InPort>(POS::HIGH_ENT_CLOCK_INPUT, module, Randrouter::HIGH_ENT_CLOCK_INPUT));
 
-		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(49.567, 17.286)), module, Randrouter::SIGNAL_OUTPUT + 0));
-		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(49.563, 28.87)), module, Randrouter::SIGNAL_OUTPUT + 1));
-		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(49.567, 40.437)), module, Randrouter::SIGNAL_OUTPUT + 2));
-		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(49.563, 52.021)), module, Randrouter::SIGNAL_OUTPUT + 3));
-		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(49.563, 63.596)), module, Randrouter::SIGNAL_OUTPUT + 4));
-		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(49.563, 75.172)), module, Randrouter::SIGNAL_OUTPUT + 5));
-		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(49.563, 86.747)), module, Randrouter::SIGNAL_OUTPUT + 6));
-		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(49.563, 98.323)), module, Randrouter::SIGNAL_OUTPUT + 7));
-		addOutput(createOutputCentered<NP::OutPort>(mm2px(Vec(49.567, 109.89)), module, Randrouter::SIGNAL_OUTPUT + 8));
+		addOutput(createOutputCentered<NP::OutPort>(POS::SIGNAL_1_OUTPUT, module, Randrouter::SIGNAL_OUTPUT + 0));
+		addOutput(createOutputCentered<NP::OutPort>(POS::SIGNAL_2_OUTPUT, module, Randrouter::SIGNAL_OUTPUT + 1));
+		addOutput(createOutputCentered<NP::OutPort>(POS::SIGNAL_3_OUTPUT, module, Randrouter::SIGNAL_OUTPUT + 2));
+		addOutput(createOutputCentered<NP::OutPort>(POS::SIGNAL_4_OUTPUT, module, Randrouter::SIGNAL_OUTPUT + 3));
+		addOutput(createOutputCentered<NP::OutPort>(POS::SIGNAL_5_OUTPUT, module, Randrouter::SIGNAL_OUTPUT + 4));
+		addOutput(createOutputCentered<NP::OutPort>(POS::SIGNAL_6_OUTPUT, module, Randrouter::SIGNAL_OUTPUT + 5));
+		addOutput(createOutputCentered<NP::OutPort>(POS::SIGNAL_7_OUTPUT, module, Randrouter::SIGNAL_OUTPUT + 6));
+		addOutput(createOutputCentered<NP::OutPort>(POS::SIGNAL_8_OUTPUT, module, Randrouter::SIGNAL_OUTPUT + 7));
+		addOutput(createOutputCentered<NP::OutPort>(POS::SIGNAL_9_OUTPUT, module, Randrouter::SIGNAL_OUTPUT + 8));
 
-		addChild(createRoutingWidget(module,mm2px(Vec(21.557, 17.142)),mm2px(Vec(28.006, 92.756))));
+		addChild(createRoutingWidget(module,POS::LINES_WIDGET.pos,POS::LINES_WIDGET.size));
 	}
 
 	struct FadeDurationQuantity : Quantity {
