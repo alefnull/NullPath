@@ -660,8 +660,8 @@ struct Randrouter : Module {
 		else {
 			for (int ii = 0; ii < SIGNAL_COUNT; ii += 2) {
 				int oi = 2 * std::floor(output_map[ii] / 2);
-				bool ii_is_8 = ii == 7;
-				bool oi_is_8 = oi == 7;
+				bool ii_is_8 = ii == 8;
+				bool oi_is_8 = oi == 8;
 				if (ii_is_8) {
 					if (oi_is_8) {
 						//Both input and output are mono so connect them
@@ -669,8 +669,8 @@ struct Randrouter : Module {
 					}
 					else {
 						//Input is Mono and Ouptut is Stereo so connect the input to both outputs at full strenth
-						target_volumes[ii + 0][oi] = 1.f;
-						target_volumes[ii + 1][oi] = 1.f;
+						target_volumes[ii][oi + 0] = 1.f;
+						target_volumes[ii][oi + 1] = 1.f;
 					}
 				}
 				else {
@@ -707,7 +707,9 @@ struct Randrouter : Module {
 			}
 		}
 
+		int maxPolyphony = 1;
 		for (int i = 0; i < SIGNAL_COUNT; i++) {
+			maxPolyphony = std::max(maxPolyphony, inputs[SIGNAL_INPUT + i].getChannels());
 			for (int j = 0; j < SIGNAL_COUNT; j++) {
 				if (crossfade) {
 					if (volumes[i][j] < target_volumes[i][j]) {
@@ -723,11 +725,10 @@ struct Randrouter : Module {
 			}
 		}
 
-
+	
 		for (int i = 0; i < SIGNAL_COUNT; i++) {
-			int poly = inputs[SIGNAL_INPUT + i].getChannels();
-			outputs[SIGNAL_OUTPUT + i].setChannels(poly);
-			for (int ch = 0; ch < poly; ch++) {
+			outputs[SIGNAL_OUTPUT + i].setChannels(maxPolyphony);
+			for (int ch = 0; ch < maxPolyphony; ch++) {
 				float out = 0;
 				if (hold_last_value && !inputs[SIGNAL_INPUT + output_map[i]].isConnected()) {
 					out = last_values[ch][i];
